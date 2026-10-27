@@ -7,8 +7,11 @@
   "scripts": {
     "build": "node scripts/build-plugin.mjs",
     "catalog": "node scripts/serve-catalog.mjs",
+    "catalog:check": "node scripts/catalog-release.mjs --check",
+    "catalog:release": "node scripts/catalog-release.mjs",
+    "catalog:bind": "node scripts/bind-catalog.mjs",
     "test": "node --test tests/*.test.mjs",
-    "check": "node scripts/build-plugin.mjs --check && node --check plugin/code.js && node --check plugin/ui.js && node --check scripts/serve-catalog.mjs && node --test tests/*.test.mjs"
+    "check": "node scripts/build-plugin.mjs --check && node --check plugin/code.js && node --check plugin/ui.js && node --check scripts/serve-catalog.mjs && node scripts/catalog-release.mjs --check && node --test tests/*.test.mjs"
   },
   "engines": {
     "node": ">=20"

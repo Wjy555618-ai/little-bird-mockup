@@ -63,6 +63,13 @@ Figma 插件发布时会展示并限制联网域名。让用户任意填写 URL 
 - manifest 保留 `catalogVersion`；素材发布出错时，把入口指回上一版清单即可回滚，不需要改插件。
 - 插件永远不执行远程脚本，只读取 JSON 和媒体文件。
 
+## 发布原子性
+
+- Netlify 只发布 `catalog/`，插件源码不进入素材站点。
+- `catalog-release.mjs` 要求显式的新版本号，并在部署前校验素材路径、分类、画布、四点坐标、revision 文件名与 SHA-256。
+- manifest 每次请求都重新验证；带 revision 的图片使用一年 immutable 缓存。
+- 首次部署使用 `bind-catalog.mjs` 同时绑定完整 manifest URL 与 Figma 允许域名，不允许手工维护两份不同的生产地址。
+
 ## 明确不做
 
 - 不复制第三方插件代码或 Pro 素材。

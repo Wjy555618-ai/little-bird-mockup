@@ -29,11 +29,12 @@ test("every static mockup has valid canvas, quad and immutable source asset", as
     }
 
     const assetPath = resolve(catalogRoot, item.layers.base);
-    const bytes = await readFile(assetPath);
-    const digest = createHash("sha256").update(bytes).digest("hex");
-    assert.equal(digest, item.integrity.baseSha256);
+    const thumbnailPath = resolve(catalogRoot, item.thumbnail);
+    const [assetBytes, thumbnailBytes] = await Promise.all([readFile(assetPath), readFile(thumbnailPath)]);
+    assert.equal(createHash("sha256").update(assetBytes).digest("hex"), item.integrity.baseSha256);
+    assert.equal(createHash("sha256").update(thumbnailBytes).digest("hex"), item.integrity.thumbnailSha256);
     assert.match(item.layers.base, /-r\d+\.[a-z0-9]+$/i, "asset filenames must be revisioned");
-    await readFile(resolve(catalogRoot, item.thumbnail));
+    assert.match(item.thumbnail, /-r\d+\.[a-z0-9]+$/i, "thumbnail filenames must be revisioned");
   }
 });
 

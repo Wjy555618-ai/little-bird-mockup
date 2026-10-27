@@ -25,7 +25,8 @@
       },
       "thumbnail": "thumbnails/studio-display-front-r1.png",
       "integrity": {
-        "baseSha256": "9af4efe18bbbc3a899d57902e71960a4d9f135389da99833a7b0e922764b0eeb"
+        "baseSha256": "9af4efe18bbbc3a899d57902e71960a4d9f135389da99833a7b0e922764b0eeb",
+        "thumbnailSha256": "775a39947edf06c33367b07e3665f2aff1fd6044f42fd297fac574d2cd0f6417"
       }
     }
   ]

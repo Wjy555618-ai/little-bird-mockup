@@ -6,12 +6,14 @@ import { fileURLToPath } from "node:url";
 
 const projectRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const pluginRoot = resolve(projectRoot, "plugin");
-const [pluginManifest, code, uiScript, uiHtml, uiStyles] = await Promise.all([
+const [pluginManifest, code, uiScript, uiHtml, uiStyles, netlifyConfig, gitignore] = await Promise.all([
   readFile(resolve(pluginRoot, "manifest.json"), "utf8").then(JSON.parse),
   readFile(resolve(pluginRoot, "code.js"), "utf8"),
   readFile(resolve(pluginRoot, "ui.js"), "utf8"),
   readFile(resolve(pluginRoot, "ui.html"), "utf8"),
-  readFile(resolve(pluginRoot, "styles.css"), "utf8")
+  readFile(resolve(pluginRoot, "styles.css"), "utf8"),
+  readFile(resolve(projectRoot, "netlify.toml"), "utf8"),
+  readFile(resolve(projectRoot, ".gitignore"), "utf8")
 ]);
 
 test("plugin uses a fixed production domain and a development-only local catalog", () => {
@@ -87,4 +89,12 @@ test("remote catalog is data-only and does not execute fetched JavaScript", () =
   assert.match(uiScript, /response\.json\(\)/);
   assert.doesNotMatch(uiScript, /eval\s*\(/);
   assert.doesNotMatch(uiScript, /new Function\s*\(/);
+});
+
+test("catalog deployment publishes only data with immutable assets and uncached manifest", () => {
+  assert.match(netlifyConfig, /publish\s*=\s*"catalog"/);
+  assert.match(netlifyConfig, /for\s*=\s*"\/v1\/manifest\.json"[\s\S]*no-store/);
+  assert.match(netlifyConfig, /for\s*=\s*"\/v1\/assets\/\*"[\s\S]*immutable/);
+  assert.match(netlifyConfig, /Access-Control-Allow-Origin\s*=\s*"\*"/);
+  assert.match(gitignore, /^\.netlify\/$/m);
 });

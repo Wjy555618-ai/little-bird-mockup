@@ -34,9 +34,19 @@
 
 服务默认运行在 `http://localhost:4173`。然后在 Figma 的“开发”菜单中导入 [`plugin/manifest.json`](plugin/manifest.json)。
 
+## 素材发布流程
+
+`catalog/` 是独立静态站点，[`netlify.toml`](netlify.toml) 只发布这个目录。`manifest.json` 禁止缓存，带 revision 的图片长期不可变缓存，因此更新时不会出现“新清单配旧图片”。
+
+1. 将新图片以 `-rN` 文件名放入 `assets/` 和 `thumbnails/`，再编辑 manifest。
+2. 运行 `npm run catalog:release -- --version YYYY.MM.DD.N`，校验坐标、路径和分类，并重算全部 SHA-256。
+3. 运行 `npm run check`。
+4. 原子部署 `catalog/`。插件刷新后即可读取新清单，无需重新发布插件。
+5. 第一次部署后运行 `npm run catalog:bind -- https://<site>/v1/manifest.json`，它会同时绑定插件 URL 和 Figma 允许域名，避免两处配置漂移。
+
 ## 发布前必须替换
 
-`plugin/ui.js` 中的 `PRODUCTION_CATALOG_URL` 目前是占位地址，`ACTIVE_CATALOG_URL` 仍指向本地开发服务。正式发布前需确定一个长期不变、支持 HTTPS 与 CORS 的素材域名，切换活动目录地址，并同步更新 `plugin/manifest.json` 的 `allowedDomains`。域名固定后，后续只更新该域名下的清单和素材即可。
+`plugin/ui.js` 中的 `PRODUCTION_CATALOG_URL` 目前是占位地址，`ACTIVE_CATALOG_URL` 仍指向本地开发服务。正式发布前需先部署上述静态目录，再使用 `catalog:bind` 一次性同步 URL 和 `allowedDomains`。域名固定后，后续只更新该域名下的清单与素材即可。
 
 `plugin/manifest.json` 当前使用开发占位 ID；发布到 Figma Community 前还需替换成 Figma 分配的正式插件 ID。
 
