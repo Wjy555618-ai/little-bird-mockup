@@ -61,6 +61,15 @@ const elements = {
   zoomOut: document.querySelector("#zoomOut"),
   zoomIn: document.querySelector("#zoomIn"),
   zoomLabel: document.querySelector("#zoomLabel"),
+  fitStageButton: document.querySelector("#fitStageButton"),
+  recentStrip: document.querySelector("#recentStrip"),
+  recentItems: document.querySelector("#recentItems"),
+  clearRecent: document.querySelector("#clearRecent"),
+  collapseButton: document.querySelector("#collapseButton"),
+  expandButton: document.querySelector("#expandButton"),
+  collapsedBar: document.querySelector("#collapsedBar"),
+  resizeGrip: document.querySelector("#resizeGrip"),
+  menuButton: document.querySelector("#menuButton"),
   toast: document.querySelector("#toast")
 };
 
@@ -99,9 +108,9 @@ async function previewDesignBytes() {
   canvas.height = 1000;
   const context = canvas.getContext("2d");
   const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
-  gradient.addColorStop(0, "#080b28");
-  gradient.addColorStop(0.55, "#3b168d");
-  gradient.addColorStop(1, "#6c4dff");
+  gradient.addColorStop(0, "#101827");
+  gradient.addColorStop(0.55, "#254d77");
+  gradient.addColorStop(1, "#6d94bd");
   context.fillStyle = gradient;
   context.fillRect(0, 0, canvas.width, canvas.height);
   context.fillStyle = "#ffffff0c";
@@ -112,7 +121,7 @@ async function previewDesignBytes() {
       context.fill();
     }
   }
-  context.fillStyle = "#d8ff5c";
+  context.fillStyle = "#f2f2f2";
   context.fillRect(80, 790, 310, 12);
   context.fillStyle = "white";
   context.font = "600 68px Inter, sans-serif";
@@ -152,7 +161,9 @@ function handlePreviewBridge(message) {
 function setCatalogState(mode, label) {
   state.catalogMode = mode;
   elements.catalogState.className = `catalog-state ${mode}`;
-  elements.catalogState.lastChild.textContent = label;
+  elements.catalogState.querySelector(".catalog-state-label").textContent = label;
+  elements.catalogState.title = label;
+  elements.catalogState.setAttribute("aria-label", label);
 }
 
 let toastTimer;
@@ -262,16 +273,36 @@ function rememberRecent(id) {
   safeStorage.setItem(RECENT_KEY, JSON.stringify(next));
 }
 
+function renderRecentStrip() {
+  if (!state.manifest) return;
+  const items = recentIds()
+    .map((id) => state.manifest.items.find((item) => item.id === id))
+    .filter(Boolean)
+    .slice(0, 3);
+  elements.recentItems.replaceChildren();
+  elements.recentStrip.hidden = items.length === 0;
+  for (const item of items) {
+    const button = document.createElement("button");
+    button.className = `recent-item${state.selectedAsset?.id === item.id ? " active" : ""}`;
+    button.title = item.name;
+    const image = document.createElement("img");
+    image.src = resolveAssetUrl(item.thumbnail);
+    image.alt = item.name;
+    button.appendChild(image);
+    button.addEventListener("click", () => selectAsset(item.id));
+    elements.recentItems.appendChild(button);
+  }
+}
+
 function filteredItems() {
   if (!state.manifest) return [];
   const query = elements.searchInput.value.trim().toLocaleLowerCase("zh-CN");
   const category = elements.categorySelect.value;
   const onlyFree = elements.freeOnly.checked;
-  const recent = new Set(recentIds());
 
   return state.manifest.items.filter((item) => {
     if (state.segment === "packs") return false;
-    if (state.segment === "recent" && !recent.has(item.id)) return false;
+    if (state.segment === "similar" && state.selectedAsset && item.category !== state.selectedAsset.category) return false;
     if (category !== "all" && item.category !== category) return false;
     if (onlyFree && !item.isFree) return false;
     if (query) {
@@ -312,6 +343,7 @@ function renderAssetGrid() {
     button.addEventListener("click", () => selectAsset(item.id));
     elements.assetGrid.appendChild(button);
   }
+  renderRecentStrip();
 }
 
 function loadImage(url) {
@@ -479,10 +511,10 @@ async function renderComposite() {
   if (state.designImage) {
     drawImageToQuad(context, state.designImage, state.selectedAsset.screen.quad, elements.fitMode.value);
     elements.screenCta.classList.add("has-image");
-    elements.screenCta.lastChild.textContent = "重新读取选区";
+    elements.screenCta.querySelector("b").textContent = "重新读取选区";
   } else {
     elements.screenCta.classList.remove("has-image");
-    elements.screenCta.lastChild.textContent = "选择 Figma 画面";
+    elements.screenCta.querySelector("b").textContent = "选择 Figma 画面";
   }
 }
 
@@ -548,6 +580,53 @@ function updateZoom(delta) {
   elements.zoomLabel.textContent = `${Math.round(state.zoom * 100)}%`;
 }
 
+function fitStage() {
+  state.zoom = 1;
+  elements.canvasWrap.style.transform = "scale(1)";
+  elements.zoomLabel.textContent = "适应";
+}
+
+function setWindowState(windowState) {
+  const collapsed = windowState === "collapsed";
+  document.documentElement.classList.toggle("is-collapsed", collapsed);
+  elements.collapsedBar.setAttribute("aria-hidden", String(!collapsed));
+  postPluginMessage({ type: "set-window-state", state: windowState });
+}
+
+function enableWindowResize() {
+  let startX = 0;
+  let startY = 0;
+  let startWidth = 0;
+  let startHeight = 0;
+  let animationFrame = 0;
+
+  elements.resizeGrip.addEventListener("pointerdown", (event) => {
+    startX = event.clientX;
+    startY = event.clientY;
+    startWidth = window.innerWidth;
+    startHeight = window.innerHeight;
+    elements.resizeGrip.setPointerCapture(event.pointerId);
+  });
+
+  elements.resizeGrip.addEventListener("pointermove", (event) => {
+    if (!elements.resizeGrip.hasPointerCapture(event.pointerId)) return;
+    cancelAnimationFrame(animationFrame);
+    animationFrame = requestAnimationFrame(() => {
+      postPluginMessage({
+        type: "resize",
+        width: startWidth + event.clientX - startX,
+        height: startHeight + event.clientY - startY
+      });
+    });
+  });
+
+  elements.resizeGrip.addEventListener("pointerup", (event) => {
+    if (elements.resizeGrip.hasPointerCapture(event.pointerId)) {
+      elements.resizeGrip.releasePointerCapture(event.pointerId);
+    }
+  });
+}
+
 for (const tab of document.querySelectorAll(".mode-tab")) {
   tab.addEventListener("click", () => {
     if (tab.dataset.mode !== "static") {
@@ -583,8 +662,17 @@ elements.pasteButton.addEventListener("click", pasteRender);
 elements.backgroundToggle.addEventListener("click", () => elements.stage.classList.toggle("light"));
 elements.zoomIn.addEventListener("click", () => updateZoom(0.1));
 elements.zoomOut.addEventListener("click", () => updateZoom(-0.1));
+elements.fitStageButton.addEventListener("click", fitStage);
+elements.clearRecent.addEventListener("click", () => {
+  safeStorage.removeItem(RECENT_KEY);
+  renderRecentStrip();
+});
+elements.collapseButton.addEventListener("click", () => setWindowState("collapsed"));
+elements.expandButton.addEventListener("click", () => setWindowState("expanded"));
+elements.menuButton.addEventListener("click", () => showToast(`样机工作室 v${PLUGIN_VERSION} · 远程素材目录`));
 document.querySelector("#settingsButton").addEventListener("click", () => showToast("设置将在远程素材链路验证后开放"));
 document.querySelector("#aboutButton").addEventListener("click", () => showToast("样机工作室 · 自有素材与渲染引擎"));
+enableWindowResize();
 
 window.onmessage = async (event) => {
   const message = event.data.pluginMessage;

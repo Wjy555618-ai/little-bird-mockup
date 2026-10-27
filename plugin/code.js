@@ -1,9 +1,13 @@
 const PLUGIN_VERSION = "0.1.0";
 const CATALOG_CACHE_KEY = "mockup-studio-catalog-v1";
+const WINDOW_SIZE = {
+  expanded: { width: 820, height: 600 },
+  collapsed: { width: 320, height: 64 }
+};
 
 figma.showUI(__html__, {
-  width: 1180,
-  height: 760,
+  width: WINDOW_SIZE.expanded.width,
+  height: WINDOW_SIZE.expanded.height,
   themeColors: true
 });
 
@@ -118,11 +122,17 @@ figma.ui.onmessage = async (message) => {
     case "notify":
       figma.notify(message.message || "样机工作室");
       break;
+    case "set-window-state": {
+      const next = message.state === "collapsed" ? WINDOW_SIZE.collapsed : WINDOW_SIZE.expanded;
+      figma.ui.resize(next.width, next.height);
+      figma.ui.postMessage({ type: "window-state-applied", state: message.state });
+      break;
+    }
     case "resize":
       if (Number.isFinite(message.width) && Number.isFinite(message.height)) {
         figma.ui.resize(
-          Math.max(720, Math.min(1440, message.width)),
-          Math.max(560, Math.min(1000, message.height))
+          Math.max(820, Math.min(1180, message.width)),
+          Math.max(600, Math.min(820, message.height))
         );
       }
       break;
