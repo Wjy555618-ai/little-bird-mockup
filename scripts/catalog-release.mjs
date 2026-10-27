@@ -53,7 +53,7 @@ async function sha256(path) {
 const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
 if (manifest.schemaVersion !== 2) fail("只支持 schemaVersion 2");
 if (manifest.environment !== library) fail(`清单 environment 必须是 ${library}`);
-if (manifest.rendererVersion !== "2.0.0") fail("rendererVersion 必须是 2.0.0");
+if (manifest.rendererVersion !== "2.1.0") fail("rendererVersion 必须是 2.1.0");
 if (!versionPattern.test(manifest.catalogVersion)) fail("当前 catalogVersion 格式无效");
 if (!Number.isFinite(Date.parse(manifest.publishedAt))) fail("publishedAt 不是有效时间");
 if (!Array.isArray(manifest.categories) || !Array.isArray(manifest.items)) fail("清单缺少 categories 或 items");
@@ -76,7 +76,10 @@ for (const item of manifest.items) {
   if (!Number.isInteger(item.canvas?.width) || !Number.isInteger(item.canvas?.height) || item.canvas.width < 1 || item.canvas.height < 1) {
     fail(`${item.id} 画布尺寸无效`);
   }
-  if (!["cover", "contain", "stretch"].includes(item.screen?.defaultFit || "cover")) fail(`${item.id} defaultFit 无效`);
+  if (!["cover", "contain"].includes(item.screen?.defaultFit || "contain")) fail(`${item.id} defaultFit 无效`);
+  if (!Number.isInteger(item.screen?.recommendedSize?.width) || !Number.isInteger(item.screen?.recommendedSize?.height) || item.screen.recommendedSize.width < 1 || item.screen.recommendedSize.height < 1 || !item.screen.recommendedSize.label) {
+    fail(`${item.id} 推荐画面尺寸无效`);
+  }
   assertQuad(item);
 
   const basePath = safeCatalogPath(item.layers?.base, `${item.id} base`);

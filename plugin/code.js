@@ -12,22 +12,43 @@ figma.showUI(__html__, {
 });
 
 function selectionSummary() {
-  const node = figma.currentPage.selection[0];
-  if (!node) {
+  const nodes = figma.currentPage.selection.filter((node) => typeof node.exportAsync === "function");
+  if (!nodes.length) {
     return { available: false, count: 0, message: "请先在画布中选择一个画框、组件或图片图层" };
   }
-
-  const canExport = typeof node.exportAsync === "function";
+  const bounds = selectionBounds(nodes);
+  const node = nodes[0];
   return {
-    available: canExport,
-    count: figma.currentPage.selection.length,
+    available: true,
+    count: nodes.length,
     id: node.id,
-    name: node.name,
-    nodeType: node.type,
-    width: "width" in node ? node.width : undefined,
-    height: "height" in node ? node.height : undefined,
-    message: canExport ? `已选择：${node.name}` : "当前图层无法导出为图片"
+    name: nodes.length === 1 ? node.name : `${nodes.length} 个图层`,
+    nodeType: nodes.length === 1 ? node.type : "MULTI_SELECTION",
+    nodeTypes: [...new Set(nodes.map((item) => item.type))],
+    width: bounds.width,
+    height: bounds.height,
+    message: nodes.length === 1 ? `已选择：${node.name}` : `已选择 ${nodes.length} 个图层，将作为一个整体读取`
   };
+}
+
+function nodeBounds(node) {
+  const bounds = node.absoluteRenderBounds || node.absoluteBoundingBox;
+  if (bounds) return bounds;
+  return {
+    x: "x" in node ? node.x : 0,
+    y: "y" in node ? node.y : 0,
+    width: "width" in node ? node.width : 1,
+    height: "height" in node ? node.height : 1
+  };
+}
+
+function selectionBounds(nodes) {
+  const boxes = nodes.map(nodeBounds);
+  const left = Math.min(...boxes.map((box) => box.x));
+  const top = Math.min(...boxes.map((box) => box.y));
+  const right = Math.max(...boxes.map((box) => box.x + box.width));
+  const bottom = Math.max(...boxes.map((box) => box.y + box.height));
+  return { x: left, y: top, width: Math.max(1, right - left), height: Math.max(1, bottom - top), boxes };
 }
 
 function publishSelection() {
@@ -44,22 +65,35 @@ async function publishCatalogCache() {
 }
 
 async function exportSelection() {
-  const node = figma.currentPage.selection[0];
-  if (!node || typeof node.exportAsync !== "function") {
+  const nodes = figma.currentPage.selection.filter((node) => typeof node.exportAsync === "function");
+  if (!nodes.length) {
     figma.ui.postMessage({ type: "selection-error", message: "请先选择一个可以导出的图层" });
     return;
   }
 
   try {
-    const width = "width" in node ? node.width : 0;
-    const exportSettings = width > 2048
-      ? { format: "PNG", constraint: { type: "WIDTH", value: 2048 } }
-      : { format: "PNG", constraint: { type: "SCALE", value: 1 } };
-    const bytes = await node.exportAsync(exportSettings);
+    const bounds = selectionBounds(nodes);
+    const scale = Math.min(1, 2048 / Math.max(bounds.width, bounds.height));
+    const layers = await Promise.all(nodes.map(async (node, index) => {
+      const box = bounds.boxes[index];
+      const bytes = await node.exportAsync({ format: "PNG", constraint: { type: "SCALE", value: scale } });
+      return {
+        bytes,
+        name: node.name,
+        nodeType: node.type,
+        x: (box.x - bounds.x) * scale,
+        y: (box.y - bounds.y) * scale,
+        width: box.width * scale,
+        height: box.height * scale
+      };
+    }));
     figma.ui.postMessage({
-      type: "selection-image",
-      bytes,
-      name: node.name
+      type: "selection-composite",
+      layers,
+      width: Math.max(1, Math.ceil(bounds.width * scale)),
+      height: Math.max(1, Math.ceil(bounds.height * scale)),
+      name: nodes.length === 1 ? nodes[0].name : `${nodes.length} 个 Figma 图层`,
+      sourceType: nodes.length === 1 ? `Figma ${nodes[0].type}` : `Figma 组合 · ${nodes.length} 层`
     });
   } catch (error) {
     figma.ui.postMessage({

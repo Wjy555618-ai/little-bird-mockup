@@ -3,9 +3,9 @@
   "assetId": "graphite-laptop-angle",
   "revision": 1,
   "status": "approved",
-  "rendererVersion": "2.0.0",
-  "itemSha256": "ea6c6a6038bbb9d8242c8f6ee37a63670c30d2df47b8a25cf4a152f5eb5c7d13",
-  "approvedAt": "2026-10-27T19:27:23.320Z",
+  "rendererVersion": "2.1.0",
+  "itemSha256": "00aae042ae73594891f140a845db6333e2a70320500c25aa5f1181f471f0d360",
+  "approvedAt": "2026-10-27T21:10:21.896Z",
   "patternIds": [
     "grid",
     "landscape",
@@ -16,6 +16,7 @@
     "schema": true,
     "renderer": true,
     "dimensions": true,
+    "recommendedSize": true,
     "geometry": true,
     "provenance": true,
     "integrity": true

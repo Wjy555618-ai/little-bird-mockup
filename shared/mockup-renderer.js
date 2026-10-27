@@ -1,7 +1,7 @@
 (function attachMockupRenderer(global) {
   "use strict";
 
-  const VERSION = "2.0.0";
+  const VERSION = "2.1.0";
   const DEFAULT_ADJUSTMENTS = Object.freeze({ scale: 1, offsetX: 0, offsetY: 0, rotation: 0, brightness: 1, contrast: 1, saturation: 1 });
   const baseCanvasCache = new WeakMap();
 
@@ -15,6 +15,10 @@
       if (point[0] < 0 || point[0] > asset.canvas.width || point[1] < 0 || point[1] > asset.canvas.height) throw new Error(`${asset.id} 屏幕顶点超出画布`);
     }
     if (!asset.layers?.base) throw new Error(`${asset.id} 缺少基础图层`);
+    if (!Number.isInteger(asset.screen?.recommendedSize?.width) || !Number.isInteger(asset.screen?.recommendedSize?.height) || asset.screen.recommendedSize.width < 1 || asset.screen.recommendedSize.height < 1) {
+      throw new Error(`${asset.id} 缺少有效的推荐画面尺寸`);
+    }
+    if (!asset.screen.recommendedSize.label) throw new Error(`${asset.id} 缺少推荐画面比例说明`);
     if (asset.screen.bleed != null && (!Number.isFinite(asset.screen.bleed) || asset.screen.bleed < 0 || asset.screen.bleed > 24)) throw new Error(`${asset.id} 屏幕出血无效`);
     return asset;
   }
@@ -112,9 +116,9 @@
     const values = { ...DEFAULT_ADJUSTMENTS, ...(adjustments || {}) };
     const sourceWidth = image.naturalWidth || image.width;
     const sourceHeight = image.naturalHeight || image.height;
-    const scaleForFit = fit === "contain" ? Math.min(width / sourceWidth, height / sourceHeight) : fit === "stretch" ? 1 : Math.max(width / sourceWidth, height / sourceHeight);
-    const drawWidth = fit === "stretch" ? width : sourceWidth * scaleForFit;
-    const drawHeight = fit === "stretch" ? height : sourceHeight * scaleForFit;
+    const scaleForFit = fit === "cover" ? Math.max(width / sourceWidth, height / sourceHeight) : Math.min(width / sourceWidth, height / sourceHeight);
+    const drawWidth = sourceWidth * scaleForFit;
+    const drawHeight = sourceHeight * scaleForFit;
     context.translate(width / 2 + values.offsetX * width * 0.42, height / 2 + values.offsetY * height * 0.42);
     context.rotate(values.rotation * Math.PI / 180);
     context.scale(values.scale, values.scale);
@@ -188,8 +192,8 @@
     context.drawImage(preparedBase, 0, 0, canvas.width, canvas.height);
     const activeQuad = expandQuad(quad || asset.screen.quad, asset.screen.bleed || 0);
     if (designImage) {
-      const target = quadSize(activeQuad);
-      const screenCanvas = createScreenCanvas(designImage, target.width / target.height, fit, adjustments, asset.screen.cornerRadius || 0);
+      const recommended = asset.screen.recommendedSize;
+      const screenCanvas = createScreenCanvas(designImage, recommended.width / recommended.height, fit, adjustments, asset.screen.cornerRadius || 0);
       fillQuad(context, activeQuad, asset.screen.underlay || "#080808");
       drawImageToQuad(context, screenCanvas, activeQuad, quality);
       restoreOcclusions(context, preparedBase, asset);

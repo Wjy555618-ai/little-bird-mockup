@@ -16,8 +16,8 @@ test("testing and production catalogs share schema v2 with separate environments
   assert.equal(production.schemaVersion, 2);
   assert.equal(testing.environment, "testing");
   assert.equal(production.environment, "production");
-  assert.equal(testing.rendererVersion, "2.0.0");
-  assert.equal(production.rendererVersion, "2.0.0");
+  assert.equal(testing.rendererVersion, "2.1.0");
+  assert.equal(production.rendererVersion, "2.1.0");
   assert.equal(testing.items.length, 4, "the functional closure is intentionally limited to four temporary mockups");
   for (const manifest of [testing, production]) {
     assert.match(manifest.catalogVersion, /^\d{4}\.\d{2}\.\d{2}\.\d+$/);
@@ -33,6 +33,10 @@ async function verifyCatalog(manifest, catalogRoot, expectedStatus) {
     assert.equal(item.provenance.kind, "generated-in-house");
     assert.ok(item.canvas.width > 0);
     assert.ok(item.canvas.height > 0);
+    assert.ok(item.screen.recommendedSize.width > 0);
+    assert.ok(item.screen.recommendedSize.height > 0);
+    assert.ok(item.screen.recommendedSize.label);
+    assert.ok(["cover", "contain"].includes(item.screen.defaultFit));
     assert.equal(item.screen.quad.length, 4);
     for (const [x, y] of item.screen.quad) {
       assert.ok(x >= 0 && x <= item.canvas.width, `${item.id} x coordinate is outside canvas`);

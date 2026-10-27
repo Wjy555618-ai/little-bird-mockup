@@ -3,9 +3,16 @@ const DEVELOPMENT_CATALOG_URL = "http://localhost:4173/catalog/testing/v1/manife
 const PRODUCTION_CATALOG_URL = "https://assets.mockup-studio.example/v1/manifest.json";
 const ACTIVE_CATALOG_URL = DEVELOPMENT_CATALOG_URL;
 const renderer = window.MockupRenderer;
+const pdfjs = window.pdfjsLib;
 const CATALOG_CACHE_KEY = "mockup-studio-catalog-v1";
 const RECENT_KEY = "mockup-studio-recent-v1";
 const memoryStorage = new Map();
+
+let pdfWorkerUrl = "";
+if (pdfjs && window.__PDF_WORKER_SOURCE__) {
+  pdfWorkerUrl = URL.createObjectURL(new Blob([window.__PDF_WORKER_SOURCE__], { type: "text/javascript" }));
+  pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+}
 
 const safeStorage = {
   getItem(key) {
@@ -54,6 +61,10 @@ const elements = {
   imageInput: document.querySelector("#imageInput"),
   clearDesignButton: document.querySelector("#clearDesignButton"),
   designSourceLabel: document.querySelector("#designSourceLabel"),
+  sourceGuide: document.querySelector("#sourceGuide"),
+  recommendedSize: document.querySelector("#recommendedSize"),
+  recommendedRatio: document.querySelector("#recommendedRatio"),
+  sourceMatch: document.querySelector("#sourceMatch"),
   fitMode: document.querySelector("#fitMode"),
   designScale: document.querySelector("#designScale"),
   designScaleValue: document.querySelector("#designScaleValue"),
@@ -85,6 +96,10 @@ const elements = {
   zoomIn: document.querySelector("#zoomIn"),
   zoomReset: document.querySelector("#zoomReset"),
   stageTitle: document.querySelector("#stageTitle"),
+  designEditor: document.querySelector("#designEditor"),
+  designPolygon: document.querySelector("#designPolygon"),
+  designDragTarget: document.querySelector("#designDragTarget"),
+  designEditorHint: document.querySelector("#designEditorHint"),
   perspectiveEditor: document.querySelector("#perspectiveEditor"),
   perspectivePolygon: document.querySelector("#perspectivePolygon"),
   perspectiveStatus: document.querySelector("#perspectiveStatus"),
@@ -109,6 +124,7 @@ const state = {
   layerImages: {},
   designImage: null,
   designObjectUrl: null,
+  designSource: null,
   selection: null,
   segment: "all",
   mode: "catalog",
@@ -182,7 +198,8 @@ function handlePreviewBridge(message) {
     previewDesignBytes().then((bytes) => dispatchPreviewMessage({
       type: "selection-image",
       bytes,
-      name: "首页设计稿（预览模拟）"
+      name: "首页设计稿（预览模拟）",
+      sourceType: "Figma 画框"
     }));
   }
   if (message.type === "paste-render") {
@@ -319,9 +336,10 @@ function filteredItems() {
   if (!state.manifest) return [];
   const query = elements.searchInput.value.trim().toLocaleLowerCase("zh-CN");
   const category = elements.categorySelect.value;
+  const similarCategory = category !== "all" ? category : state.selectedAsset?.category;
 
   return state.manifest.items.filter((item) => {
-    if (state.segment === "similar" && state.selectedAsset && item.category !== state.selectedAsset.category) return false;
+    if (state.segment === "similar" && similarCategory && item.category !== similarCategory) return false;
     if (category !== "all" && item.category !== category) return false;
     if (query) {
       const haystack = [item.name, item.category, ...(item.tags || [])].join(" ").toLocaleLowerCase("zh-CN");
@@ -337,8 +355,8 @@ function renderAssetGrid() {
   elements.catalogCount.textContent = `${items.length} 个样机`;
   elements.catalogEmpty.hidden = items.length !== 0;
   if (!items.length) {
-    elements.catalogEmpty.querySelector("strong").textContent = "没有找到样机";
-    elements.catalogEmpty.querySelector("span").textContent = "换个关键词或分类试试";
+    elements.catalogEmpty.querySelector("strong").textContent = state.segment === "similar" ? "该分类暂无相似样机" : "没有找到样机";
+    elements.catalogEmpty.querySelector("span").textContent = elements.searchInput.value ? "清空搜索或更换关键词" : "更换分类后再试";
   }
 
   for (const item of items) {
@@ -379,8 +397,11 @@ async function selectAsset(id) {
   if (!asset) return;
   state.selectedAsset = asset;
   state.customQuad = asset.screen.quad.map((point) => [...point]);
+  state.adjustments = { ...DEFAULT_ADJUSTMENTS };
   rememberRecent(id);
-  elements.fitMode.value = asset.screen.defaultFit || "cover";
+  elements.fitMode.value = asset.screen.defaultFit || "contain";
+  syncAdjustmentControls();
+  updateSourceGuide();
   elements.assetName.textContent = asset.name;
   elements.assetMeta.textContent = `${asset.canvas.width} × ${asset.canvas.height} · ${asset.status === "testing" ? "测试库" : "素材库"}`;
   elements.downloadButton.disabled = true;
@@ -399,6 +420,7 @@ async function selectAsset(id) {
     elements.previewCanvas.width = asset.canvas.width;
     elements.previewCanvas.height = asset.canvas.height;
     updatePerspectiveEditor();
+    updateDesignEditor();
     await renderComposite();
   } catch (error) {
     showToast(error instanceof Error ? error.message : "样机加载失败");
@@ -417,6 +439,175 @@ function updateOutputAvailability() {
 
 function activeQuad() {
   return state.customQuad || state.selectedAsset?.screen.quad || null;
+}
+
+function updateSourceGuide() {
+  const recommended = state.selectedAsset?.screen?.recommendedSize;
+  elements.sourceGuide.classList.remove("match", "mismatch");
+  if (!recommended) {
+    elements.recommendedSize.textContent = "选择样机后显示";
+    elements.recommendedRatio.textContent = "用于避免比例错误";
+    elements.sourceMatch.textContent = "读取内容后会统一作为一个画面对象。";
+    return;
+  }
+  elements.recommendedSize.textContent = `${recommended.width} × ${recommended.height} px`;
+  elements.recommendedRatio.textContent = `${recommended.label} · 默认完整显示且保持原比例`;
+  if (!state.designSource) {
+    elements.sourceMatch.textContent = "读取内容后，可直接在预览中拖动，拖动四角可等比缩放。";
+    return;
+  }
+  const expectedAspect = recommended.width / recommended.height;
+  const sourceAspect = state.designSource.width / state.designSource.height;
+  const matches = Math.abs(sourceAspect / expectedAspect - 1) <= 0.03;
+  elements.sourceGuide.classList.add(matches ? "match" : "mismatch");
+  const sourceLabel = `${state.designSource.width} × ${state.designSource.height} px · ${state.designSource.type}`;
+  elements.sourceMatch.textContent = matches
+    ? `当前 ${sourceLabel}，比例匹配。`
+    : `当前 ${sourceLabel}，比例不一致；已保持原比例完整显示，可拖动或等比缩放调整。`;
+}
+
+function designControlPoints() {
+  if (!state.selectedAsset || !state.designImage) return [];
+  const recommended = state.selectedAsset.screen.recommendedSize;
+  const screenWidth = 1200;
+  const screenHeight = screenWidth / (recommended.width / recommended.height);
+  const sourceWidth = state.designImage.naturalWidth || state.designImage.width;
+  const sourceHeight = state.designImage.naturalHeight || state.designImage.height;
+  const fitScale = elements.fitMode.value === "cover"
+    ? Math.max(screenWidth / sourceWidth, screenHeight / sourceHeight)
+    : Math.min(screenWidth / sourceWidth, screenHeight / sourceHeight);
+  const halfWidth = sourceWidth * fitScale * state.adjustments.scale / 2;
+  const halfHeight = sourceHeight * fitScale * state.adjustments.scale / 2;
+  const centerX = screenWidth / 2 + state.adjustments.offsetX * screenWidth * 0.42;
+  const centerY = screenHeight / 2 + state.adjustments.offsetY * screenHeight * 0.42;
+  const angle = state.adjustments.rotation * Math.PI / 180;
+  const cosine = Math.cos(angle);
+  const sine = Math.sin(angle);
+  const corners = [[-halfWidth, -halfHeight], [halfWidth, -halfHeight], [halfWidth, halfHeight], [-halfWidth, halfHeight]];
+  return corners.map(([x, y]) => {
+    const u = (centerX + x * cosine - y * sine) / screenWidth;
+    const v = (centerY + x * sine + y * cosine) / screenHeight;
+    return renderer.bilinearPoint(activeQuad(), u, v);
+  });
+}
+
+function updateDesignEditor() {
+  const points = designControlPoints();
+  const visible = state.mode === "adjust" && points.length === 4;
+  elements.designEditor.hidden = !visible;
+  if (!visible) return;
+  const pointString = points.map((point) => point.join(",")).join(" ");
+  elements.designPolygon.setAttribute("points", pointString);
+  elements.designDragTarget.setAttribute("points", pointString);
+  const svg = elements.designPolygon.ownerSVGElement;
+  svg.setAttribute("viewBox", `0 0 ${state.selectedAsset.canvas.width} ${state.selectedAsset.canvas.height}`);
+  for (const handle of elements.designEditor.querySelectorAll(".design-scale-handle")) {
+    const point = points[Number(handle.dataset.corner)];
+    handle.style.left = `${point[0] / state.selectedAsset.canvas.width * 100}%`;
+    handle.style.top = `${point[1] / state.selectedAsset.canvas.height * 100}%`;
+  }
+  const center = points.reduce((sum, point) => [sum[0] + point[0] / 4, sum[1] + point[1] / 4], [0, 0]);
+  const top = Math.min(...points.map((point) => point[1]));
+  elements.designEditorHint.style.left = `${Math.max(8, Math.min(92, center[0] / state.selectedAsset.canvas.width * 100))}%`;
+  elements.designEditorHint.style.top = `${Math.max(8, Math.min(96, top / state.selectedAsset.canvas.height * 100))}%`;
+}
+
+function pointOnCanvas(event) {
+  const rect = elements.previewCanvas.getBoundingClientRect();
+  return [
+    (event.clientX - rect.left) / rect.width * state.selectedAsset.canvas.width,
+    (event.clientY - rect.top) / rect.height * state.selectedAsset.canvas.height
+  ];
+}
+
+function deltaToScreenCoordinates(dx, dy) {
+  const quad = activeQuad();
+  const center = renderer.bilinearPoint(quad, 0.5, 0.5);
+  const alongX = renderer.bilinearPoint(quad, 0.51, 0.5);
+  const alongY = renderer.bilinearPoint(quad, 0.5, 0.51);
+  const ux = (alongX[0] - center[0]) * 100;
+  const uy = (alongX[1] - center[1]) * 100;
+  const vx = (alongY[0] - center[0]) * 100;
+  const vy = (alongY[1] - center[1]) * 100;
+  const determinant = ux * vy - uy * vx;
+  if (Math.abs(determinant) < 0.0001) return [0, 0];
+  return [(dx * vy - dy * vx) / determinant, (ux * dy - uy * dx) / determinant];
+}
+
+function commitDirectAdjustment() {
+  syncAdjustmentControls();
+  updateDesignEditor();
+  scheduleComposite("preview");
+}
+
+function enableDesignEditing() {
+  let interaction = null;
+  const start = (event, type) => {
+    if (!state.designImage || !state.selectedAsset) return;
+    const points = designControlPoints();
+    const center = points.reduce((sum, point) => [sum[0] + point[0] / 4, sum[1] + point[1] / 4], [0, 0]);
+    const pointer = pointOnCanvas(event);
+    interaction = {
+      type,
+      startPointer: pointer,
+      center,
+      startScale: state.adjustments.scale,
+      startOffsetX: state.adjustments.offsetX,
+      startOffsetY: state.adjustments.offsetY,
+      startDistance: Math.max(1, Math.hypot(pointer[0] - center[0], pointer[1] - center[1]))
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+    event.preventDefault();
+  };
+  const move = (event) => {
+    if (!interaction || !event.currentTarget.hasPointerCapture(event.pointerId)) return;
+    const pointer = pointOnCanvas(event);
+    if (interaction.type === "move") {
+      const [du, dv] = deltaToScreenCoordinates(pointer[0] - interaction.startPointer[0], pointer[1] - interaction.startPointer[1]);
+      state.adjustments.offsetX = Math.max(-1, Math.min(1, interaction.startOffsetX + du / 0.42));
+      state.adjustments.offsetY = Math.max(-1, Math.min(1, interaction.startOffsetY + dv / 0.42));
+    } else {
+      const distance = Math.hypot(pointer[0] - interaction.center[0], pointer[1] - interaction.center[1]);
+      state.adjustments.scale = Math.max(0.5, Math.min(3, interaction.startScale * distance / interaction.startDistance));
+    }
+    commitDirectAdjustment();
+  };
+  const end = (event) => {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    interaction = null;
+    renderFinalComposite();
+  };
+  elements.designDragTarget.addEventListener("pointerdown", (event) => start(event, "move"));
+  elements.designDragTarget.addEventListener("pointermove", move);
+  elements.designDragTarget.addEventListener("pointerup", end);
+  elements.designDragTarget.addEventListener("pointercancel", end);
+  elements.designDragTarget.addEventListener("keydown", (event) => {
+    const step = event.shiftKey ? 0.05 : 0.01;
+    if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
+    if (event.key === "ArrowLeft") state.adjustments.offsetX -= step;
+    if (event.key === "ArrowRight") state.adjustments.offsetX += step;
+    if (event.key === "ArrowUp") state.adjustments.offsetY -= step;
+    if (event.key === "ArrowDown") state.adjustments.offsetY += step;
+    state.adjustments.offsetX = Math.max(-1, Math.min(1, state.adjustments.offsetX));
+    state.adjustments.offsetY = Math.max(-1, Math.min(1, state.adjustments.offsetY));
+    commitDirectAdjustment();
+    renderFinalComposite();
+    event.preventDefault();
+  });
+  for (const handle of elements.designEditor.querySelectorAll(".design-scale-handle")) {
+    handle.addEventListener("pointerdown", (event) => start(event, "scale"));
+    handle.addEventListener("pointermove", move);
+    handle.addEventListener("pointerup", end);
+    handle.addEventListener("pointercancel", end);
+    handle.addEventListener("keydown", (event) => {
+      if (!["ArrowUp", "ArrowRight", "ArrowDown", "ArrowLeft"].includes(event.key)) return;
+      const direction = ["ArrowUp", "ArrowRight"].includes(event.key) ? 1 : -1;
+      state.adjustments.scale = Math.max(0.5, Math.min(3, state.adjustments.scale + direction * (event.shiftKey ? 0.1 : 0.02)));
+      commitDirectAdjustment();
+      renderFinalComposite();
+      event.preventDefault();
+    });
+  }
 }
 
 let scheduledRenderFrame = 0;
@@ -442,6 +633,7 @@ function renderComposite(quality = "final") {
     elements.screenCta.classList.remove("has-image");
     elements.screenCta.querySelector("b").textContent = "选择 Figma 画面";
   }
+  updateDesignEditor();
   updatePerspectiveEditor();
 }
 
@@ -486,10 +678,12 @@ function setMode(mode) {
   elements.adjustPanel.hidden = mode === "catalog";
   elements.adjustControls.hidden = mode !== "adjust";
   elements.perspectiveControls.hidden = mode !== "perspective";
+  elements.designEditor.hidden = mode !== "adjust" || !state.designImage;
   elements.perspectiveEditor.hidden = mode !== "perspective";
   elements.adjustPanelTitle.textContent = mode === "perspective" ? "透视编辑" : "画面调整";
   elements.stageTitle.textContent = mode === "perspective" ? "拖动四角控制点" : "预览";
   elements.designSourceLabel.textContent = state.designName || "尚未读取画面";
+  updateDesignEditor();
   updatePerspectiveEditor();
 }
 
@@ -526,16 +720,26 @@ function updateAdjustmentsFromControls() {
     saturation: Number(elements.designSaturation.value) / 100
   };
   updateAdjustmentOutputs();
+  updateDesignEditor();
   scheduleComposite("preview");
 }
 
-async function setDesignBytes(bytes, name, mimeType = "image/png") {
+async function setDesignBytes(bytes, name, mimeType = "image/png", metadata = {}) {
   if (state.designObjectUrl) URL.revokeObjectURL(state.designObjectUrl);
   state.designObjectUrl = URL.createObjectURL(new Blob([bytes], { type: mimeType }));
   state.designImage = await loadImage(state.designObjectUrl);
   state.designName = name;
+  state.designSource = {
+    width: Math.round(metadata.width || state.designImage.naturalWidth || state.designImage.width),
+    height: Math.round(metadata.height || state.designImage.naturalHeight || state.designImage.height),
+    type: metadata.type || "图片"
+  };
+  state.adjustments = { ...DEFAULT_ADJUSTMENTS };
+  elements.fitMode.value = state.selectedAsset?.screen.defaultFit || "contain";
+  syncAdjustmentControls();
   elements.designSourceLabel.textContent = name;
   elements.clearDesignButton.disabled = false;
+  updateSourceGuide();
   await renderComposite();
   updateOutputAvailability();
 }
@@ -545,37 +749,114 @@ function clearDesign() {
   state.designObjectUrl = null;
   state.designImage = null;
   state.designName = "";
+  state.designSource = null;
   elements.designSourceLabel.textContent = "尚未读取画面";
   elements.clearDesignButton.disabled = true;
   elements.imageInput.value = "";
+  updateSourceGuide();
   updateOutputAvailability();
   renderFinalComposite();
   showToast("已移除画面");
 }
 
-async function importImageFile(file) {
+function canvasToBlob(canvas) {
+  return new Promise((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("无法生成画面")), "image/png"));
+}
+
+async function setDesignCanvas(canvas, name, type) {
+  const blob = await canvasToBlob(canvas);
+  await setDesignBytes(new Uint8Array(await blob.arrayBuffer()), name, "image/png", { width: canvas.width, height: canvas.height, type });
+}
+
+async function composeSelectionLayers(message) {
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(message.width));
+  canvas.height = Math.max(1, Math.round(message.height));
+  const context = canvas.getContext("2d");
+  for (const layer of message.layers || []) {
+    const url = URL.createObjectURL(new Blob([layer.bytes], { type: "image/png" }));
+    try {
+      const image = await loadImage(url);
+      context.drawImage(image, layer.x, layer.y, layer.width, layer.height);
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
+  await setDesignCanvas(canvas, message.name, message.sourceType || "Figma 选区");
+}
+
+async function importVideoFile(file) {
+  const url = URL.createObjectURL(file);
+  const video = document.createElement("video");
+  video.muted = true;
+  video.playsInline = true;
+  video.preload = "auto";
+  try {
+    await new Promise((resolve, reject) => {
+      video.addEventListener("loadeddata", resolve, { once: true });
+      video.addEventListener("error", () => reject(new Error("视频格式无法读取")), { once: true });
+      video.src = url;
+    });
+    const scale = Math.min(1, 2048 / Math.max(video.videoWidth, video.videoHeight));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
+    canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
+    canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
+    await setDesignCanvas(canvas, `${file.name} · 静态帧`, "视频静态帧");
+  } finally {
+    video.removeAttribute("src");
+    video.load();
+    URL.revokeObjectURL(url);
+  }
+}
+
+async function importPdfFile(file) {
+  if (!pdfjs) throw new Error("PDF 解析器尚未载入");
+  const documentTask = pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) });
+  const pdf = await documentTask.promise;
+  const page = await pdf.getPage(1);
+  const initial = page.getViewport({ scale: 1 });
+  const scale = Math.min(2, 2048 / Math.max(initial.width, initial.height));
+  const viewport = page.getViewport({ scale });
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(viewport.width));
+  canvas.height = Math.max(1, Math.round(viewport.height));
+  await page.render({ canvasContext: canvas.getContext("2d"), viewport }).promise;
+  await setDesignCanvas(canvas, `${file.name} · 第 1 页`, `PDF 第 1 页 / 共 ${pdf.numPages} 页`);
+  await pdf.destroy();
+}
+
+async function importDesignFile(file) {
   if (!file) return;
-  if (!/^image\/(png|jpeg|webp)$/.test(file.type)) {
-    showToast("请选择 PNG、JPG 或 WebP 图片");
+  const extension = file.name.split(".").pop()?.toLowerCase();
+  const supportedImage = /^image\/(png|jpeg|webp|svg\+xml)$/.test(file.type) || extension === "svg";
+  const supportedVideo = file.type.startsWith("video/") || ["mp4", "webm", "mov"].includes(extension);
+  const supportedPdf = file.type === "application/pdf" || extension === "pdf";
+  if (!supportedImage && !supportedVideo && !supportedPdf) {
+    showToast("支持 PNG、JPG、WebP、SVG、MP4、WebM、MOV 和 PDF");
     elements.imageInput.value = "";
     return;
   }
-  if (file.size > 20 * 1024 * 1024) {
-    showToast("图片不能超过 20 MB");
+  if (file.size > 80 * 1024 * 1024) {
+    showToast("文件不能超过 80 MB");
     elements.imageInput.value = "";
     return;
   }
   try {
-    await setDesignBytes(new Uint8Array(await file.arrayBuffer()), file.name, file.type);
+    if (supportedVideo) await importVideoFile(file);
+    else if (supportedPdf) await importPdfFile(file);
+    else await setDesignBytes(new Uint8Array(await file.arrayBuffer()), file.name, file.type || "image/svg+xml", { type: extension === "svg" ? "SVG" : "图片" });
     showToast(`已导入：${file.name}`);
-  } catch {
-    showToast("图片读取失败，请换一张图片重试");
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : "文件读取失败，请换一个文件重试");
+  } finally {
+    elements.imageInput.value = "";
   }
 }
 
 function resetAdjustments() {
   state.adjustments = { ...DEFAULT_ADJUSTMENTS };
-  elements.fitMode.value = state.selectedAsset?.screen.defaultFit || "cover";
+  elements.fitMode.value = state.selectedAsset?.screen.defaultFit || "contain";
   syncAdjustmentControls();
   renderFinalComposite();
   showToast("画面调整已恢复默认");
@@ -746,9 +1027,12 @@ elements.clearSearch.addEventListener("click", () => {
   renderAssetGrid();
 });
 elements.categorySelect.addEventListener("change", renderAssetGrid);
-elements.fitMode.addEventListener("change", renderFinalComposite);
+elements.fitMode.addEventListener("change", () => {
+  updateDesignEditor();
+  renderFinalComposite();
+});
 elements.readSelectionButton.addEventListener("click", requestSelection);
-elements.imageInput.addEventListener("change", () => importImageFile(elements.imageInput.files?.[0]));
+elements.imageInput.addEventListener("change", () => importDesignFile(elements.imageInput.files?.[0]));
 elements.clearDesignButton.addEventListener("click", clearDesign);
 for (const control of [
   elements.designScale,
@@ -778,6 +1062,7 @@ elements.clearRecent.addEventListener("click", () => {
 elements.collapseButton.addEventListener("click", () => setWindowState("collapsed"));
 elements.expandButton.addEventListener("click", () => setWindowState("expanded"));
 syncAdjustmentControls();
+enableDesignEditing();
 enablePerspectiveEditing();
 enableWindowResize();
 
@@ -811,8 +1096,16 @@ window.onmessage = async (event) => {
   if (message.type === "selection-image") {
     elements.readSelectionButton.disabled = false;
     elements.readSelectionButton.textContent = "重新读取 Figma 选区";
-    await setDesignBytes(message.bytes, message.name);
+    await setDesignBytes(message.bytes, message.name, "image/png", { type: message.sourceType || "Figma 选区" });
     showToast(`已放入：${message.name}`);
+    return;
+  }
+
+  if (message.type === "selection-composite") {
+    elements.readSelectionButton.disabled = false;
+    elements.readSelectionButton.textContent = "重新读取 Figma 选区";
+    await composeSelectionLayers(message);
+    showToast(`已整体放入：${message.name}`);
     return;
   }
 
@@ -841,5 +1134,10 @@ elements.downloadButton.disabled = true;
 elements.pasteButton.disabled = true;
 postPluginMessage({ type: "ready" });
 fetchCatalog();
+
+window.addEventListener("beforeunload", () => {
+  if (pdfWorkerUrl) URL.revokeObjectURL(pdfWorkerUrl);
+  if (state.designObjectUrl) URL.revokeObjectURL(state.designObjectUrl);
+});
 
 void PRODUCTION_CATALOG_URL;

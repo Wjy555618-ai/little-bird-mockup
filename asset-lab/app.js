@@ -122,6 +122,7 @@ async function runAutomaticChecks() {
     schema: false,
     renderer: false,
     dimensions: false,
+    recommendedSize: false,
     geometry: false,
     provenance: false,
     integrity: false
@@ -129,6 +130,7 @@ async function runAutomaticChecks() {
   try { renderer.validateAsset(asset); checks.schema = true; } catch { /* listed below */ }
   checks.renderer = state.manifest.rendererVersion === renderer.VERSION;
   checks.dimensions = state.baseImage?.naturalWidth === asset.canvas.width && state.baseImage?.naturalHeight === asset.canvas.height;
+  checks.recommendedSize = Number.isInteger(asset.screen?.recommendedSize?.width) && Number.isInteger(asset.screen?.recommendedSize?.height) && Boolean(asset.screen?.recommendedSize?.label);
   checks.geometry = quadInside(asset, state.quad);
   checks.provenance = asset.provenance?.kind === "generated-in-house";
   try {
@@ -143,6 +145,7 @@ const checkLabels = {
   schema: "素材结构符合共享规范",
   renderer: "质检台与插件渲染器版本一致",
   dimensions: "源图尺寸与清单画布一致",
+  recommendedSize: "推荐画面尺寸与比例已填写",
   geometry: "四个屏幕顶点均在画布内",
   provenance: "素材来源标记为项目自制",
   integrity: "基础图与缩略图哈希正确"

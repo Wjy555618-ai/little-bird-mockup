@@ -1,9 +1,9 @@
 {
   "schemaVersion": 2,
-  "catalogVersion": "2026.10.28.2",
-  "publishedAt": "2026-10-27T19:27:00.771Z",
+  "catalogVersion": "2026.10.28.4",
+  "publishedAt": "2026-10-27T21:01:46.440Z",
   "environment": "testing",
-  "rendererVersion": "2.0.0",
+  "rendererVersion": "2.1.0",
   "minimumPluginVersion": "0.1.0",
   "categories": [
     {
@@ -67,9 +67,14 @@
             702
           ]
         ],
+        "recommendedSize": {
+          "width": 1920,
+          "height": 1080,
+          "label": "16:9"
+        },
         "cornerRadius": 0,
         "bleed": 3,
-        "defaultFit": "cover"
+        "defaultFit": "contain"
       },
       "layers": {
         "base": "assets/studio-display-front-r1.png"
@@ -131,9 +136,14 @@
             884
           ]
         ],
+        "recommendedSize": {
+          "width": 1290,
+          "height": 2796,
+          "label": "约 9:19.5"
+        },
         "cornerRadius": 0.06,
         "bleed": 4,
-        "defaultFit": "cover"
+        "defaultFit": "contain"
       },
       "layers": {
         "base": "assets/rock-phone-front-r1.png"
@@ -195,9 +205,14 @@
             855
           ]
         ],
+        "recommendedSize": {
+          "width": 1290,
+          "height": 2796,
+          "label": "约 9:19.5"
+        },
         "cornerRadius": 0.055,
         "bleed": 4,
-        "defaultFit": "cover",
+        "defaultFit": "contain",
         "occlusions": [
           {
             "type": "circle",
@@ -268,9 +283,14 @@
             664
           ]
         ],
+        "recommendedSize": {
+          "width": 2560,
+          "height": 1600,
+          "label": "16:10"
+        },
         "cornerRadius": 0.008,
         "bleed": 4,
-        "defaultFit": "cover"
+        "defaultFit": "contain"
       },
       "layers": {
         "base": "assets/graphite-laptop-angle-r1.png"

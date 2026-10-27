@@ -3,9 +3,9 @@
   "assetId": "studio-display-front",
   "revision": 1,
   "status": "approved",
-  "rendererVersion": "2.0.0",
-  "itemSha256": "4f03fe0c80c6126562b59be5be050dc18175ea332a86e09615abffc72249ba62",
-  "approvedAt": "2026-10-27T19:27:21.983Z",
+  "rendererVersion": "2.1.0",
+  "itemSha256": "26e3493377ede4d68b7843f67c187c6e4392ee9588e057ab263301a5a09a2988",
+  "approvedAt": "2026-10-27T21:10:20.475Z",
   "patternIds": [
     "grid",
     "landscape",
@@ -16,6 +16,7 @@
     "schema": true,
     "renderer": true,
     "dimensions": true,
+    "recommendedSize": true,
     "geometry": true,
     "provenance": true,
     "integrity": true

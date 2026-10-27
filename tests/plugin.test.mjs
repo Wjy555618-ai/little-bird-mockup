@@ -37,6 +37,8 @@ test("built UI contains the intended product modes without external scripts", ()
   assert.doesNotMatch(uiHtml, /\/\*__STYLES__\*\//);
   assert.doesNotMatch(uiHtml, /\/\*__RENDERER__\*\//);
   assert.doesNotMatch(uiHtml, /\/\*__SCRIPT__\*\//);
+  assert.doesNotMatch(uiHtml, /\/\*__PDFJS__\*\//);
+  assert.doesNotMatch(uiHtml, /\/\*__PDF_WORKER__\*\//);
   assert.doesNotMatch(uiHtml, /<script\s+src=/i);
 });
 
@@ -76,12 +78,14 @@ test("screen editing is real and exposes only functional controls", () => {
     "designBrightness",
     "designContrast",
     "designSaturation",
+    "designEditor",
+    "designDragTarget",
     "perspectiveEditor",
     "resetPerspectiveButton"
   ]) assert.match(uiHtml, new RegExp(`id="${id}"`));
   assert.doesNotMatch(uiScript, /function drawImageToQuad|function adjustedDesignCanvas/);
   assert.match(uiScript, /enablePerspectiveEditing/);
-  assert.match(uiScript, /importImageFile/);
+  assert.match(uiScript, /importDesignFile/);
   assert.doesNotMatch(uiHtml, /id="settingsButton"|id="aboutButton"|id="menuButton"/);
 });
 
@@ -101,6 +105,35 @@ test("continuous editing uses responsive preview rendering and a final-quality c
   assert.match(uiScript, /renderFinalComposite\(\);\s*const blob = await canvasBlob\(\)/);
 });
 
+test("content keeps its own aspect ratio and uses the mockup canonical screen size", () => {
+  assert.match(rendererScript, /asset\.screen\.recommendedSize/);
+  assert.doesNotMatch(uiHtml, /<option value="stretch">/);
+  assert.match(uiHtml, /完整显示（不变形）/);
+  assert.match(uiHtml, /id="recommendedSize"/);
+});
+
+test("the design is one directly manipulable object inside the mockup", () => {
+  assert.match(uiScript, /function enableDesignEditing/);
+  assert.match(uiScript, /designDragTarget\.addEventListener\("pointerdown"/);
+  assert.match(uiScript, /\.design-scale-handle/);
+  assert.match(uiScript, /deltaToScreenCoordinates/);
+  assert.match(uiStyles, /\.design-drag-target\s*\{[^}]*cursor:\s*move/s);
+});
+
+test("Figma and local sources flatten to one static design object", () => {
+  assert.match(code, /type:\s*"selection-composite"/);
+  assert.match(code, /Figma 组合/);
+  assert.match(uiScript, /composeSelectionLayers/);
+  assert.match(uiScript, /importVideoFile/);
+  assert.match(uiScript, /importPdfFile/);
+  assert.match(uiHtml, /application\/pdf/);
+});
+
+test("similar filtering respects an explicitly selected category", () => {
+  assert.match(uiScript, /const similarCategory = category !== "all" \? category : state\.selectedAsset\?\.category/);
+  assert.match(uiScript, /item\.category !== similarCategory/);
+});
+
 test("perspective overlay leaves the center source action clickable", () => {
   assert.match(uiStyles, /\.perspective-editor\s*\{[^}]*pointer-events:\s*none/s);
   assert.match(uiStyles, /\.perspective-handle\s*\{[^}]*pointer-events:\s*auto/s);
@@ -108,7 +141,7 @@ test("perspective overlay leaves the center source action clickable", () => {
 });
 
 test("plugin and asset lab use one shared renderer and one catalog schema", () => {
-  assert.match(rendererScript, /const VERSION = "2\.0\.0"/);
+  assert.match(rendererScript, /const VERSION = "2\.1\.0"/);
   assert.match(labHtml, /src="\/shared\/mockup-renderer\.js"/);
   assert.match(labScript, /renderer\.renderComposite/);
   assert.match(serverScript, /catalog\/testing\/v1/);

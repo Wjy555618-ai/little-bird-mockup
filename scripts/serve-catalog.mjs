@@ -16,7 +16,7 @@ const host = "127.0.0.1";
 
 const REQUIRED_PATTERNS = ["grid", "landscape", "portrait", "edge"];
 const MANUAL_KEYS = ["frameFit", "perspective", "edgeMask", "imageQuality", "allPatterns"];
-const AUTOMATIC_KEYS = ["schema", "renderer", "dimensions", "geometry", "provenance", "integrity"];
+const AUTOMATIC_KEYS = ["schema", "renderer", "dimensions", "recommendedSize", "geometry", "provenance", "integrity"];
 
 const contentTypes = {
   ".css": "text/css; charset=utf-8",
@@ -75,9 +75,10 @@ async function readBody(request) {
 }
 
 async function verifyItem(manifest, item) {
-  if (manifest.schemaVersion !== 2 || manifest.rendererVersion !== "2.0.0") throw new Error("测试库规范或渲染器版本不匹配");
+  if (manifest.schemaVersion !== 2 || manifest.rendererVersion !== "2.1.0") throw new Error("测试库规范或渲染器版本不匹配");
   if (!item || item.status !== "testing" || item.renderer !== "static-screen-v2") throw new Error("素材不是可质检的静态样机");
   if (!Number.isInteger(item.canvas?.width) || !Number.isInteger(item.canvas?.height)) throw new Error("画布尺寸无效");
+  if (!Number.isInteger(item.screen?.recommendedSize?.width) || !Number.isInteger(item.screen?.recommendedSize?.height) || !item.screen.recommendedSize.label) throw new Error("推荐画面尺寸无效");
   assertQuad(item, item.screen?.quad);
   if (item.provenance?.kind !== "generated-in-house") throw new Error("素材来源未标记为项目自制");
   const basePath = safePath(testingRoot, item.layers?.base);

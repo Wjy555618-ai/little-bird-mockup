@@ -18,6 +18,11 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "dependencies": {
+    "pdfjs-dist": "^6.4.299"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
   }
 }
-

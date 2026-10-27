@@ -101,23 +101,28 @@
             <div class="source-actions">
               <button class="panel-button primary-panel-button" id="readSelectionButton">读取 Figma 选区</button>
               <label class="panel-button file-button">
-                导入图片
-                <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp" hidden />
+                导入文件
+                <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,video/mp4,video/webm,video/quicktime,application/pdf,.svg,.mov,.pdf" hidden />
               </label>
               <button class="panel-button" id="clearDesignButton" disabled>移除画面</button>
             </div>
+
+            <section class="source-guide" id="sourceGuide" aria-live="polite">
+              <div><span>推荐画面</span><strong id="recommendedSize">选择样机后显示</strong></div>
+              <span id="recommendedRatio">用于避免比例错误</span>
+              <p id="sourceMatch">支持 Figma 图层、容器、组合及本地图片、SVG、视频和 PDF，读取后统一作为一个画面对象。</p>
+            </section>
 
             <div class="panel-mode-content" id="adjustControls">
               <section class="control-section">
                 <label class="select-control">
                   <span>填充方式</span>
                   <select id="fitMode">
-                    <option value="cover">填满</option>
-                    <option value="contain">完整显示</option>
-                    <option value="stretch">拉伸</option>
+                    <option value="contain">完整显示（不变形）</option>
+                    <option value="cover">裁切填满</option>
                   </select>
                 </label>
-                <label class="range-control"><span>缩放</span><input id="designScale" type="range" min="50" max="200" value="100" /><output id="designScaleValue">100%</output></label>
+                <label class="range-control"><span>缩放</span><input id="designScale" type="range" min="50" max="300" value="100" /><output id="designScaleValue">100%</output></label>
                 <label class="range-control"><span>水平</span><input id="designOffsetX" type="range" min="-100" max="100" value="0" /><output id="designOffsetXValue">0%</output></label>
                 <label class="range-control"><span>垂直</span><input id="designOffsetY" type="range" min="-100" max="100" value="0" /><output id="designOffsetYValue">0%</output></label>
                 <label class="range-control"><span>旋转</span><input id="designRotation" type="range" min="-30" max="30" value="0" /><output id="designRotationValue">0°</output></label>
@@ -165,6 +170,17 @@
           <div class="stage" id="stage">
             <div class="canvas-wrap" id="canvasWrap">
               <canvas id="previewCanvas" width="1448" height="1086"></canvas>
+              <div class="design-editor" id="designEditor" hidden>
+                <svg viewBox="0 0 1448 1086" preserveAspectRatio="none">
+                  <polygon class="design-outline" id="designPolygon" points="" />
+                  <polygon class="design-drag-target" id="designDragTarget" points="" role="button" tabindex="0" aria-label="拖动画面位置" />
+                </svg>
+                <button class="design-scale-handle" data-corner="0" aria-label="左上角等比缩放"></button>
+                <button class="design-scale-handle" data-corner="1" aria-label="右上角等比缩放"></button>
+                <button class="design-scale-handle" data-corner="2" aria-label="右下角等比缩放"></button>
+                <button class="design-scale-handle" data-corner="3" aria-label="左下角等比缩放"></button>
+                <span class="design-editor-hint" id="designEditorHint">拖动 · 角点等比缩放</span>
+              </div>
               <div class="perspective-editor" id="perspectiveEditor" hidden>
                 <svg viewBox="0 0 1448 1086" preserveAspectRatio="none" aria-hidden="true"><polygon id="perspectivePolygon" points="" /></svg>
                 <button class="perspective-handle" data-corner="0" aria-label="左上角控制点"></button>
@@ -201,6 +217,8 @@
     </div>
 
     <span id="versionLabel" hidden>DEV</span>
+    <script>/*__PDFJS__*/</script>
+    <script>/*__PDF_WORKER__*/</script>
     <script>/*__RENDERER__*/</script>
     <script>/*__SCRIPT__*/</script>
   </body>
