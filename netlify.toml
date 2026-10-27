@@ -1,5 +1,5 @@
 [build]
-  publish = "catalog"
+  publish = "catalog/production"
 
 [[headers]]
   for = "/*"

@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "assetId": "rail-phone-angle",
+  "revision": 1,
+  "status": "approved",
+  "rendererVersion": "2.0.0",
+  "itemSha256": "33e9b1b468f384b47347590cd5ce186ee8657329cd0a6bf32309ff87b7bc7494",
+  "approvedAt": "2026-10-27T19:27:22.888Z",
+  "patternIds": [
+    "grid",
+    "landscape",
+    "portrait",
+    "edge"
+  ],
+  "automaticChecks": {
+    "schema": true,
+    "renderer": true,
+    "dimensions": true,
+    "geometry": true,
+    "provenance": true,
+    "integrity": true
+  },
+  "manualChecks": {
+    "frameFit": true,
+    "perspective": true,
+    "edgeMask": true,
+    "imageQuality": true,
+    "allPatterns": true
+  }
+}

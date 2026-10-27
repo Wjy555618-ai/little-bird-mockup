@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>样机质检台</title>
+    <link rel="stylesheet" href="/asset-lab/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <div><strong>样机质检台</strong><span>Mockup Asset Lab</span></div>
+      </div>
+      <div class="top-status">
+        <span id="libraryState" class="status-dot">正在连接测试库</span>
+        <span id="rendererVersion" class="version-pill">Renderer —</span>
+        <button id="reloadButton" class="icon-button" type="button" title="重新读取">↻</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside class="asset-panel">
+        <header class="panel-heading">
+          <div><strong>测试库</strong><span id="catalogVersion">—</span></div>
+          <span id="assetCount" class="count-pill">0</span>
+        </header>
+        <p class="panel-note">仅用于验证流程的 4 个临时样机。正式资产须逐个通过本页后再发布。</p>
+        <div id="assetList" class="asset-list" aria-label="待检样机"></div>
+      </aside>
+
+      <section class="preview-panel">
+        <div class="preview-toolbar">
+          <div>
+            <strong id="assetName">请选择样机</strong>
+            <span id="assetMeta">等待素材目录</span>
+          </div>
+          <div class="pattern-tabs" id="patternTabs" role="tablist" aria-label="测试图案">
+            <button class="active" data-pattern="grid" type="button">网格</button>
+            <button data-pattern="landscape" type="button">横屏</button>
+            <button data-pattern="portrait" type="button">竖屏</button>
+            <button data-pattern="edge" type="button">明暗边界</button>
+          </div>
+        </div>
+        <div class="stage" id="stage">
+          <div class="canvas-wrap" id="canvasWrap">
+            <canvas id="previewCanvas" width="1448" height="1086"></canvas>
+            <div id="quadEditor" class="quad-editor">
+              <svg preserveAspectRatio="none" aria-hidden="true"><polygon id="quadPolygon" points="" /></svg>
+              <button data-corner="0" aria-label="左上角"></button>
+              <button data-corner="1" aria-label="右上角"></button>
+              <button data-corner="2" aria-label="右下角"></button>
+              <button data-corner="3" aria-label="左下角"></button>
+            </div>
+          </div>
+        </div>
+        <footer class="preview-footer">
+          <span>拖动四角校准屏幕区域；测试图与正式插件使用同一渲染器。</span>
+          <div>
+            <button id="resetGeometryButton" class="secondary-button" type="button">恢复清单坐标</button>
+            <button id="saveGeometryButton" class="primary-button" type="button">保存坐标</button>
+          </div>
+        </footer>
+      </section>
+
+      <aside class="qa-panel">
+        <section class="qa-section">
+          <header><strong>自动检查</strong><span id="automaticSummary">0 / 6</span></header>
+          <div id="automaticChecks" class="check-list"></div>
+        </section>
+        <section class="qa-section manual-section">
+          <header><strong>人工验收</strong><span>必须全部确认</span></header>
+          <label><input type="checkbox" data-manual="frameFit" /> 画面与设备边框贴合</label>
+          <label><input type="checkbox" data-manual="perspective" /> 透视方向与场景一致</label>
+          <label><input type="checkbox" data-manual="edgeMask" /> 圆角与遮挡关系正确</label>
+          <label><input type="checkbox" data-manual="imageQuality" /> 无破图、重影或明显接缝</label>
+          <label><input type="checkbox" data-manual="allPatterns" /> 四种测试图均已查看</label>
+        </section>
+        <section class="qa-section visit-section">
+          <header><strong>测试图覆盖</strong><span id="patternSummary">1 / 4</span></header>
+          <div id="patternVisits" class="visit-grid"></div>
+        </section>
+        <div class="approval-card">
+          <div><strong id="approvalTitle">尚未达到发布条件</strong><span id="approvalHint">先完成自动检查、四种测试图和人工验收</span></div>
+          <button id="approveButton" class="approve-button" type="button" disabled>批准进入正式库</button>
+        </div>
+      </aside>
+    </main>
+
+    <div id="toast" class="toast" role="status" hidden></div>
+    <script src="/shared/mockup-renderer.js"></script>
+    <script src="/asset-lab/app.js"></script>
+  </body>
+</html>

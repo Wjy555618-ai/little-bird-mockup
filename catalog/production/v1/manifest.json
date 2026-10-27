@@ -1,0 +1,313 @@
+{
+  "schemaVersion": 2,
+  "catalogVersion": "2026.10.28.3",
+  "publishedAt": "2026-10-27T19:36:52.710Z",
+  "environment": "production",
+  "rendererVersion": "2.0.0",
+  "minimumPluginVersion": "0.1.0",
+  "categories": [
+    {
+      "id": "display",
+      "label": "显示器"
+    },
+    {
+      "id": "phone",
+      "label": "手机"
+    },
+    {
+      "id": "laptop",
+      "label": "笔记本"
+    }
+  ],
+  "items": [
+    {
+      "id": "studio-display-front",
+      "revision": 1,
+      "status": "approved",
+      "name": "工作室显示器 · 正面",
+      "category": "display",
+      "tags": [
+        "显示器",
+        "桌面",
+        "正面",
+        "金属",
+        "monitor"
+      ],
+      "renderer": "static-screen-v2",
+      "chromaKey": {
+        "enabled": true,
+        "minimumGreen": 65,
+        "dominance": 1.18,
+        "replacement": [
+          16,
+          16,
+          16
+        ]
+      },
+      "canvas": {
+        "width": 1448,
+        "height": 1086
+      },
+      "screen": {
+        "quad": [
+          [
+            260,
+            185
+          ],
+          [
+            1190,
+            185
+          ],
+          [
+            1190,
+            702
+          ],
+          [
+            260,
+            702
+          ]
+        ],
+        "cornerRadius": 0,
+        "bleed": 3,
+        "defaultFit": "cover"
+      },
+      "layers": {
+        "base": "assets/studio-display-front-r1.png"
+      },
+      "thumbnail": "thumbnails/studio-display-front-r1.png",
+      "provenance": {
+        "kind": "generated-in-house",
+        "usage": "temporary-test"
+      },
+      "integrity": {
+        "baseSha256": "9af4efe18bbbc3a899d57902e71960a4d9f135389da99833a7b0e922764b0eeb",
+        "thumbnailSha256": "775a39947edf06c33367b07e3665f2aff1fd6044f42fd297fac574d2cd0f6417"
+      },
+      "qa": {
+        "approvedAt": "2026-10-27T19:27:21.983Z",
+        "rendererVersion": "2.0.0",
+        "sourceItemSha256": "4f03fe0c80c6126562b59be5be050dc18175ea332a86e09615abffc72249ba62",
+        "report": "approvals/studio-display-front-r1.json"
+      }
+    },
+    {
+      "id": "rock-phone-front",
+      "revision": 1,
+      "status": "approved",
+      "name": "岩石手机 · 正面",
+      "category": "phone",
+      "tags": [
+        "手机",
+        "岩石",
+        "黑白",
+        "正面",
+        "phone"
+      ],
+      "renderer": "static-screen-v2",
+      "chromaKey": {
+        "enabled": true,
+        "minimumGreen": 65,
+        "dominance": 1.18,
+        "replacement": [
+          16,
+          16,
+          16
+        ]
+      },
+      "canvas": {
+        "width": 1448,
+        "height": 1086
+      },
+      "screen": {
+        "quad": [
+          [
+            556,
+            154
+          ],
+          [
+            892,
+            154
+          ],
+          [
+            892,
+            884
+          ],
+          [
+            556,
+            884
+          ]
+        ],
+        "cornerRadius": 0.06,
+        "bleed": 4,
+        "defaultFit": "cover"
+      },
+      "layers": {
+        "base": "assets/rock-phone-front-r1.png"
+      },
+      "thumbnail": "assets/rock-phone-front-r1.png",
+      "provenance": {
+        "kind": "generated-in-house",
+        "usage": "temporary-test"
+      },
+      "integrity": {
+        "baseSha256": "d530217efe71e4169a52e3b2db70237a74b6bcd9ded7d3f730217397177d5993",
+        "thumbnailSha256": "d530217efe71e4169a52e3b2db70237a74b6bcd9ded7d3f730217397177d5993"
+      },
+      "qa": {
+        "approvedAt": "2026-10-27T19:27:22.436Z",
+        "rendererVersion": "2.0.0",
+        "sourceItemSha256": "e1616d5218a500963a4912fcf2ae82dcde4f86939ba5217938b080005e320f36",
+        "report": "approvals/rock-phone-front-r1.json"
+      }
+    },
+    {
+      "id": "rail-phone-angle",
+      "revision": 1,
+      "status": "approved",
+      "name": "支架手机 · 倾斜",
+      "category": "phone",
+      "tags": [
+        "手机",
+        "支架",
+        "倾斜",
+        "透视",
+        "phone"
+      ],
+      "renderer": "static-screen-v2",
+      "chromaKey": {
+        "enabled": true,
+        "minimumGreen": 20,
+        "dominance": 1.02,
+        "replacement": [
+          2,
+          2,
+          2
+        ]
+      },
+      "canvas": {
+        "width": 1448,
+        "height": 1086
+      },
+      "screen": {
+        "quad": [
+          [
+            644,
+            163
+          ],
+          [
+            862,
+            114
+          ],
+          [
+            862,
+            798
+          ],
+          [
+            644,
+            855
+          ]
+        ],
+        "cornerRadius": 0.055,
+        "bleed": 4,
+        "defaultFit": "cover",
+        "occlusions": [
+          {
+            "type": "circle",
+            "cx": 754,
+            "cy": 158,
+            "radius": 10,
+            "fill": "#080808"
+          }
+        ]
+      },
+      "layers": {
+        "base": "assets/rail-phone-angle-r1.png"
+      },
+      "thumbnail": "assets/rail-phone-angle-r1.png",
+      "provenance": {
+        "kind": "generated-in-house",
+        "usage": "temporary-test"
+      },
+      "integrity": {
+        "baseSha256": "e09768963cb11b8f7769eae3241deca2add5df0cd23a59ee948aeffda68695c4",
+        "thumbnailSha256": "e09768963cb11b8f7769eae3241deca2add5df0cd23a59ee948aeffda68695c4"
+      },
+      "qa": {
+        "approvedAt": "2026-10-27T19:27:22.888Z",
+        "rendererVersion": "2.0.0",
+        "sourceItemSha256": "33e9b1b468f384b47347590cd5ce186ee8657329cd0a6bf32309ff87b7bc7494",
+        "report": "approvals/rail-phone-angle-r1.json"
+      }
+    },
+    {
+      "id": "graphite-laptop-angle",
+      "revision": 1,
+      "status": "approved",
+      "name": "石墨笔记本 · 倾斜",
+      "category": "laptop",
+      "tags": [
+        "笔记本",
+        "金属",
+        "倾斜",
+        "透视",
+        "laptop"
+      ],
+      "renderer": "static-screen-v2",
+      "chromaKey": {
+        "enabled": true,
+        "minimumGreen": 65,
+        "dominance": 1.18,
+        "replacement": [
+          16,
+          16,
+          16
+        ]
+      },
+      "canvas": {
+        "width": 1536,
+        "height": 1024
+      },
+      "screen": {
+        "quad": [
+          [
+            235,
+            164
+          ],
+          [
+            939,
+            140
+          ],
+          [
+            1004,
+            587
+          ],
+          [
+            297,
+            664
+          ]
+        ],
+        "cornerRadius": 0.008,
+        "bleed": 4,
+        "defaultFit": "cover"
+      },
+      "layers": {
+        "base": "assets/graphite-laptop-angle-r1.png"
+      },
+      "thumbnail": "assets/graphite-laptop-angle-r1.png",
+      "provenance": {
+        "kind": "generated-in-house",
+        "usage": "temporary-test"
+      },
+      "integrity": {
+        "baseSha256": "893687802f9c1b42522cffeb2e1a361ae6dd4962da31114d2f6221c63220c66c",
+        "thumbnailSha256": "893687802f9c1b42522cffeb2e1a361ae6dd4962da31114d2f6221c63220c66c"
+      },
+      "qa": {
+        "approvedAt": "2026-10-27T19:27:23.320Z",
+        "rendererVersion": "2.0.0",
+        "sourceItemSha256": "ea6c6a6038bbb9d8242c8f6ee37a63670c30d2df47b8a25cf4a152f5eb5c7d13",
+        "report": "approvals/graphite-laptop-angle-r1.json"
+      }
+    }
+  ]
+}

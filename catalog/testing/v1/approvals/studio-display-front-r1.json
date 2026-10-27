@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "assetId": "studio-display-front",
+  "revision": 1,
+  "status": "approved",
+  "rendererVersion": "2.0.0",
+  "itemSha256": "4f03fe0c80c6126562b59be5be050dc18175ea332a86e09615abffc72249ba62",
+  "approvedAt": "2026-10-27T19:27:21.983Z",
+  "patternIds": [
+    "grid",
+    "landscape",
+    "portrait",
+    "edge"
+  ],
+  "automaticChecks": {
+    "schema": true,
+    "renderer": true,
+    "dimensions": true,
+    "geometry": true,
+    "provenance": true,
+    "integrity": true
+  },
+  "manualChecks": {
+    "frameFit": true,
+    "perspective": true,
+    "edgeMask": true,
+    "imageQuality": true,
+    "allPatterns": true
+  }
+}

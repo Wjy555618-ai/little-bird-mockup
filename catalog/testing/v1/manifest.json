@@ -1,0 +1,289 @@
+{
+  "schemaVersion": 2,
+  "catalogVersion": "2026.10.28.2",
+  "publishedAt": "2026-10-27T19:27:00.771Z",
+  "environment": "testing",
+  "rendererVersion": "2.0.0",
+  "minimumPluginVersion": "0.1.0",
+  "categories": [
+    {
+      "id": "display",
+      "label": "显示器"
+    },
+    {
+      "id": "phone",
+      "label": "手机"
+    },
+    {
+      "id": "laptop",
+      "label": "笔记本"
+    }
+  ],
+  "items": [
+    {
+      "id": "studio-display-front",
+      "revision": 1,
+      "status": "testing",
+      "name": "工作室显示器 · 正面",
+      "category": "display",
+      "tags": [
+        "显示器",
+        "桌面",
+        "正面",
+        "金属",
+        "monitor"
+      ],
+      "renderer": "static-screen-v2",
+      "chromaKey": {
+        "enabled": true,
+        "minimumGreen": 65,
+        "dominance": 1.18,
+        "replacement": [
+          16,
+          16,
+          16
+        ]
+      },
+      "canvas": {
+        "width": 1448,
+        "height": 1086
+      },
+      "screen": {
+        "quad": [
+          [
+            260,
+            185
+          ],
+          [
+            1190,
+            185
+          ],
+          [
+            1190,
+            702
+          ],
+          [
+            260,
+            702
+          ]
+        ],
+        "cornerRadius": 0,
+        "bleed": 3,
+        "defaultFit": "cover"
+      },
+      "layers": {
+        "base": "assets/studio-display-front-r1.png"
+      },
+      "thumbnail": "thumbnails/studio-display-front-r1.png",
+      "provenance": {
+        "kind": "generated-in-house",
+        "usage": "temporary-test"
+      },
+      "integrity": {
+        "baseSha256": "9af4efe18bbbc3a899d57902e71960a4d9f135389da99833a7b0e922764b0eeb",
+        "thumbnailSha256": "775a39947edf06c33367b07e3665f2aff1fd6044f42fd297fac574d2cd0f6417"
+      }
+    },
+    {
+      "id": "rock-phone-front",
+      "revision": 1,
+      "status": "testing",
+      "name": "岩石手机 · 正面",
+      "category": "phone",
+      "tags": [
+        "手机",
+        "岩石",
+        "黑白",
+        "正面",
+        "phone"
+      ],
+      "renderer": "static-screen-v2",
+      "chromaKey": {
+        "enabled": true,
+        "minimumGreen": 65,
+        "dominance": 1.18,
+        "replacement": [
+          16,
+          16,
+          16
+        ]
+      },
+      "canvas": {
+        "width": 1448,
+        "height": 1086
+      },
+      "screen": {
+        "quad": [
+          [
+            556,
+            154
+          ],
+          [
+            892,
+            154
+          ],
+          [
+            892,
+            884
+          ],
+          [
+            556,
+            884
+          ]
+        ],
+        "cornerRadius": 0.06,
+        "bleed": 4,
+        "defaultFit": "cover"
+      },
+      "layers": {
+        "base": "assets/rock-phone-front-r1.png"
+      },
+      "thumbnail": "assets/rock-phone-front-r1.png",
+      "provenance": {
+        "kind": "generated-in-house",
+        "usage": "temporary-test"
+      },
+      "integrity": {
+        "baseSha256": "d530217efe71e4169a52e3b2db70237a74b6bcd9ded7d3f730217397177d5993",
+        "thumbnailSha256": "d530217efe71e4169a52e3b2db70237a74b6bcd9ded7d3f730217397177d5993"
+      }
+    },
+    {
+      "id": "rail-phone-angle",
+      "revision": 1,
+      "status": "testing",
+      "name": "支架手机 · 倾斜",
+      "category": "phone",
+      "tags": [
+        "手机",
+        "支架",
+        "倾斜",
+        "透视",
+        "phone"
+      ],
+      "renderer": "static-screen-v2",
+      "chromaKey": {
+        "enabled": true,
+        "minimumGreen": 20,
+        "dominance": 1.02,
+        "replacement": [
+          2,
+          2,
+          2
+        ]
+      },
+      "canvas": {
+        "width": 1448,
+        "height": 1086
+      },
+      "screen": {
+        "quad": [
+          [
+            644,
+            163
+          ],
+          [
+            862,
+            114
+          ],
+          [
+            862,
+            798
+          ],
+          [
+            644,
+            855
+          ]
+        ],
+        "cornerRadius": 0.055,
+        "bleed": 4,
+        "defaultFit": "cover",
+        "occlusions": [
+          {
+            "type": "circle",
+            "cx": 754,
+            "cy": 158,
+            "radius": 10,
+            "fill": "#080808"
+          }
+        ]
+      },
+      "layers": {
+        "base": "assets/rail-phone-angle-r1.png"
+      },
+      "thumbnail": "assets/rail-phone-angle-r1.png",
+      "provenance": {
+        "kind": "generated-in-house",
+        "usage": "temporary-test"
+      },
+      "integrity": {
+        "baseSha256": "e09768963cb11b8f7769eae3241deca2add5df0cd23a59ee948aeffda68695c4",
+        "thumbnailSha256": "e09768963cb11b8f7769eae3241deca2add5df0cd23a59ee948aeffda68695c4"
+      }
+    },
+    {
+      "id": "graphite-laptop-angle",
+      "revision": 1,
+      "status": "testing",
+      "name": "石墨笔记本 · 倾斜",
+      "category": "laptop",
+      "tags": [
+        "笔记本",
+        "金属",
+        "倾斜",
+        "透视",
+        "laptop"
+      ],
+      "renderer": "static-screen-v2",
+      "chromaKey": {
+        "enabled": true,
+        "minimumGreen": 65,
+        "dominance": 1.18,
+        "replacement": [
+          16,
+          16,
+          16
+        ]
+      },
+      "canvas": {
+        "width": 1536,
+        "height": 1024
+      },
+      "screen": {
+        "quad": [
+          [
+            235,
+            164
+          ],
+          [
+            939,
+            140
+          ],
+          [
+            1004,
+            587
+          ],
+          [
+            297,
+            664
+          ]
+        ],
+        "cornerRadius": 0.008,
+        "bleed": 4,
+        "defaultFit": "cover"
+      },
+      "layers": {
+        "base": "assets/graphite-laptop-angle-r1.png"
+      },
+      "thumbnail": "assets/graphite-laptop-angle-r1.png",
+      "provenance": {
+        "kind": "generated-in-house",
+        "usage": "temporary-test"
+      },
+      "integrity": {
+        "baseSha256": "893687802f9c1b42522cffeb2e1a361ae6dd4962da31114d2f6221c63220c66c",
+        "thumbnailSha256": "893687802f9c1b42522cffeb2e1a361ae6dd4962da31114d2f6221c63220c66c"
+      }
+    }
+  ]
+}

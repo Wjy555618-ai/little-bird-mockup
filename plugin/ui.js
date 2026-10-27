@@ -1,7 +1,8 @@
 const PLUGIN_VERSION = "0.1.0";
-const DEVELOPMENT_CATALOG_URL = "http://localhost:4173/catalog/v1/manifest.json";
-const PRODUCTION_CATALOG_URL = "https://assets.mockup-studio.example/catalog/v1/manifest.json";
+const DEVELOPMENT_CATALOG_URL = "http://localhost:4173/catalog/testing/v1/manifest.json";
+const PRODUCTION_CATALOG_URL = "https://assets.mockup-studio.example/v1/manifest.json";
 const ACTIVE_CATALOG_URL = DEVELOPMENT_CATALOG_URL;
+const renderer = window.MockupRenderer;
 const CATALOG_CACHE_KEY = "mockup-studio-catalog-v1";
 const RECENT_KEY = "mockup-studio-recent-v1";
 const memoryStorage = new Map();
@@ -39,7 +40,6 @@ const elements = {
   searchInput: document.querySelector("#searchInput"),
   clearSearch: document.querySelector("#clearSearch"),
   categorySelect: document.querySelector("#categorySelect"),
-  freeOnly: document.querySelector("#freeOnly"),
   catalogCount: document.querySelector("#catalogCount"),
   catalogView: document.querySelector("#catalogView"),
   adjustPanel: document.querySelector("#adjustPanel"),
@@ -95,15 +95,7 @@ const elements = {
   toast: document.querySelector("#toast")
 };
 
-const DEFAULT_ADJUSTMENTS = Object.freeze({
-  scale: 1,
-  offsetX: 0,
-  offsetY: 0,
-  rotation: 0,
-  brightness: 1,
-  contrast: 1,
-  saturation: 1
-});
+const DEFAULT_ADJUSTMENTS = renderer.DEFAULT_ADJUSTMENTS;
 
 const state = {
   manifest: null,
@@ -111,6 +103,7 @@ const state = {
   catalogMode: "loading",
   selectedAsset: null,
   baseImage: null,
+  layerImages: {},
   designImage: null,
   designObjectUrl: null,
   selection: null,
@@ -218,21 +211,11 @@ function withTimeout(promise, milliseconds) {
 }
 
 function validateManifest(manifest) {
-  if (!manifest || manifest.schemaVersion !== 1) throw new Error("不支持的素材清单版本");
+  if (!manifest || ![1, 2].includes(manifest.schemaVersion)) throw new Error("不支持的素材清单版本");
   if (!Array.isArray(manifest.items)) throw new Error("素材清单缺少 items");
   for (const item of manifest.items) {
-    if (!item.id || !item.name || item.renderer !== "static-screen-v1") {
-      throw new Error(`样机条目不完整：${item.id || "unknown"}`);
-    }
-    if (!item.canvas || !Number.isFinite(item.canvas.width) || !Number.isFinite(item.canvas.height)) {
-      throw new Error(`样机画布尺寸无效：${item.id}`);
-    }
-    if (!item.screen || !Array.isArray(item.screen.quad) || item.screen.quad.length !== 4) {
-      throw new Error(`样机屏幕坐标无效：${item.id}`);
-    }
-    if (!item.layers || !item.layers.base || !item.thumbnail) {
-      throw new Error(`样机资源路径无效：${item.id}`);
-    }
+    renderer.validateAsset(item);
+    if (!item.thumbnail) throw new Error(`样机缩略图路径无效：${item.id}`);
   }
   return manifest;
 }
@@ -333,12 +316,10 @@ function filteredItems() {
   if (!state.manifest) return [];
   const query = elements.searchInput.value.trim().toLocaleLowerCase("zh-CN");
   const category = elements.categorySelect.value;
-  const onlyFree = elements.freeOnly.checked;
 
   return state.manifest.items.filter((item) => {
     if (state.segment === "similar" && state.selectedAsset && item.category !== state.selectedAsset.category) return false;
     if (category !== "all" && item.category !== category) return false;
-    if (onlyFree && !item.isFree) return false;
     if (query) {
       const haystack = [item.name, item.category, ...(item.tags || [])].join(" ").toLocaleLowerCase("zh-CN");
       if (!haystack.includes(query)) return false;
@@ -371,7 +352,7 @@ function renderAssetGrid() {
     const name = document.createElement("strong");
     name.textContent = item.name;
     const meta = document.createElement("span");
-    meta.textContent = item.isFree ? "免费 · 静态" : "静态";
+    meta.textContent = item.status === "testing" ? "测试素材" : "静态样机";
     footer.append(name, meta);
     button.append(image, footer);
     button.addEventListener("click", () => selectAsset(item.id));
@@ -398,7 +379,7 @@ async function selectAsset(id) {
   rememberRecent(id);
   elements.fitMode.value = asset.screen.defaultFit || "cover";
   elements.assetName.textContent = asset.name;
-  elements.assetMeta.textContent = `${asset.canvas.width} × ${asset.canvas.height} · ${asset.isFree ? "免费" : "素材库"}`;
+  elements.assetMeta.textContent = `${asset.canvas.width} × ${asset.canvas.height} · ${asset.status === "testing" ? "测试库" : "素材库"}`;
   elements.downloadButton.disabled = true;
   elements.pasteButton.disabled = true;
   state.rendering = true;
@@ -407,6 +388,11 @@ async function selectAsset(id) {
 
   try {
     state.baseImage = await loadImage(resolveAssetUrl(asset.layers.base));
+    const optionalLayers = await Promise.all(["reflection", "foreground"].map(async (name) => {
+      if (!asset.layers[name]) return [name, null];
+      return [name, await loadImage(resolveAssetUrl(asset.layers[name]))];
+    }));
+    state.layerImages = Object.fromEntries(optionalLayers.filter(([, image]) => image));
     elements.previewCanvas.width = asset.canvas.width;
     elements.previewCanvas.height = asset.canvas.height;
     updatePerspectiveEditor();
@@ -426,155 +412,23 @@ function updateOutputAvailability() {
   elements.pasteButton.disabled = disabled;
 }
 
-function quadSize(quad) {
-  const distance = (a, b) => Math.hypot(b[0] - a[0], b[1] - a[1]);
-  return {
-    width: (distance(quad[0], quad[1]) + distance(quad[3], quad[2])) / 2,
-    height: (distance(quad[0], quad[3]) + distance(quad[1], quad[2])) / 2
-  };
-}
-
-function bilinearPoint(quad, u, v) {
-  const topX = quad[0][0] + (quad[1][0] - quad[0][0]) * u;
-  const topY = quad[0][1] + (quad[1][1] - quad[0][1]) * u;
-  const bottomX = quad[3][0] + (quad[2][0] - quad[3][0]) * u;
-  const bottomY = quad[3][1] + (quad[2][1] - quad[3][1]) * u;
-  return [topX + (bottomX - topX) * v, topY + (bottomY - topY) * v];
-}
-
-function drawMappedTriangle(context, image, source, destination) {
-  const [s0, s1, s2] = source;
-  const [d0, d1, d2] = destination;
-  const denominator = s0[0] * (s1[1] - s2[1]) + s1[0] * (s2[1] - s0[1]) + s2[0] * (s0[1] - s1[1]);
-  if (Math.abs(denominator) < 0.00001) return;
-
-  const a = (d0[0] * (s1[1] - s2[1]) + d1[0] * (s2[1] - s0[1]) + d2[0] * (s0[1] - s1[1])) / denominator;
-  const c = (d0[0] * (s2[0] - s1[0]) + d1[0] * (s0[0] - s2[0]) + d2[0] * (s1[0] - s0[0])) / denominator;
-  const e = (d0[0] * (s1[0] * s2[1] - s2[0] * s1[1]) + d1[0] * (s2[0] * s0[1] - s0[0] * s2[1]) + d2[0] * (s0[0] * s1[1] - s1[0] * s0[1])) / denominator;
-  const b = (d0[1] * (s1[1] - s2[1]) + d1[1] * (s2[1] - s0[1]) + d2[1] * (s0[1] - s1[1])) / denominator;
-  const d = (d0[1] * (s2[0] - s1[0]) + d1[1] * (s0[0] - s2[0]) + d2[1] * (s1[0] - s0[0])) / denominator;
-  const f = (d0[1] * (s1[0] * s2[1] - s2[0] * s1[1]) + d1[1] * (s2[0] * s0[1] - s0[0] * s2[1]) + d2[1] * (s0[0] * s1[1] - s1[0] * s0[1])) / denominator;
-
-  context.save();
-  context.beginPath();
-  context.moveTo(d0[0], d0[1]);
-  context.lineTo(d1[0], d1[1]);
-  context.lineTo(d2[0], d2[1]);
-  context.closePath();
-  context.clip();
-  context.setTransform(a, b, c, d, e, f);
-  context.drawImage(image, 0, 0);
-  context.restore();
-}
-
-function insetQuad(quad, sourceAspect, targetAspect) {
-  let minU = 0;
-  let maxU = 1;
-  let minV = 0;
-  let maxV = 1;
-  if (sourceAspect > targetAspect) {
-    const heightRatio = targetAspect / sourceAspect;
-    minV = (1 - heightRatio) / 2;
-    maxV = 1 - minV;
-  } else {
-    const widthRatio = sourceAspect / targetAspect;
-    minU = (1 - widthRatio) / 2;
-    maxU = 1 - minU;
-  }
-  return [
-    bilinearPoint(quad, minU, minV),
-    bilinearPoint(quad, maxU, minV),
-    bilinearPoint(quad, maxU, maxV),
-    bilinearPoint(quad, minU, maxV)
-  ];
-}
-
-function fillQuad(context, quad, color) {
-  context.save();
-  context.fillStyle = color;
-  context.beginPath();
-  context.moveTo(quad[0][0], quad[0][1]);
-  for (let index = 1; index < quad.length; index += 1) context.lineTo(quad[index][0], quad[index][1]);
-  context.closePath();
-  context.fill();
-  context.restore();
-}
-
-function drawImageToQuad(context, image, originalQuad, fit) {
-  const target = quadSize(originalQuad);
-  const targetAspect = target.width / target.height;
-  const sourceAspect = image.width / image.height;
-  let quad = originalQuad;
-  let sourceRect = { x: 0, y: 0, width: image.width, height: image.height };
-
-  if (fit === "cover") {
-    if (sourceAspect > targetAspect) {
-      sourceRect.width = image.height * targetAspect;
-      sourceRect.x = (image.width - sourceRect.width) / 2;
-    } else {
-      sourceRect.height = image.width / targetAspect;
-      sourceRect.y = (image.height - sourceRect.height) / 2;
-    }
-  } else if (fit === "contain") {
-    fillQuad(context, originalQuad, "#0d0d0d");
-    quad = insetQuad(originalQuad, sourceAspect, targetAspect);
-  }
-
-  const columns = 18;
-  const rows = 10;
-  for (let row = 0; row < rows; row += 1) {
-    for (let column = 0; column < columns; column += 1) {
-      const u0 = column / columns;
-      const u1 = (column + 1) / columns;
-      const v0 = row / rows;
-      const v1 = (row + 1) / rows;
-      const sx0 = sourceRect.x + sourceRect.width * u0;
-      const sx1 = sourceRect.x + sourceRect.width * u1;
-      const sy0 = sourceRect.y + sourceRect.height * v0;
-      const sy1 = sourceRect.y + sourceRect.height * v1;
-      const d00 = bilinearPoint(quad, u0, v0);
-      const d10 = bilinearPoint(quad, u1, v0);
-      const d11 = bilinearPoint(quad, u1, v1);
-      const d01 = bilinearPoint(quad, u0, v1);
-      drawMappedTriangle(context, image, [[sx0, sy0], [sx1, sy0], [sx1, sy1]], [d00, d10, d11]);
-      drawMappedTriangle(context, image, [[sx0, sy0], [sx1, sy1], [sx0, sy1]], [d00, d11, d01]);
-    }
-  }
-}
-
-function adjustedDesignCanvas() {
-  if (!state.designImage) return null;
-  const canvas = document.createElement("canvas");
-  canvas.width = state.designImage.naturalWidth || state.designImage.width;
-  canvas.height = state.designImage.naturalHeight || state.designImage.height;
-  const context = canvas.getContext("2d", { alpha: false });
-  const { scale, offsetX, offsetY, rotation, brightness, contrast, saturation } = state.adjustments;
-  context.fillStyle = "#0d0d0d";
-  context.fillRect(0, 0, canvas.width, canvas.height);
-  context.translate(
-    canvas.width / 2 + offsetX * canvas.width * 0.42,
-    canvas.height / 2 + offsetY * canvas.height * 0.42
-  );
-  context.rotate(rotation * Math.PI / 180);
-  context.scale(scale, scale);
-  context.filter = `brightness(${brightness}) contrast(${contrast}) saturate(${saturation})`;
-  context.drawImage(state.designImage, -canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
-  return canvas;
-}
-
 function activeQuad() {
   return state.customQuad || state.selectedAsset?.screen.quad || null;
 }
 
 async function renderComposite() {
   if (!state.selectedAsset || !state.baseImage) return;
-  const canvas = elements.previewCanvas;
-  const context = canvas.getContext("2d", { alpha: false });
-  context.setTransform(1, 0, 0, 1, 0, 0);
-  context.clearRect(0, 0, canvas.width, canvas.height);
-  context.drawImage(state.baseImage, 0, 0, canvas.width, canvas.height);
+  renderer.renderComposite({
+    canvas: elements.previewCanvas,
+    asset: state.selectedAsset,
+    baseImage: state.baseImage,
+    designImage: state.designImage,
+    fit: elements.fitMode.value,
+    adjustments: state.adjustments,
+    quad: activeQuad(),
+    layerImages: state.layerImages
+  });
   if (state.designImage) {
-    drawImageToQuad(context, adjustedDesignCanvas(), activeQuad(), elements.fitMode.value);
     elements.screenCta.classList.add("has-image");
     elements.screenCta.querySelector("b").textContent = "重新读取选区";
   } else {
@@ -857,7 +711,6 @@ elements.clearSearch.addEventListener("click", () => {
   renderAssetGrid();
 });
 elements.categorySelect.addEventListener("change", renderAssetGrid);
-elements.freeOnly.addEventListener("change", renderAssetGrid);
 elements.fitMode.addEventListener("change", renderComposite);
 elements.readSelectionButton.addEventListener("click", requestSelection);
 elements.imageInput.addEventListener("change", () => importImageFile(elements.imageInput.files?.[0]));

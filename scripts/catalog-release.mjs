@@ -4,9 +4,12 @@ import { resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const projectRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
-const catalogRoot = resolve(projectRoot, "catalog/v1");
-const manifestPath = resolve(catalogRoot, "manifest.json");
 const args = process.argv.slice(2);
+const libraryIndex = args.indexOf("--library");
+const library = libraryIndex >= 0 ? args[libraryIndex + 1] : "production";
+if (!["testing", "production"].includes(library)) throw new Error("--library 仅支持 testing 或 production");
+const catalogRoot = resolve(projectRoot, `catalog/${library}/v1`);
+const manifestPath = resolve(catalogRoot, "manifest.json");
 const checkOnly = args.includes("--check");
 const versionIndex = args.indexOf("--version");
 const nextVersion = versionIndex >= 0 ? args[versionIndex + 1] : null;
@@ -48,7 +51,9 @@ async function sha256(path) {
 }
 
 const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
-if (manifest.schemaVersion !== 1) fail("只支持 schemaVersion 1");
+if (manifest.schemaVersion !== 2) fail("只支持 schemaVersion 2");
+if (manifest.environment !== library) fail(`清单 environment 必须是 ${library}`);
+if (manifest.rendererVersion !== "2.0.0") fail("rendererVersion 必须是 2.0.0");
 if (!versionPattern.test(manifest.catalogVersion)) fail("当前 catalogVersion 格式无效");
 if (!Number.isFinite(Date.parse(manifest.publishedAt))) fail("publishedAt 不是有效时间");
 if (!Array.isArray(manifest.categories) || !Array.isArray(manifest.items)) fail("清单缺少 categories 或 items");
@@ -65,7 +70,9 @@ for (const item of manifest.items) {
   itemIds.add(item.id);
   if (!Number.isInteger(item.revision) || item.revision < 1) fail(`${item.id} revision 必须是正整数`);
   if (!item.name || !categoryIds.has(item.category)) fail(`${item.id} 的名称或分类无效`);
-  if (item.renderer !== "static-screen-v1") fail(`${item.id} 使用了未支持的渲染器`);
+  if (item.renderer !== "static-screen-v2") fail(`${item.id} 使用了未支持的渲染器`);
+  if (item.status !== (library === "testing" ? "testing" : "approved")) fail(`${item.id} 状态不属于 ${library} 库`);
+  if (item.provenance?.kind !== "generated-in-house") fail(`${item.id} 缺少项目自制来源标记`);
   if (!Number.isInteger(item.canvas?.width) || !Number.isInteger(item.canvas?.height) || item.canvas.width < 1 || item.canvas.height < 1) {
     fail(`${item.id} 画布尺寸无效`);
   }
@@ -86,10 +93,25 @@ for (const item of manifest.items) {
     item.integrity.baseSha256 = baseSha256;
     item.integrity.thumbnailSha256 = thumbnailSha256;
   }
+
+  if (library === "production") {
+    if (!item.qa?.approvedAt || item.qa.rendererVersion !== manifest.rendererVersion || !item.qa.sourceItemSha256) {
+      fail(`${item.id} 缺少完整质检元数据`);
+    }
+    const reportPath = safeCatalogPath(item.qa.report, `${item.id} qa report`);
+    const report = JSON.parse(await readFile(reportPath, "utf8"));
+    if (report.status !== "approved" || report.assetId !== item.id || report.revision !== item.revision) {
+      fail(`${item.id} 的质检报告身份不匹配`);
+    }
+    if (report.rendererVersion !== manifest.rendererVersion || report.approvedAt !== item.qa.approvedAt) {
+      fail(`${item.id} 的质检报告版本或时间不匹配`);
+    }
+    if (report.itemSha256 !== item.qa.sourceItemSha256) fail(`${item.id} 的质检摘要不匹配`);
+  }
 }
 
 if (checkOnly) {
-  console.log(`Catalog OK: ${manifest.items.length} 个样机，版本 ${manifest.catalogVersion}`);
+  console.log(`${library} catalog OK: ${manifest.items.length} 个样机，版本 ${manifest.catalogVersion}`);
 } else {
   if (!nextVersion || !versionPattern.test(nextVersion)) {
     fail("发布必须显式传入 --version YYYY.MM.DD.N");
@@ -98,6 +120,6 @@ if (checkOnly) {
   manifest.catalogVersion = nextVersion;
   manifest.publishedAt = new Date().toISOString();
   await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
-  console.log(`Catalog released locally: ${manifest.items.length} 个样机，版本 ${nextVersion}`);
-  console.log("下一步：运行 npm run check，再原子部署 catalog/ 目录。");
+  console.log(`${library} catalog released locally: ${manifest.items.length} 个样机，版本 ${nextVersion}`);
+  console.log("下一步：运行 npm run check；仅原子部署 catalog/production/ 目录。");
 }

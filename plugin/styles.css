@@ -59,15 +59,10 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .search-field button, .recent-strip button { border: 0; background: none; color: #747379; cursor: pointer; font-size: 18px; }
 .search-field button[hidden] { display: none; }
 .filter-row { justify-content: space-between; gap: 10px; margin-top: 10px; }
+.filter-row.single-filter .category-select { width: 100%; }
 .category-select { min-width: 0; flex: 1; height: 36px; padding: 0 10px; display: flex; align-items: center; gap: 8px; border: 1px solid #323236; border-radius: 10px; background: #1a1a1a; color: #a5a4aa; }
 .category-select svg { width: 16px; height: 16px; }
 .category-select select, .fit-select select { min-width: 0; flex: 1; border: 0; outline: 0; color: #d5d4d9; background: transparent; }
-.toggle-label { display: flex; align-items: center; gap: 7px; color: #8e8d93; white-space: nowrap; cursor: pointer; }
-.toggle-label input { display: none; }
-.toggle { width: 30px; height: 18px; padding: 2px; border-radius: 99px; background: #37373a; transition: background .15s ease; }
-.toggle::after { content: ""; display: block; width: 14px; height: 14px; border-radius: 50%; background: #77767c; transition: transform .15s ease, background .15s ease; }
-.toggle-label input:checked + .toggle { background: #dddce0; }
-.toggle-label input:checked + .toggle::after { transform: translateX(12px); background: #242424; }
 .catalog-summary { height: 28px; padding: 0 15px; display: flex; align-items: center; justify-content: space-between; color: #69686e; font-size: 10px; }
 
 .asset-grid { min-height: 0; overflow: auto; padding: 0 12px 12px; display: grid; align-content: start; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }

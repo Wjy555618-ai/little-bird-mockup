@@ -4,14 +4,16 @@ import { fileURLToPath } from "node:url";
 
 const projectRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const pluginRoot = resolve(projectRoot, "plugin");
-const [template, styles, script] = await Promise.all([
+const [template, styles, renderer, script] = await Promise.all([
   readFile(resolve(pluginRoot, "ui.template.html"), "utf8"),
   readFile(resolve(pluginRoot, "styles.css"), "utf8"),
+  readFile(resolve(projectRoot, "shared/mockup-renderer.js"), "utf8"),
   readFile(resolve(pluginRoot, "ui.js"), "utf8")
 ]);
 
 const output = template
   .replace("/*__STYLES__*/", styles)
+  .replace("/*__RENDERER__*/", renderer)
   .replace("/*__SCRIPT__*/", script);
 
 if (process.argv.includes("--check")) {

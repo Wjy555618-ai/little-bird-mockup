@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "assetId": "rock-phone-front",
+  "revision": 1,
+  "status": "approved",
+  "rendererVersion": "2.0.0",
+  "itemSha256": "e1616d5218a500963a4912fcf2ae82dcde4f86939ba5217938b080005e320f36",
+  "approvedAt": "2026-10-27T19:27:22.436Z",
+  "patternIds": [
+    "grid",
+    "landscape",
+    "portrait",
+    "edge"
+  ],
+  "automaticChecks": {
+    "schema": true,
+    "renderer": true,
+    "dimensions": true,
+    "geometry": true,
+    "provenance": true,
+    "integrity": true
+  },
+  "manualChecks": {
+    "frameFit": true,
+    "perspective": true,
+    "edgeMask": true,
+    "imageQuality": true,
+    "allPatterns": true
+  }
+}

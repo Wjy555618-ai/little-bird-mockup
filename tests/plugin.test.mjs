@@ -6,12 +6,16 @@ import { fileURLToPath } from "node:url";
 
 const projectRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const pluginRoot = resolve(projectRoot, "plugin");
-const [pluginManifest, code, uiScript, uiHtml, uiStyles, netlifyConfig, gitignore] = await Promise.all([
+const [pluginManifest, code, uiScript, uiHtml, uiStyles, rendererScript, labHtml, labScript, serverScript, netlifyConfig, gitignore] = await Promise.all([
   readFile(resolve(pluginRoot, "manifest.json"), "utf8").then(JSON.parse),
   readFile(resolve(pluginRoot, "code.js"), "utf8"),
   readFile(resolve(pluginRoot, "ui.js"), "utf8"),
   readFile(resolve(pluginRoot, "ui.html"), "utf8"),
   readFile(resolve(pluginRoot, "styles.css"), "utf8"),
+  readFile(resolve(projectRoot, "shared/mockup-renderer.js"), "utf8"),
+  readFile(resolve(projectRoot, "asset-lab/index.html"), "utf8"),
+  readFile(resolve(projectRoot, "asset-lab/app.js"), "utf8"),
+  readFile(resolve(projectRoot, "scripts/serve-catalog.mjs"), "utf8"),
   readFile(resolve(projectRoot, "netlify.toml"), "utf8"),
   readFile(resolve(projectRoot, ".gitignore"), "utf8")
 ]);
@@ -19,7 +23,7 @@ const [pluginManifest, code, uiScript, uiHtml, uiStyles, netlifyConfig, gitignor
 test("plugin uses a fixed production domain and a development-only local catalog", () => {
   assert.deepEqual(pluginManifest.networkAccess.allowedDomains, ["https://assets.mockup-studio.example"]);
   assert.deepEqual(pluginManifest.networkAccess.devAllowedDomains, ["http://localhost:4173"]);
-  assert.match(uiScript, /PRODUCTION_CATALOG_URL/);
+  assert.match(uiScript, /PRODUCTION_CATALOG_URL = "https:\/\/assets\.mockup-studio\.example\/v1\/manifest\.json"/);
   assert.match(uiScript, /DEVELOPMENT_CATALOG_URL/);
 });
 
@@ -31,6 +35,7 @@ test("built UI contains the intended product modes without external scripts", ()
     assert.doesNotMatch(uiHtml, new RegExp(`>${removedLabel}<`));
   }
   assert.doesNotMatch(uiHtml, /\/\*__STYLES__\*\//);
+  assert.doesNotMatch(uiHtml, /\/\*__RENDERER__\*\//);
   assert.doesNotMatch(uiHtml, /\/\*__SCRIPT__\*\//);
   assert.doesNotMatch(uiHtml, /<script\s+src=/i);
 });
@@ -56,7 +61,7 @@ test("the real vertical slice exports selection and writes rendered bytes back",
   assert.match(code, /figma\.createImage\(message\.bytes\)/);
   assert.match(code, /figma\.currentPage\.appendChild/);
   assert.match(code, /figma\.clientStorage\.setAsync/);
-  assert.match(uiScript, /drawImageToQuad/);
+  assert.match(uiScript, /renderer\.renderComposite/);
   assert.match(uiScript, /paste-render/);
 });
 
@@ -74,10 +79,24 @@ test("screen editing is real and exposes only functional controls", () => {
     "perspectiveEditor",
     "resetPerspectiveButton"
   ]) assert.match(uiHtml, new RegExp(`id="${id}"`));
-  assert.match(uiScript, /adjustedDesignCanvas/);
+  assert.doesNotMatch(uiScript, /function drawImageToQuad|function adjustedDesignCanvas/);
   assert.match(uiScript, /enablePerspectiveEditing/);
   assert.match(uiScript, /importImageFile/);
   assert.doesNotMatch(uiHtml, /id="settingsButton"|id="aboutButton"|id="menuButton"/);
+});
+
+test("plugin and asset lab use one shared renderer and one catalog schema", () => {
+  assert.match(rendererScript, /const VERSION = "2\.0\.0"/);
+  assert.match(labHtml, /src="\/shared\/mockup-renderer\.js"/);
+  assert.match(labScript, /renderer\.renderComposite/);
+  assert.match(serverScript, /catalog\/testing\/v1/);
+  assert.match(serverScript, /\/api\/lab\/approve/);
+  assert.match(serverScript, /\/api\/lab\/geometry/);
+});
+
+test("irrelevant paid-only filtering is removed", () => {
+  assert.doesNotMatch(uiHtml, /仅免费|id="freeOnly"/);
+  assert.doesNotMatch(uiScript, /freeOnly/);
 });
 
 test("search has one explicit clear action without a native search cancel control", () => {
@@ -92,7 +111,7 @@ test("remote catalog is data-only and does not execute fetched JavaScript", () =
 });
 
 test("catalog deployment publishes only data with immutable assets and uncached manifest", () => {
-  assert.match(netlifyConfig, /publish\s*=\s*"catalog"/);
+  assert.match(netlifyConfig, /publish\s*=\s*"catalog\/production"/);
   assert.match(netlifyConfig, /for\s*=\s*"\/v1\/manifest\.json"[\s\S]*no-store/);
   assert.match(netlifyConfig, /for\s*=\s*"\/v1\/assets\/\*"[\s\S]*immutable/);
   assert.match(netlifyConfig, /Access-Control-Allow-Origin\s*=\s*"\*"/);
