@@ -124,9 +124,10 @@
     return canvas;
   }
 
-  function drawImageToQuad(context, image, quad) {
-    const columns = 20;
-    const rows = 14;
+  function drawImageToQuad(context, image, quad, quality = "final") {
+    const livePreview = quality === "preview";
+    const columns = livePreview ? 8 : 20;
+    const rows = livePreview ? 6 : 14;
     for (let row = 0; row < rows; row += 1) {
       for (let column = 0; column < columns; column += 1) {
         const u0 = column / columns;
@@ -176,7 +177,7 @@
     }
   }
 
-  function renderComposite({ canvas, asset, baseImage, designImage, fit = "cover", adjustments, quad, layerImages = {} }) {
+  function renderComposite({ canvas, asset, baseImage, designImage, fit = "cover", adjustments, quad, layerImages = {}, quality = "final" }) {
     validateAsset(asset);
     const context = canvas.getContext("2d", { alpha: false });
     context.setTransform(1, 0, 0, 1, 0, 0);
@@ -190,7 +191,7 @@
       const target = quadSize(activeQuad);
       const screenCanvas = createScreenCanvas(designImage, target.width / target.height, fit, adjustments, asset.screen.cornerRadius || 0);
       fillQuad(context, activeQuad, asset.screen.underlay || "#080808");
-      drawImageToQuad(context, screenCanvas, activeQuad);
+      drawImageToQuad(context, screenCanvas, activeQuad, quality);
       restoreOcclusions(context, preparedBase, asset);
     }
     if (layerImages.reflection) {

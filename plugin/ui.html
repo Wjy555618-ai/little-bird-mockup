@@ -50,7 +50,7 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 
 .catalog-panel { min-width: 0; min-height: 0; border-right: 1px solid var(--line); background: #181818; position: relative; }
 .catalog-view { width: 100%; height: 100%; min-height: 0; display: grid; grid-template-rows: 66px auto 28px minmax(0, 1fr) auto; }
-.catalog-view[hidden], .adjust-panel[hidden] { display: none; }
+.catalog-view[hidden], .adjust-panel[hidden], .panel-mode-content[hidden] { display: none; }
 .catalog-segments { height: 66px; margin: 0 14px; padding: 12px 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; border-bottom: 1px solid var(--line-soft); }
 .catalog-segments { grid-template-columns: repeat(2, 1fr); }
 .segment { border-radius: 11px; color: #c2c1c7; font-size: 13px; }
@@ -106,7 +106,7 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .selection-dot { width: 7px; height: 7px; flex: 0 0 auto; border-radius: 50%; background: #5e5d62; }
 .selection-card.ready .selection-dot { background: #dedde1; }
 .source-actions { margin: 10px 0 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
-.panel-button, .reset-button { min-height: 34px; border: 1px solid #343438; border-radius: 9px; background: #202020; color: #bebdc3; cursor: pointer; }
+.panel-button, .reset-button { min-height: 34px; border: 1px solid #343438; border-radius: 9px; background: #202020; color: #bebdc3; cursor: pointer; white-space: nowrap; }
 .panel-button:hover, .reset-button:hover { border-color: #56555b; color: #f0eff2; }
 .panel-button:disabled { opacity: .38; cursor: not-allowed; }
 .primary-panel-button { background: #ededf0; color: #171717; }
@@ -118,10 +118,24 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .select-control select { width: 120px; height: 30px; padding: 0 8px; border: 1px solid #38373c; border-radius: 8px; outline: 0; background: #202020; color: #dddce1; }
 .range-control { display: grid; grid-template-columns: 42px minmax(0, 1fr) 36px; align-items: center; gap: 8px; color: #aaa9af; }
 .range-control output { color: #77767c; font-size: 10px; text-align: right; }
-.range-control input[type="range"] { width: 100%; height: 16px; margin: 0; appearance: none; background: transparent; }
-.range-control input[type="range"]::-webkit-slider-runnable-track { height: 3px; border-radius: 99px; background: #414045; }
-.range-control input[type="range"]::-webkit-slider-thumb { width: 12px; height: 12px; margin-top: -4.5px; appearance: none; border: 1px solid #111; border-radius: 50%; background: #e4e3e7; }
+.range-control input[type="range"] { width: 100%; height: 28px; margin: -6px 0; appearance: none; background: transparent; cursor: ew-resize; touch-action: none; }
+.range-control input[type="range"]::-webkit-slider-runnable-track { height: 4px; border-radius: 99px; background: #414045; }
+.range-control input[type="range"]::-webkit-slider-thumb { width: 16px; height: 16px; margin-top: -6px; appearance: none; border: 1px solid #111; border-radius: 50%; background: #e4e3e7; box-shadow: 0 1px 4px #0008; }
+.range-control input[type="range"]:active::-webkit-slider-thumb { background: #fff; transform: scale(1.08); }
 .reset-button { width: 100%; margin-top: 12px; }
+.perspective-controls { margin-top: 10px; }
+.perspective-guide { padding: 13px 12px; display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 11px; border: 1px solid #2f2f33; border-radius: 11px; background: #1b1b1b; }
+.perspective-guide > div { min-width: 0; display: grid; gap: 5px; }
+.perspective-guide strong { color: #d8d7dc; font-size: 11px; }
+.perspective-guide span { color: #85848a; font-size: 10px; line-height: 1.5; }
+.perspective-guide-icon { width: 30px; height: 30px; position: relative; border: 1px dashed #8d8c92; }
+.perspective-guide-icon i { width: 6px; height: 6px; position: absolute; border: 1px solid #181818; border-radius: 50%; background: #e8e7eb; }
+.perspective-guide-icon i:nth-child(1) { left: -3px; top: -3px; }
+.perspective-guide-icon i:nth-child(2) { right: -3px; top: -3px; }
+.perspective-guide-icon i:nth-child(3) { right: -3px; bottom: -3px; }
+.perspective-guide-icon i:nth-child(4) { left: -3px; bottom: -3px; }
+.perspective-state-row { min-height: 38px; margin-top: 10px; padding: 0 11px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #2f2f33; border-radius: 10px; color: #85848a; }
+.perspective-state-row output { color: #d4d3d8; font-size: 10px; }
 
 .stage-panel { min-width: 0; min-height: 0; display: grid; grid-template-rows: 48px minmax(0, 1fr) 66px; background: #202020; }
 .stage-toolbar { min-width: 0; padding: 0 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; position: relative; border-bottom: 1px solid #2d2d2d; background: #1c1c1c; }
@@ -138,12 +152,12 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .stage.light { background: #d3d3d3; }
 .canvas-wrap { max-width: 100%; max-height: 100%; position: relative; overflow: hidden; border-radius: 15px; transform-origin: center; transition: transform .16s ease; }
 .canvas-wrap canvas { width: 100%; height: 100%; max-width: calc(100vw - 420px); max-height: calc(100vh - 220px); display: block; object-fit: contain; background: #2b2b2b; }
-.perspective-editor { position: absolute; inset: 0; z-index: 4; }
+.perspective-editor { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
 .perspective-editor[hidden] { display: none; }
 .perspective-editor svg { width: 100%; height: 100%; position: absolute; inset: 0; overflow: visible; pointer-events: none; }
 .perspective-editor polygon { fill: #ffffff0d; stroke: #f0eff3; stroke-width: 3; stroke-dasharray: 11 8; vector-effect: non-scaling-stroke; }
-.perspective-handle { width: 15px; height: 15px; position: absolute; z-index: 2; transform: translate(-50%, -50%); border: 2px solid #161616; border-radius: 50%; background: #efeff2; box-shadow: 0 2px 8px #0009; cursor: move; touch-action: none; }
-.screen-cta { position: absolute; left: 50%; top: 47%; transform: translate(-50%, -50%); padding: 0; display: grid; place-items: center; color: #fff; }
+.perspective-handle { width: 17px; height: 17px; position: absolute; z-index: 2; transform: translate(-50%, -50%); border: 2px solid #161616; border-radius: 50%; background: #efeff2; box-shadow: 0 2px 8px #0009; cursor: move; touch-action: none; pointer-events: auto; }
+.screen-cta { position: absolute; left: 50%; top: 47%; z-index: 5; transform: translate(-50%, -50%); padding: 0; display: grid; place-items: center; color: #fff; }
 .screen-cta span { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 50%; background: #070707; box-shadow: 0 13px 25px #0005; font-size: 25px; font-weight: 300; }
 .screen-cta b { display: none; }
 .screen-cta.has-image { opacity: 0; }
@@ -295,29 +309,45 @@ html.is-collapsed .collapsed-bar[aria-hidden="true"] { visibility: visible; }
               <button class="panel-button" id="clearDesignButton" disabled>移除画面</button>
             </div>
 
-            <section class="control-section">
-              <label class="select-control">
-                <span>填充方式</span>
-                <select id="fitMode">
-                  <option value="cover">填满</option>
-                  <option value="contain">完整显示</option>
-                  <option value="stretch">拉伸</option>
-                </select>
-              </label>
-              <label class="range-control"><span>缩放</span><input id="designScale" type="range" min="50" max="200" value="100" /><output id="designScaleValue">100%</output></label>
-              <label class="range-control"><span>水平</span><input id="designOffsetX" type="range" min="-100" max="100" value="0" /><output id="designOffsetXValue">0%</output></label>
-              <label class="range-control"><span>垂直</span><input id="designOffsetY" type="range" min="-100" max="100" value="0" /><output id="designOffsetYValue">0%</output></label>
-              <label class="range-control"><span>旋转</span><input id="designRotation" type="range" min="-30" max="30" value="0" /><output id="designRotationValue">0°</output></label>
-            </section>
+            <div class="panel-mode-content" id="adjustControls">
+              <section class="control-section">
+                <label class="select-control">
+                  <span>填充方式</span>
+                  <select id="fitMode">
+                    <option value="cover">填满</option>
+                    <option value="contain">完整显示</option>
+                    <option value="stretch">拉伸</option>
+                  </select>
+                </label>
+                <label class="range-control"><span>缩放</span><input id="designScale" type="range" min="50" max="200" value="100" /><output id="designScaleValue">100%</output></label>
+                <label class="range-control"><span>水平</span><input id="designOffsetX" type="range" min="-100" max="100" value="0" /><output id="designOffsetXValue">0%</output></label>
+                <label class="range-control"><span>垂直</span><input id="designOffsetY" type="range" min="-100" max="100" value="0" /><output id="designOffsetYValue">0%</output></label>
+                <label class="range-control"><span>旋转</span><input id="designRotation" type="range" min="-30" max="30" value="0" /><output id="designRotationValue">0°</output></label>
+              </section>
 
-            <section class="control-section">
-              <label class="range-control"><span>亮度</span><input id="designBrightness" type="range" min="50" max="150" value="100" /><output id="designBrightnessValue">100%</output></label>
-              <label class="range-control"><span>对比度</span><input id="designContrast" type="range" min="50" max="150" value="100" /><output id="designContrastValue">100%</output></label>
-              <label class="range-control"><span>饱和度</span><input id="designSaturation" type="range" min="0" max="200" value="100" /><output id="designSaturationValue">100%</output></label>
-            </section>
+              <section class="control-section">
+                <label class="range-control"><span>亮度</span><input id="designBrightness" type="range" min="50" max="150" value="100" /><output id="designBrightnessValue">100%</output></label>
+                <label class="range-control"><span>对比度</span><input id="designContrast" type="range" min="50" max="150" value="100" /><output id="designContrastValue">100%</output></label>
+                <label class="range-control"><span>饱和度</span><input id="designSaturation" type="range" min="0" max="200" value="100" /><output id="designSaturationValue">100%</output></label>
+              </section>
 
-            <button class="reset-button" id="resetAdjustmentsButton">恢复默认调整</button>
-            <button class="reset-button" id="resetPerspectiveButton">恢复样机透视</button>
+              <button class="reset-button" id="resetAdjustmentsButton">恢复默认调整</button>
+            </div>
+
+            <div class="panel-mode-content perspective-controls" id="perspectiveControls" hidden>
+              <section class="perspective-guide">
+                <span class="perspective-guide-icon" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+                <div>
+                  <strong>拖动预览中的四个控制点</strong>
+                  <span>控制点只改变当前样机的屏幕区域，导出和粘贴会使用调整后的结果。</span>
+                </div>
+              </section>
+              <div class="perspective-state-row">
+                <span>当前状态</span>
+                <output id="perspectiveStatus">默认透视</output>
+              </div>
+              <button class="reset-button" id="resetPerspectiveButton">恢复样机透视</button>
+            </div>
           </div>
         </aside>
 
@@ -499,9 +529,10 @@ html.is-collapsed .collapsed-bar[aria-hidden="true"] { visibility: visible; }
     return canvas;
   }
 
-  function drawImageToQuad(context, image, quad) {
-    const columns = 20;
-    const rows = 14;
+  function drawImageToQuad(context, image, quad, quality = "final") {
+    const livePreview = quality === "preview";
+    const columns = livePreview ? 8 : 20;
+    const rows = livePreview ? 6 : 14;
     for (let row = 0; row < rows; row += 1) {
       for (let column = 0; column < columns; column += 1) {
         const u0 = column / columns;
@@ -551,7 +582,7 @@ html.is-collapsed .collapsed-bar[aria-hidden="true"] { visibility: visible; }
     }
   }
 
-  function renderComposite({ canvas, asset, baseImage, designImage, fit = "cover", adjustments, quad, layerImages = {} }) {
+  function renderComposite({ canvas, asset, baseImage, designImage, fit = "cover", adjustments, quad, layerImages = {}, quality = "final" }) {
     validateAsset(asset);
     const context = canvas.getContext("2d", { alpha: false });
     context.setTransform(1, 0, 0, 1, 0, 0);
@@ -565,7 +596,7 @@ html.is-collapsed .collapsed-bar[aria-hidden="true"] { visibility: visible; }
       const target = quadSize(activeQuad);
       const screenCanvas = createScreenCanvas(designImage, target.width / target.height, fit, adjustments, asset.screen.cornerRadius || 0);
       fillQuad(context, activeQuad, asset.screen.underlay || "#080808");
-      drawImageToQuad(context, screenCanvas, activeQuad);
+      drawImageToQuad(context, screenCanvas, activeQuad, quality);
       restoreOcclusions(context, preparedBase, asset);
     }
     if (layerImages.reflection) {
@@ -627,6 +658,8 @@ const elements = {
   catalogCount: document.querySelector("#catalogCount"),
   catalogView: document.querySelector("#catalogView"),
   adjustPanel: document.querySelector("#adjustPanel"),
+  adjustControls: document.querySelector("#adjustControls"),
+  perspectiveControls: document.querySelector("#perspectiveControls"),
   adjustPanelTitle: document.querySelector("#adjustPanelTitle"),
   assetGrid: document.querySelector("#assetGrid"),
   catalogEmpty: document.querySelector("#catalogEmpty"),
@@ -669,6 +702,7 @@ const elements = {
   stageTitle: document.querySelector("#stageTitle"),
   perspectiveEditor: document.querySelector("#perspectiveEditor"),
   perspectivePolygon: document.querySelector("#perspectivePolygon"),
+  perspectiveStatus: document.querySelector("#perspectiveStatus"),
   recentStrip: document.querySelector("#recentStrip"),
   recentItems: document.querySelector("#recentItems"),
   clearRecent: document.querySelector("#clearRecent"),
@@ -1000,7 +1034,10 @@ function activeQuad() {
   return state.customQuad || state.selectedAsset?.screen.quad || null;
 }
 
-async function renderComposite() {
+let scheduledRenderFrame = 0;
+let scheduledRenderQuality = "preview";
+
+function renderComposite(quality = "final") {
   if (!state.selectedAsset || !state.baseImage) return;
   renderer.renderComposite({
     canvas: elements.previewCanvas,
@@ -1010,7 +1047,8 @@ async function renderComposite() {
     fit: elements.fitMode.value,
     adjustments: state.adjustments,
     quad: activeQuad(),
-    layerImages: state.layerImages
+    layerImages: state.layerImages,
+    quality
   });
   if (state.designImage) {
     elements.screenCta.classList.add("has-image");
@@ -1020,6 +1058,24 @@ async function renderComposite() {
     elements.screenCta.querySelector("b").textContent = "选择 Figma 画面";
   }
   updatePerspectiveEditor();
+}
+
+function scheduleComposite(quality = "preview") {
+  if (quality === "final") scheduledRenderQuality = "final";
+  if (scheduledRenderFrame) return;
+  scheduledRenderFrame = requestAnimationFrame(() => {
+    scheduledRenderFrame = 0;
+    const nextQuality = scheduledRenderQuality;
+    scheduledRenderQuality = "preview";
+    renderComposite(nextQuality);
+  });
+}
+
+function renderFinalComposite() {
+  if (scheduledRenderFrame) cancelAnimationFrame(scheduledRenderFrame);
+  scheduledRenderFrame = 0;
+  scheduledRenderQuality = "preview";
+  renderComposite("final");
 }
 
 function updatePerspectiveEditor() {
@@ -1033,6 +1089,9 @@ function updatePerspectiveEditor() {
     handle.style.left = `${point[0] / state.selectedAsset.canvas.width * 100}%`;
     handle.style.top = `${point[1] / state.selectedAsset.canvas.height * 100}%`;
   }
+  const original = state.selectedAsset.screen.quad;
+  const unchanged = quad.every((point, index) => point.every((value, axis) => Math.abs(value - original[index][axis]) < 0.5));
+  elements.perspectiveStatus.textContent = unchanged ? "默认透视" : "已调整";
 }
 
 function setMode(mode) {
@@ -1040,13 +1099,23 @@ function setMode(mode) {
   document.querySelectorAll(".mode-tab").forEach((tab) => tab.classList.toggle("active", tab.dataset.mode === mode));
   elements.catalogView.hidden = mode !== "catalog";
   elements.adjustPanel.hidden = mode === "catalog";
+  elements.adjustControls.hidden = mode !== "adjust";
+  elements.perspectiveControls.hidden = mode !== "perspective";
   elements.perspectiveEditor.hidden = mode !== "perspective";
   elements.adjustPanelTitle.textContent = mode === "perspective" ? "透视编辑" : "画面调整";
   elements.stageTitle.textContent = mode === "perspective" ? "拖动四角控制点" : "预览";
-  elements.designSourceLabel.textContent = mode === "perspective"
-    ? "调整当前样机的屏幕四角，结果会直接写入导出图"
-    : (state.designName || "尚未读取画面");
+  elements.designSourceLabel.textContent = state.designName || "尚未读取画面";
   updatePerspectiveEditor();
+}
+
+function updateAdjustmentOutputs() {
+  elements.designScaleValue.textContent = `${elements.designScale.value}%`;
+  elements.designOffsetXValue.textContent = `${elements.designOffsetX.value}%`;
+  elements.designOffsetYValue.textContent = `${elements.designOffsetY.value}%`;
+  elements.designRotationValue.textContent = `${elements.designRotation.value}°`;
+  elements.designBrightnessValue.textContent = `${elements.designBrightness.value}%`;
+  elements.designContrastValue.textContent = `${elements.designContrast.value}%`;
+  elements.designSaturationValue.textContent = `${elements.designSaturation.value}%`;
 }
 
 function syncAdjustmentControls() {
@@ -1058,13 +1127,7 @@ function syncAdjustmentControls() {
   elements.designBrightness.value = String(Math.round(values.brightness * 100));
   elements.designContrast.value = String(Math.round(values.contrast * 100));
   elements.designSaturation.value = String(Math.round(values.saturation * 100));
-  elements.designScaleValue.textContent = `${elements.designScale.value}%`;
-  elements.designOffsetXValue.textContent = `${elements.designOffsetX.value}%`;
-  elements.designOffsetYValue.textContent = `${elements.designOffsetY.value}%`;
-  elements.designRotationValue.textContent = `${elements.designRotation.value}°`;
-  elements.designBrightnessValue.textContent = `${elements.designBrightness.value}%`;
-  elements.designContrastValue.textContent = `${elements.designContrast.value}%`;
-  elements.designSaturationValue.textContent = `${elements.designSaturation.value}%`;
+  updateAdjustmentOutputs();
 }
 
 function updateAdjustmentsFromControls() {
@@ -1077,8 +1140,8 @@ function updateAdjustmentsFromControls() {
     contrast: Number(elements.designContrast.value) / 100,
     saturation: Number(elements.designSaturation.value) / 100
   };
-  syncAdjustmentControls();
-  renderComposite();
+  updateAdjustmentOutputs();
+  scheduleComposite("preview");
 }
 
 async function setDesignBytes(bytes, name, mimeType = "image/png") {
@@ -1101,7 +1164,7 @@ function clearDesign() {
   elements.clearDesignButton.disabled = true;
   elements.imageInput.value = "";
   updateOutputAvailability();
-  renderComposite();
+  renderFinalComposite();
   showToast("已移除画面");
 }
 
@@ -1129,14 +1192,14 @@ function resetAdjustments() {
   state.adjustments = { ...DEFAULT_ADJUSTMENTS };
   elements.fitMode.value = state.selectedAsset?.screen.defaultFit || "cover";
   syncAdjustmentControls();
-  renderComposite();
+  renderFinalComposite();
   showToast("画面调整已恢复默认");
 }
 
 function resetPerspective() {
   if (!state.selectedAsset) return;
   state.customQuad = state.selectedAsset.screen.quad.map((point) => [...point]);
-  renderComposite();
+  renderFinalComposite();
   showToast("样机透视已恢复默认");
 }
 
@@ -1153,17 +1216,18 @@ function enablePerspectiveEditing() {
       const y = Math.max(0, Math.min(state.selectedAsset.canvas.height, (event.clientY - rect.top) / rect.height * state.selectedAsset.canvas.height));
       state.customQuad[Number(handle.dataset.corner)] = [x, y];
       updatePerspectiveEditor();
-      renderComposite();
+      scheduleComposite("preview");
     });
     handle.addEventListener("pointerup", (event) => {
       if (handle.hasPointerCapture(event.pointerId)) handle.releasePointerCapture(event.pointerId);
+      renderFinalComposite();
     });
+    handle.addEventListener("pointercancel", renderFinalComposite);
   }
 }
 
 function requestSelection() {
   if (!state.selection?.available) {
-    setMode("adjust");
     showToast(state.selection?.message || "请先在 Figma 画布中选择一个图层");
     return;
   }
@@ -1183,6 +1247,7 @@ function canvasBlob() {
 
 async function downloadRender() {
   try {
+    renderFinalComposite();
     const blob = await canvasBlob();
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
@@ -1202,6 +1267,7 @@ async function pasteRender() {
   try {
     elements.pasteButton.disabled = true;
     elements.pasteButton.textContent = "正在粘贴";
+    renderFinalComposite();
     const blob = await canvasBlob();
     const bytes = new Uint8Array(await blob.arrayBuffer());
     postPluginMessage({
@@ -1295,7 +1361,7 @@ elements.clearSearch.addEventListener("click", () => {
   renderAssetGrid();
 });
 elements.categorySelect.addEventListener("change", renderAssetGrid);
-elements.fitMode.addEventListener("change", renderComposite);
+elements.fitMode.addEventListener("change", renderFinalComposite);
 elements.readSelectionButton.addEventListener("click", requestSelection);
 elements.imageInput.addEventListener("change", () => importImageFile(elements.imageInput.files?.[0]));
 elements.clearDesignButton.addEventListener("click", clearDesign);
@@ -1307,7 +1373,10 @@ for (const control of [
   elements.designBrightness,
   elements.designContrast,
   elements.designSaturation
-]) control.addEventListener("input", updateAdjustmentsFromControls);
+]) {
+  control.addEventListener("input", updateAdjustmentsFromControls);
+  control.addEventListener("change", renderFinalComposite);
+}
 elements.resetAdjustmentsButton.addEventListener("click", resetAdjustments);
 elements.resetPerspectiveButton.addEventListener("click", resetPerspective);
 elements.screenCta.addEventListener("click", requestSelection);

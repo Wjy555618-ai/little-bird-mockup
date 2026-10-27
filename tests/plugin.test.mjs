@@ -85,6 +85,28 @@ test("screen editing is real and exposes only functional controls", () => {
   assert.doesNotMatch(uiHtml, /id="settingsButton"|id="aboutButton"|id="menuButton"/);
 });
 
+test("adjustment and perspective tabs own distinct left-panel content", () => {
+  assert.match(uiHtml, /id="adjustControls"/);
+  assert.match(uiHtml, /id="perspectiveControls"[^>]*hidden/);
+  assert.match(uiHtml, /id="perspectiveStatus"/);
+  assert.match(uiScript, /elements\.adjustControls\.hidden = mode !== "adjust"/);
+  assert.match(uiScript, /elements\.perspectiveControls\.hidden = mode !== "perspective"/);
+});
+
+test("continuous editing uses responsive preview rendering and a final-quality commit", () => {
+  assert.match(rendererScript, /quality === "preview"/);
+  assert.match(uiScript, /requestAnimationFrame/);
+  assert.match(uiScript, /scheduleComposite\("preview"\)/);
+  assert.match(uiScript, /control\.addEventListener\("change", renderFinalComposite\)/);
+  assert.match(uiScript, /renderFinalComposite\(\);\s*const blob = await canvasBlob\(\)/);
+});
+
+test("perspective overlay leaves the center source action clickable", () => {
+  assert.match(uiStyles, /\.perspective-editor\s*\{[^}]*pointer-events:\s*none/s);
+  assert.match(uiStyles, /\.perspective-handle\s*\{[^}]*pointer-events:\s*auto/s);
+  assert.match(uiStyles, /\.screen-cta\s*\{[^}]*z-index:\s*5/s);
+});
+
 test("plugin and asset lab use one shared renderer and one catalog schema", () => {
   assert.match(rendererScript, /const VERSION = "2\.0\.0"/);
   assert.match(labHtml, /src="\/shared\/mockup-renderer\.js"/);

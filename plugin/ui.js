@@ -43,6 +43,8 @@ const elements = {
   catalogCount: document.querySelector("#catalogCount"),
   catalogView: document.querySelector("#catalogView"),
   adjustPanel: document.querySelector("#adjustPanel"),
+  adjustControls: document.querySelector("#adjustControls"),
+  perspectiveControls: document.querySelector("#perspectiveControls"),
   adjustPanelTitle: document.querySelector("#adjustPanelTitle"),
   assetGrid: document.querySelector("#assetGrid"),
   catalogEmpty: document.querySelector("#catalogEmpty"),
@@ -85,6 +87,7 @@ const elements = {
   stageTitle: document.querySelector("#stageTitle"),
   perspectiveEditor: document.querySelector("#perspectiveEditor"),
   perspectivePolygon: document.querySelector("#perspectivePolygon"),
+  perspectiveStatus: document.querySelector("#perspectiveStatus"),
   recentStrip: document.querySelector("#recentStrip"),
   recentItems: document.querySelector("#recentItems"),
   clearRecent: document.querySelector("#clearRecent"),
@@ -416,7 +419,10 @@ function activeQuad() {
   return state.customQuad || state.selectedAsset?.screen.quad || null;
 }
 
-async function renderComposite() {
+let scheduledRenderFrame = 0;
+let scheduledRenderQuality = "preview";
+
+function renderComposite(quality = "final") {
   if (!state.selectedAsset || !state.baseImage) return;
   renderer.renderComposite({
     canvas: elements.previewCanvas,
@@ -426,7 +432,8 @@ async function renderComposite() {
     fit: elements.fitMode.value,
     adjustments: state.adjustments,
     quad: activeQuad(),
-    layerImages: state.layerImages
+    layerImages: state.layerImages,
+    quality
   });
   if (state.designImage) {
     elements.screenCta.classList.add("has-image");
@@ -436,6 +443,24 @@ async function renderComposite() {
     elements.screenCta.querySelector("b").textContent = "选择 Figma 画面";
   }
   updatePerspectiveEditor();
+}
+
+function scheduleComposite(quality = "preview") {
+  if (quality === "final") scheduledRenderQuality = "final";
+  if (scheduledRenderFrame) return;
+  scheduledRenderFrame = requestAnimationFrame(() => {
+    scheduledRenderFrame = 0;
+    const nextQuality = scheduledRenderQuality;
+    scheduledRenderQuality = "preview";
+    renderComposite(nextQuality);
+  });
+}
+
+function renderFinalComposite() {
+  if (scheduledRenderFrame) cancelAnimationFrame(scheduledRenderFrame);
+  scheduledRenderFrame = 0;
+  scheduledRenderQuality = "preview";
+  renderComposite("final");
 }
 
 function updatePerspectiveEditor() {
@@ -449,6 +474,9 @@ function updatePerspectiveEditor() {
     handle.style.left = `${point[0] / state.selectedAsset.canvas.width * 100}%`;
     handle.style.top = `${point[1] / state.selectedAsset.canvas.height * 100}%`;
   }
+  const original = state.selectedAsset.screen.quad;
+  const unchanged = quad.every((point, index) => point.every((value, axis) => Math.abs(value - original[index][axis]) < 0.5));
+  elements.perspectiveStatus.textContent = unchanged ? "默认透视" : "已调整";
 }
 
 function setMode(mode) {
@@ -456,13 +484,23 @@ function setMode(mode) {
   document.querySelectorAll(".mode-tab").forEach((tab) => tab.classList.toggle("active", tab.dataset.mode === mode));
   elements.catalogView.hidden = mode !== "catalog";
   elements.adjustPanel.hidden = mode === "catalog";
+  elements.adjustControls.hidden = mode !== "adjust";
+  elements.perspectiveControls.hidden = mode !== "perspective";
   elements.perspectiveEditor.hidden = mode !== "perspective";
   elements.adjustPanelTitle.textContent = mode === "perspective" ? "透视编辑" : "画面调整";
   elements.stageTitle.textContent = mode === "perspective" ? "拖动四角控制点" : "预览";
-  elements.designSourceLabel.textContent = mode === "perspective"
-    ? "调整当前样机的屏幕四角，结果会直接写入导出图"
-    : (state.designName || "尚未读取画面");
+  elements.designSourceLabel.textContent = state.designName || "尚未读取画面";
   updatePerspectiveEditor();
+}
+
+function updateAdjustmentOutputs() {
+  elements.designScaleValue.textContent = `${elements.designScale.value}%`;
+  elements.designOffsetXValue.textContent = `${elements.designOffsetX.value}%`;
+  elements.designOffsetYValue.textContent = `${elements.designOffsetY.value}%`;
+  elements.designRotationValue.textContent = `${elements.designRotation.value}°`;
+  elements.designBrightnessValue.textContent = `${elements.designBrightness.value}%`;
+  elements.designContrastValue.textContent = `${elements.designContrast.value}%`;
+  elements.designSaturationValue.textContent = `${elements.designSaturation.value}%`;
 }
 
 function syncAdjustmentControls() {
@@ -474,13 +512,7 @@ function syncAdjustmentControls() {
   elements.designBrightness.value = String(Math.round(values.brightness * 100));
   elements.designContrast.value = String(Math.round(values.contrast * 100));
   elements.designSaturation.value = String(Math.round(values.saturation * 100));
-  elements.designScaleValue.textContent = `${elements.designScale.value}%`;
-  elements.designOffsetXValue.textContent = `${elements.designOffsetX.value}%`;
-  elements.designOffsetYValue.textContent = `${elements.designOffsetY.value}%`;
-  elements.designRotationValue.textContent = `${elements.designRotation.value}°`;
-  elements.designBrightnessValue.textContent = `${elements.designBrightness.value}%`;
-  elements.designContrastValue.textContent = `${elements.designContrast.value}%`;
-  elements.designSaturationValue.textContent = `${elements.designSaturation.value}%`;
+  updateAdjustmentOutputs();
 }
 
 function updateAdjustmentsFromControls() {
@@ -493,8 +525,8 @@ function updateAdjustmentsFromControls() {
     contrast: Number(elements.designContrast.value) / 100,
     saturation: Number(elements.designSaturation.value) / 100
   };
-  syncAdjustmentControls();
-  renderComposite();
+  updateAdjustmentOutputs();
+  scheduleComposite("preview");
 }
 
 async function setDesignBytes(bytes, name, mimeType = "image/png") {
@@ -517,7 +549,7 @@ function clearDesign() {
   elements.clearDesignButton.disabled = true;
   elements.imageInput.value = "";
   updateOutputAvailability();
-  renderComposite();
+  renderFinalComposite();
   showToast("已移除画面");
 }
 
@@ -545,14 +577,14 @@ function resetAdjustments() {
   state.adjustments = { ...DEFAULT_ADJUSTMENTS };
   elements.fitMode.value = state.selectedAsset?.screen.defaultFit || "cover";
   syncAdjustmentControls();
-  renderComposite();
+  renderFinalComposite();
   showToast("画面调整已恢复默认");
 }
 
 function resetPerspective() {
   if (!state.selectedAsset) return;
   state.customQuad = state.selectedAsset.screen.quad.map((point) => [...point]);
-  renderComposite();
+  renderFinalComposite();
   showToast("样机透视已恢复默认");
 }
 
@@ -569,17 +601,18 @@ function enablePerspectiveEditing() {
       const y = Math.max(0, Math.min(state.selectedAsset.canvas.height, (event.clientY - rect.top) / rect.height * state.selectedAsset.canvas.height));
       state.customQuad[Number(handle.dataset.corner)] = [x, y];
       updatePerspectiveEditor();
-      renderComposite();
+      scheduleComposite("preview");
     });
     handle.addEventListener("pointerup", (event) => {
       if (handle.hasPointerCapture(event.pointerId)) handle.releasePointerCapture(event.pointerId);
+      renderFinalComposite();
     });
+    handle.addEventListener("pointercancel", renderFinalComposite);
   }
 }
 
 function requestSelection() {
   if (!state.selection?.available) {
-    setMode("adjust");
     showToast(state.selection?.message || "请先在 Figma 画布中选择一个图层");
     return;
   }
@@ -599,6 +632,7 @@ function canvasBlob() {
 
 async function downloadRender() {
   try {
+    renderFinalComposite();
     const blob = await canvasBlob();
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
@@ -618,6 +652,7 @@ async function pasteRender() {
   try {
     elements.pasteButton.disabled = true;
     elements.pasteButton.textContent = "正在粘贴";
+    renderFinalComposite();
     const blob = await canvasBlob();
     const bytes = new Uint8Array(await blob.arrayBuffer());
     postPluginMessage({
@@ -711,7 +746,7 @@ elements.clearSearch.addEventListener("click", () => {
   renderAssetGrid();
 });
 elements.categorySelect.addEventListener("change", renderAssetGrid);
-elements.fitMode.addEventListener("change", renderComposite);
+elements.fitMode.addEventListener("change", renderFinalComposite);
 elements.readSelectionButton.addEventListener("click", requestSelection);
 elements.imageInput.addEventListener("change", () => importImageFile(elements.imageInput.files?.[0]));
 elements.clearDesignButton.addEventListener("click", clearDesign);
@@ -723,7 +758,10 @@ for (const control of [
   elements.designBrightness,
   elements.designContrast,
   elements.designSaturation
-]) control.addEventListener("input", updateAdjustmentsFromControls);
+]) {
+  control.addEventListener("input", updateAdjustmentsFromControls);
+  control.addEventListener("change", renderFinalComposite);
+}
 elements.resetAdjustmentsButton.addEventListener("click", resetAdjustments);
 elements.resetPerspectiveButton.addEventListener("click", resetPerspective);
 elements.screenCta.addEventListener("click", requestSelection);
