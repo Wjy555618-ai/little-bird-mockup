@@ -22,8 +22,11 @@ test("plugin uses a fixed production domain and a development-only local catalog
 });
 
 test("built UI contains the intended product modes without external scripts", () => {
-  for (const label of ["静态", "动态", "3D 工作室", "弯曲", "透视变形"]) {
+  for (const label of ["样机", "画面调整", "透视编辑"]) {
     assert.match(uiHtml, new RegExp(label));
+  }
+  for (const removedLabel of ["动态", "3D 工作室", "弯曲", "套装"]) {
+    assert.doesNotMatch(uiHtml, new RegExp(`>${removedLabel}<`));
   }
   assert.doesNotMatch(uiHtml, /\/\*__STYLES__\*\//);
   assert.doesNotMatch(uiHtml, /\/\*__SCRIPT__\*\//);
@@ -53,6 +56,31 @@ test("the real vertical slice exports selection and writes rendered bytes back",
   assert.match(code, /figma\.clientStorage\.setAsync/);
   assert.match(uiScript, /drawImageToQuad/);
   assert.match(uiScript, /paste-render/);
+});
+
+test("screen editing is real and exposes only functional controls", () => {
+  for (const id of [
+    "imageInput",
+    "clearDesignButton",
+    "designScale",
+    "designOffsetX",
+    "designOffsetY",
+    "designRotation",
+    "designBrightness",
+    "designContrast",
+    "designSaturation",
+    "perspectiveEditor",
+    "resetPerspectiveButton"
+  ]) assert.match(uiHtml, new RegExp(`id="${id}"`));
+  assert.match(uiScript, /adjustedDesignCanvas/);
+  assert.match(uiScript, /enablePerspectiveEditing/);
+  assert.match(uiScript, /importImageFile/);
+  assert.doesNotMatch(uiHtml, /id="settingsButton"|id="aboutButton"|id="menuButton"/);
+});
+
+test("search has one explicit clear action without a native search cancel control", () => {
+  assert.match(uiHtml, /id="searchInput" type="text"/);
+  assert.equal((uiHtml.match(/id="clearSearch"/g) || []).length, 1);
 });
 
 test("remote catalog is data-only and does not execute fetched JavaScript", () => {

@@ -36,26 +36,23 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .mode-tab:hover { color: #f1f0f4; }
 .mode-tab.active { background: #252525; color: #f4f3f6; }
 .mode-tab svg { width: 17px; height: 17px; }
-.mode-divider { width: 1px; height: 24px; background: var(--line); margin: 0 7px; }
 .top-actions { gap: 7px; }
 
-.catalog-state { width: 34px; height: 34px; position: relative; display: grid; place-items: center; color: #b8b7bd; }
-.catalog-state-label { display: none; }
-.catalog-state i { width: 7px; height: 7px; position: absolute; top: 4px; right: 3px; border: 1px solid #181818; border-radius: 50%; background: #6a6a6f; }
-.catalog-state.online i { background: #f3f3f3; }
-.catalog-state.cached i { background: #ee8d32; }
-.catalog-state.error i { background: #dc5c5c; }
+.catalog-state { display: inline-flex; align-items: center; gap: 5px; color: #747379; }
+.catalog-state::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #66656b; }
+.catalog-state.online::before { background: #c9c8cc; }
+.catalog-state.cached::before { background: #ee8d32; }
+.catalog-state.error::before { background: #dc5c5c; }
 .window-button, .tool-button, .color-button { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 9px; color: #bdbcc2; }
 .window-button:hover, .tool-button:hover, .color-button:hover { background: #262626; color: #fff; }
 
-.workspace { min-width: 0; min-height: 0; display: grid; grid-template-columns: 52px 304px minmax(0, 1fr); }
-.rail { min-height: 0; padding: 14px 8px; display: flex; flex-direction: column; align-items: center; gap: 10px; border-right: 1px solid var(--line-soft); background: #171717; }
-.rail-spacer { flex: 1; }
-.rail-button { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 10px; color: #8e8d93; }
-.rail-button:hover, .rail-button.active { background: #262626; color: #e8e7eb; }
+.workspace { min-width: 0; min-height: 0; display: grid; grid-template-columns: 304px minmax(0, 1fr); }
 
-.catalog-panel { min-width: 0; min-height: 0; display: grid; grid-template-rows: 66px auto 28px minmax(0, 1fr) auto; border-right: 1px solid var(--line); background: #181818; position: relative; }
+.catalog-panel { min-width: 0; min-height: 0; border-right: 1px solid var(--line); background: #181818; position: relative; }
+.catalog-view { width: 100%; height: 100%; min-height: 0; display: grid; grid-template-rows: 66px auto 28px minmax(0, 1fr) auto; }
+.catalog-view[hidden], .adjust-panel[hidden] { display: none; }
 .catalog-segments { height: 66px; margin: 0 14px; padding: 12px 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; border-bottom: 1px solid var(--line-soft); }
+.catalog-segments { grid-template-columns: repeat(2, 1fr); }
 .segment { border-radius: 11px; color: #c2c1c7; font-size: 13px; }
 .segment:hover { color: #fff; }
 .segment.active { background: #252525; color: #f2f1f4; box-shadow: 0 2px 5px #0005; }
@@ -66,6 +63,7 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .search-field input { min-width: 0; border: 0; outline: 0; color: #e5e4e8; background: transparent; }
 .search-field input::placeholder { color: #747379; }
 .search-field button, .recent-strip button { border: 0; background: none; color: #747379; cursor: pointer; font-size: 18px; }
+.search-field button[hidden] { display: none; }
 .filter-row { justify-content: space-between; gap: 10px; margin-top: 10px; }
 .category-select { min-width: 0; flex: 1; height: 36px; padding: 0 10px; display: flex; align-items: center; gap: 8px; border: 1px solid #323236; border-radius: 10px; background: #1a1a1a; color: #a5a4aa; }
 .category-select svg { width: 16px; height: 16px; }
@@ -102,14 +100,42 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .recent-item.active { border-color: #dedde1; }
 .recent-item img { width: 100%; height: 100%; display: block; object-fit: cover; }
 
+.adjust-panel { width: 100%; height: 100%; min-height: 0; overflow: auto; padding: 17px 16px 20px; }
+.adjust-panel::-webkit-scrollbar { width: 6px; }
+.adjust-panel::-webkit-scrollbar-thumb { background: #36363a; border-radius: 99px; }
+.panel-heading { margin-bottom: 14px; display: grid; gap: 4px; }
+.panel-heading strong { color: #e9e8ec; font-size: 14px; }
+.panel-heading span { overflow: hidden; color: #77767c; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.selection-card { min-height: 42px; padding: 9px 10px; display: flex; align-items: center; gap: 8px; border: 1px solid #303034; border-radius: 10px; background: #1b1b1b; color: #98979d; line-height: 1.35; }
+.selection-card.ready { color: #d4d3d8; }
+.selection-dot { width: 7px; height: 7px; flex: 0 0 auto; border-radius: 50%; background: #5e5d62; }
+.selection-card.ready .selection-dot { background: #dedde1; }
+.source-actions { margin: 10px 0 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.panel-button, .reset-button { min-height: 34px; border: 1px solid #343438; border-radius: 9px; background: #202020; color: #bebdc3; cursor: pointer; }
+.panel-button:hover, .reset-button:hover { border-color: #56555b; color: #f0eff2; }
+.panel-button:disabled { opacity: .38; cursor: not-allowed; }
+.primary-panel-button { background: #ededf0; color: #171717; }
+.primary-panel-button:hover { border-color: #fff; background: #fff; color: #111; }
+.file-button { display: grid; place-items: center; }
+.source-actions .panel-button:last-child { grid-column: 1 / -1; }
+.control-section { margin-top: 10px; padding: 12px; display: grid; gap: 12px; border: 1px solid #2f2f33; border-radius: 11px; background: #1b1b1b; }
+.select-control { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: #a5a4aa; }
+.select-control select { width: 120px; height: 30px; padding: 0 8px; border: 1px solid #38373c; border-radius: 8px; outline: 0; background: #202020; color: #dddce1; }
+.range-control { display: grid; grid-template-columns: 42px minmax(0, 1fr) 36px; align-items: center; gap: 8px; color: #aaa9af; }
+.range-control output { color: #77767c; font-size: 10px; text-align: right; }
+.range-control input[type="range"] { width: 100%; height: 16px; margin: 0; appearance: none; background: transparent; }
+.range-control input[type="range"]::-webkit-slider-runnable-track { height: 3px; border-radius: 99px; background: #414045; }
+.range-control input[type="range"]::-webkit-slider-thumb { width: 12px; height: 12px; margin-top: -4.5px; appearance: none; border: 1px solid #111; border-radius: 50%; background: #e4e3e7; }
+.reset-button { width: 100%; margin-top: 12px; }
+
 .stage-panel { min-width: 0; min-height: 0; display: grid; grid-template-rows: 48px minmax(0, 1fr) 66px; background: #202020; }
 .stage-toolbar { min-width: 0; padding: 0 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; position: relative; border-bottom: 1px solid #2d2d2d; background: #1c1c1c; }
 .stage-tools-right { gap: 7px; }
+.stage-title { color: #77767c; font-size: 11px; }
 .zoom-controls { gap: 3px; }
 .zoom-controls .tool-button { width: 30px; height: 30px; background: #242424; }
-.zoom-label { min-width: 34px; color: #85848a; text-align: center; font-size: 10px; }
-.selection-chip { width: 1px; height: 1px; overflow: hidden; position: absolute; left: -9999px; clip: rect(0 0 0 0); white-space: nowrap; }
-.fit-select { height: 32px; min-width: 114px; padding: 0 8px; display: flex; align-items: center; gap: 5px; border: 1px solid #343438; border-radius: 8px; color: #77767c; }
+.zoom-label { min-width: 40px; height: 30px; padding: 0; border: 0; background: transparent; color: #85848a; cursor: pointer; text-align: center; font-size: 10px; }
+.zoom-label:hover { color: #efeff2; }
 .color-button { border: 1px solid #343438; }
 .color-button i { width: 17px; height: 17px; display: block; border: 1px solid #57565c; border-radius: 50%; background: linear-gradient(90deg, #d2d2d2 50%, #151515 50%); }
 
@@ -117,6 +143,11 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .stage.light { background: #d3d3d3; }
 .canvas-wrap { max-width: 100%; max-height: 100%; position: relative; overflow: hidden; border-radius: 15px; transform-origin: center; transition: transform .16s ease; }
 .canvas-wrap canvas { width: 100%; height: 100%; max-width: calc(100vw - 420px); max-height: calc(100vh - 220px); display: block; object-fit: contain; background: #2b2b2b; }
+.perspective-editor { position: absolute; inset: 0; z-index: 4; }
+.perspective-editor[hidden] { display: none; }
+.perspective-editor svg { width: 100%; height: 100%; position: absolute; inset: 0; overflow: visible; pointer-events: none; }
+.perspective-editor polygon { fill: #ffffff0d; stroke: #f0eff3; stroke-width: 3; stroke-dasharray: 11 8; vector-effect: non-scaling-stroke; }
+.perspective-handle { width: 15px; height: 15px; position: absolute; z-index: 2; transform: translate(-50%, -50%); border: 2px solid #161616; border-radius: 50%; background: #efeff2; box-shadow: 0 2px 8px #0009; cursor: move; touch-action: none; }
 .screen-cta { position: absolute; left: 50%; top: 47%; transform: translate(-50%, -50%); padding: 0; display: grid; place-items: center; color: #fff; }
 .screen-cta span { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 50%; background: #070707; box-shadow: 0 13px 25px #0005; font-size: 25px; font-weight: 300; }
 .screen-cta b { display: none; }
@@ -158,8 +189,8 @@ html.is-collapsed .collapsed-bar[aria-hidden="true"] { visibility: visible; }
 
 @media (max-width: 900px) {
   .mode-tab { padding: 0 8px; }
-  .workspace { grid-template-columns: 48px 272px minmax(0, 1fr); }
-  .canvas-wrap canvas { max-width: calc(100vw - 372px); }
+  .workspace { grid-template-columns: 272px minmax(0, 1fr); }
+  .canvas-wrap canvas { max-width: calc(100vw - 324px); }
   .asset-meta { display: none; }
   .actionbar { grid-template-columns: 1fr; }
   .action-buttons { grid-column: 1; }
@@ -183,138 +214,146 @@ html.is-collapsed .collapsed-bar[aria-hidden="true"] { visibility: visible; }
     <div class="app-shell">
       <header class="modebar">
         <nav class="mode-tabs" aria-label="样机模式">
-          <button class="mode-tab active" data-mode="static">
+          <button class="mode-tab active" data-mode="catalog">
             <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="m6 16 4-4 3 3 2-2 3 3" /></svg>
-            <span>静态</span>
+            <span>样机</span>
           </button>
-          <button class="mode-tab" data-mode="live">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" /><path d="M12 7v10M7 12h10" /></svg>
-            <span>动态</span>
+          <button class="mode-tab" data-mode="adjust">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4v16M12 4v16M19 4v16M3 8h4M10 15h4M17 10h4" /></svg>
+            <span>画面调整</span>
           </button>
-          <button class="mode-tab" data-mode="3d">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="14" rx="2" /><path d="M3 20h18M8 17l-1 3M16 17l1 3" /></svg>
-            <span>3D 工作室</span>
-          </button>
-          <span class="mode-divider" aria-hidden="true"></span>
-          <button class="mode-tab" data-mode="warp">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5c5 3 11-3 16 0M4 12c5 3 11-3 16 0M4 19c5 3 11-3 16 0M5 4c3 5-3 11 0 16M12 4c3 5-3 11 0 16M19 4c3 5-3 11 0 16" /></svg>
-            <span>弯曲</span>
-          </button>
-          <button class="mode-tab" data-mode="distort">
+          <button class="mode-tab" data-mode="perspective">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 6 14-2 1 15-16 1Z" /><circle cx="5" cy="6" r="1" /><circle cx="19" cy="4" r="1" /><circle cx="20" cy="19" r="1" /><circle cx="4" cy="20" r="1" /></svg>
-            <span>透视变形</span>
+            <span>透视编辑</span>
           </button>
         </nav>
 
         <div class="top-actions">
-          <span class="catalog-state" id="catalogState" title="连接素材库" aria-label="连接素材库">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4" /></svg>
-            <i></i><span class="catalog-state-label">连接素材库</span>
-          </span>
           <button class="window-button" id="refreshButton" aria-label="刷新素材库" title="刷新素材库">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6v5h-5M4 18v-5h5" /><path d="M18.5 10A7 7 0 0 0 6.2 6.4L4 11M5.5 14A7 7 0 0 0 17.8 17.6L20 13" /></svg>
           </button>
           <button class="window-button" id="collapseButton" aria-label="收起插件" title="收起插件">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12" /></svg>
           </button>
-          <button class="window-button" id="menuButton" aria-label="更多" title="更多">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14" /></svg>
-          </button>
         </div>
       </header>
 
       <main class="workspace">
-        <aside class="rail" aria-label="功能栏">
-          <button class="rail-button active" title="样机目录" aria-label="样机目录">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="16" rx="3" /><path d="m8 15 3-3 2 2 2-2 2 3" /></svg>
-          </button>
-          <button class="rail-button" id="settingsButton" title="设置" aria-label="设置">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4v16M12 4v16M19 4v16M3 8h4M10 15h4M17 10h4" /></svg>
-          </button>
-          <div class="rail-spacer"></div>
-          <button class="rail-button" id="aboutButton" title="关于" aria-label="关于">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M9.8 9a2.4 2.4 0 1 1 3.6 2.1c-.9.5-1.4 1.1-1.4 2.2M12 17h.01" /></svg>
-          </button>
-        </aside>
-
         <aside class="catalog-panel">
-          <div class="catalog-segments" role="tablist">
-            <button class="segment active" data-filter="all">全部</button>
-            <button class="segment" data-filter="packs">套装</button>
-            <button class="segment" data-filter="similar">相似</button>
-          </div>
-
-          <div class="catalog-tools">
-            <label class="search-field">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 4 4" /></svg>
-              <input id="searchInput" type="search" placeholder="搜索样机" autocomplete="off" />
-              <button id="clearSearch" aria-label="清空搜索">×</button>
-            </label>
-            <div class="filter-row">
-              <label class="category-select">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
-                <select id="categorySelect" aria-label="样机分类">
-                  <option value="all">全部分类</option>
-                </select>
-              </label>
-              <label class="toggle-label">
-                <input id="freeOnly" type="checkbox" />
-                <span class="toggle"></span>
-                仅免费
-              </label>
+          <div class="catalog-view" id="catalogView">
+            <div class="catalog-segments" role="tablist">
+              <button class="segment active" data-filter="all">全部</button>
+              <button class="segment" data-filter="similar">相似</button>
             </div>
+
+            <div class="catalog-tools">
+              <label class="search-field">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 4 4" /></svg>
+                <input id="searchInput" type="text" placeholder="搜索样机" autocomplete="off" />
+                <button id="clearSearch" aria-label="清空搜索" hidden>×</button>
+              </label>
+              <div class="filter-row">
+                <label class="category-select">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+                  <select id="categorySelect" aria-label="样机分类">
+                    <option value="all">全部分类</option>
+                  </select>
+                </label>
+                <label class="toggle-label">
+                  <input id="freeOnly" type="checkbox" />
+                  <span class="toggle"></span>
+                  仅免费
+                </label>
+              </div>
+            </div>
+
+            <div class="catalog-summary">
+              <span id="catalogCount">0 个样机</span>
+              <span class="catalog-state loading" id="catalogState">正在连接</span>
+            </div>
+
+            <div class="asset-grid" id="assetGrid" aria-live="polite"></div>
+
+            <div class="catalog-empty" id="catalogEmpty" hidden>
+              <strong>没有找到样机</strong>
+              <span>换个关键词或刷新素材库</span>
+            </div>
+
+            <section class="recent-strip" id="recentStrip" hidden>
+              <header><span>最近使用</span><button id="clearRecent" aria-label="清除最近使用">×</button></header>
+              <div id="recentItems"></div>
+            </section>
           </div>
 
-          <div class="catalog-summary">
-            <span id="catalogCount">0 个样机</span>
-            <span id="catalogVersion">—</span>
-          </div>
+          <div class="adjust-panel" id="adjustPanel" hidden>
+            <header class="panel-heading">
+              <strong id="adjustPanelTitle">画面调整</strong>
+              <span id="designSourceLabel">尚未读取画面</span>
+            </header>
 
-          <div class="asset-grid" id="assetGrid" aria-live="polite"></div>
+            <div class="selection-card" id="selectionChip" aria-live="polite">
+              <span class="selection-dot"></span>
+              <span id="selectionText">未选择 Figma 图层</span>
+            </div>
 
-          <div class="catalog-empty" id="catalogEmpty" hidden>
-            <strong>没有找到样机</strong>
-            <span>换个关键词或刷新素材库</span>
-          </div>
+            <div class="source-actions">
+              <button class="panel-button primary-panel-button" id="readSelectionButton">读取 Figma 选区</button>
+              <label class="panel-button file-button">
+                导入图片
+                <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp" hidden />
+              </label>
+              <button class="panel-button" id="clearDesignButton" disabled>移除画面</button>
+            </div>
 
-          <section class="recent-strip" id="recentStrip" hidden>
-            <header><span>最近使用</span><button id="clearRecent" aria-label="清除最近使用">×</button></header>
-            <div id="recentItems"></div>
-          </section>
-        </aside>
-
-        <section class="stage-panel">
-          <div class="stage-toolbar">
-            <button class="tool-button" id="fitStageButton" title="适应画布" aria-label="适应画布">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M3 16v5h5" /></svg>
-            </button>
-            <div class="stage-tools-right">
-              <span class="zoom-controls">
-                <button class="tool-button" id="zoomOut" title="缩小" aria-label="缩小">−</button>
-                <span class="zoom-label" id="zoomLabel">适应</span>
-                <button class="tool-button" id="zoomIn" title="放大" aria-label="放大">＋</button>
-              </span>
-              <label class="fit-select">
-                <span>适配</span>
+            <section class="control-section">
+              <label class="select-control">
+                <span>填充方式</span>
                 <select id="fitMode">
                   <option value="cover">填满</option>
                   <option value="contain">完整显示</option>
                   <option value="stretch">拉伸</option>
                 </select>
               </label>
-              <button class="color-button" id="backgroundToggle" title="切换舞台背景" aria-label="切换舞台背景"><i></i></button>
-            </div>
+              <label class="range-control"><span>缩放</span><input id="designScale" type="range" min="50" max="200" value="100" /><output id="designScaleValue">100%</output></label>
+              <label class="range-control"><span>水平</span><input id="designOffsetX" type="range" min="-100" max="100" value="0" /><output id="designOffsetXValue">0%</output></label>
+              <label class="range-control"><span>垂直</span><input id="designOffsetY" type="range" min="-100" max="100" value="0" /><output id="designOffsetYValue">0%</output></label>
+              <label class="range-control"><span>旋转</span><input id="designRotation" type="range" min="-30" max="30" value="0" /><output id="designRotationValue">0°</output></label>
+            </section>
 
-            <div class="selection-chip" id="selectionChip" aria-live="polite">
-              <span class="selection-dot"></span>
-              <span id="selectionText">未选择 Figma 图层</span>
-              <button id="readSelectionButton">读取选区</button>
+            <section class="control-section">
+              <label class="range-control"><span>亮度</span><input id="designBrightness" type="range" min="50" max="150" value="100" /><output id="designBrightnessValue">100%</output></label>
+              <label class="range-control"><span>对比度</span><input id="designContrast" type="range" min="50" max="150" value="100" /><output id="designContrastValue">100%</output></label>
+              <label class="range-control"><span>饱和度</span><input id="designSaturation" type="range" min="0" max="200" value="100" /><output id="designSaturationValue">100%</output></label>
+            </section>
+
+            <button class="reset-button" id="resetAdjustmentsButton">恢复默认调整</button>
+            <button class="reset-button" id="resetPerspectiveButton">恢复样机透视</button>
+          </div>
+        </aside>
+
+        <section class="stage-panel">
+          <div class="stage-toolbar">
+            <span class="stage-title" id="stageTitle">预览</span>
+            <div class="stage-tools-right">
+              <span class="zoom-controls">
+                <button class="tool-button" id="zoomOut" title="缩小" aria-label="缩小">−</button>
+                <button class="zoom-label" id="zoomReset" title="适应画布">适应</button>
+                <button class="tool-button" id="zoomIn" title="放大" aria-label="放大">＋</button>
+              </span>
+              <button class="color-button" id="backgroundToggle" title="切换舞台背景" aria-label="切换舞台背景"><i></i></button>
             </div>
           </div>
 
           <div class="stage" id="stage">
             <div class="canvas-wrap" id="canvasWrap">
               <canvas id="previewCanvas" width="1448" height="1086"></canvas>
+              <div class="perspective-editor" id="perspectiveEditor" hidden>
+                <svg viewBox="0 0 1448 1086" preserveAspectRatio="none" aria-hidden="true"><polygon id="perspectivePolygon" points="" /></svg>
+                <button class="perspective-handle" data-corner="0" aria-label="左上角控制点"></button>
+                <button class="perspective-handle" data-corner="1" aria-label="右上角控制点"></button>
+                <button class="perspective-handle" data-corner="2" aria-label="右下角控制点"></button>
+                <button class="perspective-handle" data-corner="3" aria-label="左下角控制点"></button>
+              </div>
               <button class="screen-cta" id="screenCta">
                 <span>＋</span>
                 <b>选择 Figma 画面</b>
@@ -332,7 +371,7 @@ html.is-collapsed .collapsed-bar[aria-hidden="true"] { visibility: visible; }
               <button class="secondary-button" id="downloadButton">导出</button>
               <div class="primary-group">
                 <button class="primary-button" id="pasteButton">粘贴到画布</button>
-                <span class="resolution-pill">平面 · 原始尺寸</span>
+                <span class="resolution-pill">PNG · 原始尺寸</span>
               </div>
             </div>
           </footer>
@@ -387,13 +426,34 @@ const elements = {
   categorySelect: document.querySelector("#categorySelect"),
   freeOnly: document.querySelector("#freeOnly"),
   catalogCount: document.querySelector("#catalogCount"),
-  catalogVersion: document.querySelector("#catalogVersion"),
+  catalogView: document.querySelector("#catalogView"),
+  adjustPanel: document.querySelector("#adjustPanel"),
+  adjustPanelTitle: document.querySelector("#adjustPanelTitle"),
   assetGrid: document.querySelector("#assetGrid"),
   catalogEmpty: document.querySelector("#catalogEmpty"),
   selectionChip: document.querySelector("#selectionChip"),
   selectionText: document.querySelector("#selectionText"),
   readSelectionButton: document.querySelector("#readSelectionButton"),
+  imageInput: document.querySelector("#imageInput"),
+  clearDesignButton: document.querySelector("#clearDesignButton"),
+  designSourceLabel: document.querySelector("#designSourceLabel"),
   fitMode: document.querySelector("#fitMode"),
+  designScale: document.querySelector("#designScale"),
+  designScaleValue: document.querySelector("#designScaleValue"),
+  designOffsetX: document.querySelector("#designOffsetX"),
+  designOffsetXValue: document.querySelector("#designOffsetXValue"),
+  designOffsetY: document.querySelector("#designOffsetY"),
+  designOffsetYValue: document.querySelector("#designOffsetYValue"),
+  designRotation: document.querySelector("#designRotation"),
+  designRotationValue: document.querySelector("#designRotationValue"),
+  designBrightness: document.querySelector("#designBrightness"),
+  designBrightnessValue: document.querySelector("#designBrightnessValue"),
+  designContrast: document.querySelector("#designContrast"),
+  designContrastValue: document.querySelector("#designContrastValue"),
+  designSaturation: document.querySelector("#designSaturation"),
+  designSaturationValue: document.querySelector("#designSaturationValue"),
+  resetAdjustmentsButton: document.querySelector("#resetAdjustmentsButton"),
+  resetPerspectiveButton: document.querySelector("#resetPerspectiveButton"),
   backgroundToggle: document.querySelector("#backgroundToggle"),
   stage: document.querySelector("#stage"),
   canvasWrap: document.querySelector("#canvasWrap"),
@@ -406,8 +466,10 @@ const elements = {
   pasteButton: document.querySelector("#pasteButton"),
   zoomOut: document.querySelector("#zoomOut"),
   zoomIn: document.querySelector("#zoomIn"),
-  zoomLabel: document.querySelector("#zoomLabel"),
-  fitStageButton: document.querySelector("#fitStageButton"),
+  zoomReset: document.querySelector("#zoomReset"),
+  stageTitle: document.querySelector("#stageTitle"),
+  perspectiveEditor: document.querySelector("#perspectiveEditor"),
+  perspectivePolygon: document.querySelector("#perspectivePolygon"),
   recentStrip: document.querySelector("#recentStrip"),
   recentItems: document.querySelector("#recentItems"),
   clearRecent: document.querySelector("#clearRecent"),
@@ -415,9 +477,18 @@ const elements = {
   expandButton: document.querySelector("#expandButton"),
   collapsedBar: document.querySelector("#collapsedBar"),
   resizeGrip: document.querySelector("#resizeGrip"),
-  menuButton: document.querySelector("#menuButton"),
   toast: document.querySelector("#toast")
 };
+
+const DEFAULT_ADJUSTMENTS = Object.freeze({
+  scale: 1,
+  offsetX: 0,
+  offsetY: 0,
+  rotation: 0,
+  brightness: 1,
+  contrast: 1,
+  saturation: 1
+});
 
 const state = {
   manifest: null,
@@ -429,9 +500,13 @@ const state = {
   designObjectUrl: null,
   selection: null,
   segment: "all",
+  mode: "catalog",
   zoom: 1,
   rendering: false,
-  pluginCatalogCache: null
+  pluginCatalogCache: null,
+  customQuad: null,
+  designName: "",
+  adjustments: { ...DEFAULT_ADJUSTMENTS }
 };
 
 elements.versionLabel.textContent = `v${PLUGIN_VERSION}`;
@@ -507,7 +582,7 @@ function handlePreviewBridge(message) {
 function setCatalogState(mode, label) {
   state.catalogMode = mode;
   elements.catalogState.className = `catalog-state ${mode}`;
-  elements.catalogState.querySelector(".catalog-state-label").textContent = label;
+  elements.catalogState.textContent = label;
   elements.catalogState.title = label;
   elements.catalogState.setAttribute("aria-label", label);
 }
@@ -601,7 +676,6 @@ function hydrateCatalog() {
     option.textContent = category.label;
     elements.categorySelect.appendChild(option);
   }
-  elements.catalogVersion.textContent = state.manifest.catalogVersion;
   renderAssetGrid();
   if (!state.selectedAsset && state.manifest.items[0]) selectAsset(state.manifest.items[0].id);
 }
@@ -647,7 +721,6 @@ function filteredItems() {
   const onlyFree = elements.freeOnly.checked;
 
   return state.manifest.items.filter((item) => {
-    if (state.segment === "packs") return false;
     if (state.segment === "similar" && state.selectedAsset && item.category !== state.selectedAsset.category) return false;
     if (category !== "all" && item.category !== category) return false;
     if (onlyFree && !item.isFree) return false;
@@ -665,8 +738,8 @@ function renderAssetGrid() {
   elements.catalogCount.textContent = `${items.length} 个样机`;
   elements.catalogEmpty.hidden = items.length !== 0;
   if (!items.length) {
-    elements.catalogEmpty.querySelector("strong").textContent = state.segment === "packs" ? "套装即将开放" : "没有找到样机";
-    elements.catalogEmpty.querySelector("span").textContent = state.segment === "packs" ? "当前版本先验证单个样机流程" : "换个关键词或分类试试";
+    elements.catalogEmpty.querySelector("strong").textContent = "没有找到样机";
+    elements.catalogEmpty.querySelector("span").textContent = "换个关键词或分类试试";
   }
 
   for (const item of items) {
@@ -706,6 +779,7 @@ async function selectAsset(id) {
   const asset = state.manifest?.items.find((item) => item.id === id);
   if (!asset) return;
   state.selectedAsset = asset;
+  state.customQuad = asset.screen.quad.map((point) => [...point]);
   rememberRecent(id);
   elements.fitMode.value = asset.screen.defaultFit || "cover";
   elements.assetName.textContent = asset.name;
@@ -720,15 +794,21 @@ async function selectAsset(id) {
     state.baseImage = await loadImage(resolveAssetUrl(asset.layers.base));
     elements.previewCanvas.width = asset.canvas.width;
     elements.previewCanvas.height = asset.canvas.height;
+    updatePerspectiveEditor();
     await renderComposite();
   } catch (error) {
     showToast(error instanceof Error ? error.message : "样机加载失败");
   } finally {
     state.rendering = false;
     elements.renderingBadge.hidden = true;
-    elements.downloadButton.disabled = !state.baseImage;
-    elements.pasteButton.disabled = !state.baseImage;
+    updateOutputAvailability();
   }
+}
+
+function updateOutputAvailability() {
+  const disabled = state.rendering || !state.baseImage || !state.designImage;
+  elements.downloadButton.disabled = disabled;
+  elements.pasteButton.disabled = disabled;
 }
 
 function quadSize(quad) {
@@ -847,6 +927,30 @@ function drawImageToQuad(context, image, originalQuad, fit) {
   }
 }
 
+function adjustedDesignCanvas() {
+  if (!state.designImage) return null;
+  const canvas = document.createElement("canvas");
+  canvas.width = state.designImage.naturalWidth || state.designImage.width;
+  canvas.height = state.designImage.naturalHeight || state.designImage.height;
+  const context = canvas.getContext("2d", { alpha: false });
+  const { scale, offsetX, offsetY, rotation, brightness, contrast, saturation } = state.adjustments;
+  context.fillStyle = "#0d0d0d";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.translate(
+    canvas.width / 2 + offsetX * canvas.width * 0.42,
+    canvas.height / 2 + offsetY * canvas.height * 0.42
+  );
+  context.rotate(rotation * Math.PI / 180);
+  context.scale(scale, scale);
+  context.filter = `brightness(${brightness}) contrast(${contrast}) saturate(${saturation})`;
+  context.drawImage(state.designImage, -canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
+  return canvas;
+}
+
+function activeQuad() {
+  return state.customQuad || state.selectedAsset?.screen.quad || null;
+}
+
 async function renderComposite() {
   if (!state.selectedAsset || !state.baseImage) return;
   const canvas = elements.previewCanvas;
@@ -855,17 +959,158 @@ async function renderComposite() {
   context.clearRect(0, 0, canvas.width, canvas.height);
   context.drawImage(state.baseImage, 0, 0, canvas.width, canvas.height);
   if (state.designImage) {
-    drawImageToQuad(context, state.designImage, state.selectedAsset.screen.quad, elements.fitMode.value);
+    drawImageToQuad(context, adjustedDesignCanvas(), activeQuad(), elements.fitMode.value);
     elements.screenCta.classList.add("has-image");
     elements.screenCta.querySelector("b").textContent = "重新读取选区";
   } else {
     elements.screenCta.classList.remove("has-image");
     elements.screenCta.querySelector("b").textContent = "选择 Figma 画面";
   }
+  updatePerspectiveEditor();
+}
+
+function updatePerspectiveEditor() {
+  const quad = activeQuad();
+  if (!quad || !state.selectedAsset) return;
+  elements.perspectivePolygon.setAttribute("points", quad.map((point) => point.join(",")).join(" "));
+  const svg = elements.perspectivePolygon.ownerSVGElement;
+  svg.setAttribute("viewBox", `0 0 ${state.selectedAsset.canvas.width} ${state.selectedAsset.canvas.height}`);
+  for (const handle of elements.perspectiveEditor.querySelectorAll(".perspective-handle")) {
+    const point = quad[Number(handle.dataset.corner)];
+    handle.style.left = `${point[0] / state.selectedAsset.canvas.width * 100}%`;
+    handle.style.top = `${point[1] / state.selectedAsset.canvas.height * 100}%`;
+  }
+}
+
+function setMode(mode) {
+  state.mode = mode;
+  document.querySelectorAll(".mode-tab").forEach((tab) => tab.classList.toggle("active", tab.dataset.mode === mode));
+  elements.catalogView.hidden = mode !== "catalog";
+  elements.adjustPanel.hidden = mode === "catalog";
+  elements.perspectiveEditor.hidden = mode !== "perspective";
+  elements.adjustPanelTitle.textContent = mode === "perspective" ? "透视编辑" : "画面调整";
+  elements.stageTitle.textContent = mode === "perspective" ? "拖动四角控制点" : "预览";
+  elements.designSourceLabel.textContent = mode === "perspective"
+    ? "调整当前样机的屏幕四角，结果会直接写入导出图"
+    : (state.designName || "尚未读取画面");
+  updatePerspectiveEditor();
+}
+
+function syncAdjustmentControls() {
+  const values = state.adjustments;
+  elements.designScale.value = String(Math.round(values.scale * 100));
+  elements.designOffsetX.value = String(Math.round(values.offsetX * 100));
+  elements.designOffsetY.value = String(Math.round(values.offsetY * 100));
+  elements.designRotation.value = String(Math.round(values.rotation));
+  elements.designBrightness.value = String(Math.round(values.brightness * 100));
+  elements.designContrast.value = String(Math.round(values.contrast * 100));
+  elements.designSaturation.value = String(Math.round(values.saturation * 100));
+  elements.designScaleValue.textContent = `${elements.designScale.value}%`;
+  elements.designOffsetXValue.textContent = `${elements.designOffsetX.value}%`;
+  elements.designOffsetYValue.textContent = `${elements.designOffsetY.value}%`;
+  elements.designRotationValue.textContent = `${elements.designRotation.value}°`;
+  elements.designBrightnessValue.textContent = `${elements.designBrightness.value}%`;
+  elements.designContrastValue.textContent = `${elements.designContrast.value}%`;
+  elements.designSaturationValue.textContent = `${elements.designSaturation.value}%`;
+}
+
+function updateAdjustmentsFromControls() {
+  state.adjustments = {
+    scale: Number(elements.designScale.value) / 100,
+    offsetX: Number(elements.designOffsetX.value) / 100,
+    offsetY: Number(elements.designOffsetY.value) / 100,
+    rotation: Number(elements.designRotation.value),
+    brightness: Number(elements.designBrightness.value) / 100,
+    contrast: Number(elements.designContrast.value) / 100,
+    saturation: Number(elements.designSaturation.value) / 100
+  };
+  syncAdjustmentControls();
+  renderComposite();
+}
+
+async function setDesignBytes(bytes, name, mimeType = "image/png") {
+  if (state.designObjectUrl) URL.revokeObjectURL(state.designObjectUrl);
+  state.designObjectUrl = URL.createObjectURL(new Blob([bytes], { type: mimeType }));
+  state.designImage = await loadImage(state.designObjectUrl);
+  state.designName = name;
+  elements.designSourceLabel.textContent = name;
+  elements.clearDesignButton.disabled = false;
+  await renderComposite();
+  updateOutputAvailability();
+}
+
+function clearDesign() {
+  if (state.designObjectUrl) URL.revokeObjectURL(state.designObjectUrl);
+  state.designObjectUrl = null;
+  state.designImage = null;
+  state.designName = "";
+  elements.designSourceLabel.textContent = "尚未读取画面";
+  elements.clearDesignButton.disabled = true;
+  elements.imageInput.value = "";
+  updateOutputAvailability();
+  renderComposite();
+  showToast("已移除画面");
+}
+
+async function importImageFile(file) {
+  if (!file) return;
+  if (!/^image\/(png|jpeg|webp)$/.test(file.type)) {
+    showToast("请选择 PNG、JPG 或 WebP 图片");
+    elements.imageInput.value = "";
+    return;
+  }
+  if (file.size > 20 * 1024 * 1024) {
+    showToast("图片不能超过 20 MB");
+    elements.imageInput.value = "";
+    return;
+  }
+  try {
+    await setDesignBytes(new Uint8Array(await file.arrayBuffer()), file.name, file.type);
+    showToast(`已导入：${file.name}`);
+  } catch {
+    showToast("图片读取失败，请换一张图片重试");
+  }
+}
+
+function resetAdjustments() {
+  state.adjustments = { ...DEFAULT_ADJUSTMENTS };
+  elements.fitMode.value = state.selectedAsset?.screen.defaultFit || "cover";
+  syncAdjustmentControls();
+  renderComposite();
+  showToast("画面调整已恢复默认");
+}
+
+function resetPerspective() {
+  if (!state.selectedAsset) return;
+  state.customQuad = state.selectedAsset.screen.quad.map((point) => [...point]);
+  renderComposite();
+  showToast("样机透视已恢复默认");
+}
+
+function enablePerspectiveEditing() {
+  for (const handle of elements.perspectiveEditor.querySelectorAll(".perspective-handle")) {
+    handle.addEventListener("pointerdown", (event) => {
+      handle.setPointerCapture(event.pointerId);
+      event.preventDefault();
+    });
+    handle.addEventListener("pointermove", (event) => {
+      if (!handle.hasPointerCapture(event.pointerId) || !state.selectedAsset) return;
+      const rect = elements.previewCanvas.getBoundingClientRect();
+      const x = Math.max(0, Math.min(state.selectedAsset.canvas.width, (event.clientX - rect.left) / rect.width * state.selectedAsset.canvas.width));
+      const y = Math.max(0, Math.min(state.selectedAsset.canvas.height, (event.clientY - rect.top) / rect.height * state.selectedAsset.canvas.height));
+      state.customQuad[Number(handle.dataset.corner)] = [x, y];
+      updatePerspectiveEditor();
+      renderComposite();
+    });
+    handle.addEventListener("pointerup", (event) => {
+      if (handle.hasPointerCapture(event.pointerId)) handle.releasePointerCapture(event.pointerId);
+    });
+  }
 }
 
 function requestSelection() {
   if (!state.selection?.available) {
+    setMode("adjust");
     showToast(state.selection?.message || "请先在 Figma 画布中选择一个图层");
     return;
   }
@@ -923,13 +1168,13 @@ async function pasteRender() {
 function updateZoom(delta) {
   state.zoom = Math.max(0.7, Math.min(1.5, state.zoom + delta));
   elements.canvasWrap.style.transform = `scale(${state.zoom})`;
-  elements.zoomLabel.textContent = `${Math.round(state.zoom * 100)}%`;
+  elements.zoomReset.textContent = `${Math.round(state.zoom * 100)}%`;
 }
 
 function fitStage() {
   state.zoom = 1;
   elements.canvasWrap.style.transform = "scale(1)";
-  elements.zoomLabel.textContent = "适应";
+  elements.zoomReset.textContent = "适应";
 }
 
 function setWindowState(windowState) {
@@ -974,13 +1219,7 @@ function enableWindowResize() {
 }
 
 for (const tab of document.querySelectorAll(".mode-tab")) {
-  tab.addEventListener("click", () => {
-    if (tab.dataset.mode !== "static") {
-      showToast(`${tab.textContent.replace(/开发中|规划中/g, "").trim()}尚未实现；当前只开放真实可用的静态样机`);
-      return;
-    }
-    document.querySelectorAll(".mode-tab").forEach((item) => item.classList.toggle("active", item === tab));
-  });
+  tab.addEventListener("click", () => setMode(tab.dataset.mode));
 }
 
 for (const segment of document.querySelectorAll(".segment")) {
@@ -992,9 +1231,13 @@ for (const segment of document.querySelectorAll(".segment")) {
 }
 
 elements.refreshButton.addEventListener("click", fetchCatalog);
-elements.searchInput.addEventListener("input", renderAssetGrid);
+elements.searchInput.addEventListener("input", () => {
+  elements.clearSearch.hidden = !elements.searchInput.value;
+  renderAssetGrid();
+});
 elements.clearSearch.addEventListener("click", () => {
   elements.searchInput.value = "";
+  elements.clearSearch.hidden = true;
   elements.searchInput.focus();
   renderAssetGrid();
 });
@@ -1002,22 +1245,34 @@ elements.categorySelect.addEventListener("change", renderAssetGrid);
 elements.freeOnly.addEventListener("change", renderAssetGrid);
 elements.fitMode.addEventListener("change", renderComposite);
 elements.readSelectionButton.addEventListener("click", requestSelection);
+elements.imageInput.addEventListener("change", () => importImageFile(elements.imageInput.files?.[0]));
+elements.clearDesignButton.addEventListener("click", clearDesign);
+for (const control of [
+  elements.designScale,
+  elements.designOffsetX,
+  elements.designOffsetY,
+  elements.designRotation,
+  elements.designBrightness,
+  elements.designContrast,
+  elements.designSaturation
+]) control.addEventListener("input", updateAdjustmentsFromControls);
+elements.resetAdjustmentsButton.addEventListener("click", resetAdjustments);
+elements.resetPerspectiveButton.addEventListener("click", resetPerspective);
 elements.screenCta.addEventListener("click", requestSelection);
 elements.downloadButton.addEventListener("click", downloadRender);
 elements.pasteButton.addEventListener("click", pasteRender);
 elements.backgroundToggle.addEventListener("click", () => elements.stage.classList.toggle("light"));
 elements.zoomIn.addEventListener("click", () => updateZoom(0.1));
 elements.zoomOut.addEventListener("click", () => updateZoom(-0.1));
-elements.fitStageButton.addEventListener("click", fitStage);
+elements.zoomReset.addEventListener("click", fitStage);
 elements.clearRecent.addEventListener("click", () => {
   safeStorage.removeItem(RECENT_KEY);
   renderRecentStrip();
 });
 elements.collapseButton.addEventListener("click", () => setWindowState("collapsed"));
 elements.expandButton.addEventListener("click", () => setWindowState("expanded"));
-elements.menuButton.addEventListener("click", () => showToast(`样机工作室 v${PLUGIN_VERSION} · 远程素材目录`));
-document.querySelector("#settingsButton").addEventListener("click", () => showToast("设置将在远程素材链路验证后开放"));
-document.querySelector("#aboutButton").addEventListener("click", () => showToast("样机工作室 · 自有素材与渲染引擎"));
+syncAdjustmentControls();
+enablePerspectiveEditing();
 enableWindowResize();
 
 window.onmessage = async (event) => {
@@ -1049,11 +1304,8 @@ window.onmessage = async (event) => {
 
   if (message.type === "selection-image") {
     elements.readSelectionButton.disabled = false;
-    elements.readSelectionButton.textContent = "重新读取";
-    if (state.designObjectUrl) URL.revokeObjectURL(state.designObjectUrl);
-    state.designObjectUrl = URL.createObjectURL(new Blob([message.bytes], { type: "image/png" }));
-    state.designImage = await loadImage(state.designObjectUrl);
-    await renderComposite();
+    elements.readSelectionButton.textContent = "重新读取 Figma 选区";
+    await setDesignBytes(message.bytes, message.name);
     showToast(`已放入：${message.name}`);
     return;
   }

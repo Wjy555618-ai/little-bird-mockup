@@ -41,13 +41,34 @@ const elements = {
   categorySelect: document.querySelector("#categorySelect"),
   freeOnly: document.querySelector("#freeOnly"),
   catalogCount: document.querySelector("#catalogCount"),
-  catalogVersion: document.querySelector("#catalogVersion"),
+  catalogView: document.querySelector("#catalogView"),
+  adjustPanel: document.querySelector("#adjustPanel"),
+  adjustPanelTitle: document.querySelector("#adjustPanelTitle"),
   assetGrid: document.querySelector("#assetGrid"),
   catalogEmpty: document.querySelector("#catalogEmpty"),
   selectionChip: document.querySelector("#selectionChip"),
   selectionText: document.querySelector("#selectionText"),
   readSelectionButton: document.querySelector("#readSelectionButton"),
+  imageInput: document.querySelector("#imageInput"),
+  clearDesignButton: document.querySelector("#clearDesignButton"),
+  designSourceLabel: document.querySelector("#designSourceLabel"),
   fitMode: document.querySelector("#fitMode"),
+  designScale: document.querySelector("#designScale"),
+  designScaleValue: document.querySelector("#designScaleValue"),
+  designOffsetX: document.querySelector("#designOffsetX"),
+  designOffsetXValue: document.querySelector("#designOffsetXValue"),
+  designOffsetY: document.querySelector("#designOffsetY"),
+  designOffsetYValue: document.querySelector("#designOffsetYValue"),
+  designRotation: document.querySelector("#designRotation"),
+  designRotationValue: document.querySelector("#designRotationValue"),
+  designBrightness: document.querySelector("#designBrightness"),
+  designBrightnessValue: document.querySelector("#designBrightnessValue"),
+  designContrast: document.querySelector("#designContrast"),
+  designContrastValue: document.querySelector("#designContrastValue"),
+  designSaturation: document.querySelector("#designSaturation"),
+  designSaturationValue: document.querySelector("#designSaturationValue"),
+  resetAdjustmentsButton: document.querySelector("#resetAdjustmentsButton"),
+  resetPerspectiveButton: document.querySelector("#resetPerspectiveButton"),
   backgroundToggle: document.querySelector("#backgroundToggle"),
   stage: document.querySelector("#stage"),
   canvasWrap: document.querySelector("#canvasWrap"),
@@ -60,8 +81,10 @@ const elements = {
   pasteButton: document.querySelector("#pasteButton"),
   zoomOut: document.querySelector("#zoomOut"),
   zoomIn: document.querySelector("#zoomIn"),
-  zoomLabel: document.querySelector("#zoomLabel"),
-  fitStageButton: document.querySelector("#fitStageButton"),
+  zoomReset: document.querySelector("#zoomReset"),
+  stageTitle: document.querySelector("#stageTitle"),
+  perspectiveEditor: document.querySelector("#perspectiveEditor"),
+  perspectivePolygon: document.querySelector("#perspectivePolygon"),
   recentStrip: document.querySelector("#recentStrip"),
   recentItems: document.querySelector("#recentItems"),
   clearRecent: document.querySelector("#clearRecent"),
@@ -69,9 +92,18 @@ const elements = {
   expandButton: document.querySelector("#expandButton"),
   collapsedBar: document.querySelector("#collapsedBar"),
   resizeGrip: document.querySelector("#resizeGrip"),
-  menuButton: document.querySelector("#menuButton"),
   toast: document.querySelector("#toast")
 };
+
+const DEFAULT_ADJUSTMENTS = Object.freeze({
+  scale: 1,
+  offsetX: 0,
+  offsetY: 0,
+  rotation: 0,
+  brightness: 1,
+  contrast: 1,
+  saturation: 1
+});
 
 const state = {
   manifest: null,
@@ -83,9 +115,13 @@ const state = {
   designObjectUrl: null,
   selection: null,
   segment: "all",
+  mode: "catalog",
   zoom: 1,
   rendering: false,
-  pluginCatalogCache: null
+  pluginCatalogCache: null,
+  customQuad: null,
+  designName: "",
+  adjustments: { ...DEFAULT_ADJUSTMENTS }
 };
 
 elements.versionLabel.textContent = `v${PLUGIN_VERSION}`;
@@ -161,7 +197,7 @@ function handlePreviewBridge(message) {
 function setCatalogState(mode, label) {
   state.catalogMode = mode;
   elements.catalogState.className = `catalog-state ${mode}`;
-  elements.catalogState.querySelector(".catalog-state-label").textContent = label;
+  elements.catalogState.textContent = label;
   elements.catalogState.title = label;
   elements.catalogState.setAttribute("aria-label", label);
 }
@@ -255,7 +291,6 @@ function hydrateCatalog() {
     option.textContent = category.label;
     elements.categorySelect.appendChild(option);
   }
-  elements.catalogVersion.textContent = state.manifest.catalogVersion;
   renderAssetGrid();
   if (!state.selectedAsset && state.manifest.items[0]) selectAsset(state.manifest.items[0].id);
 }
@@ -301,7 +336,6 @@ function filteredItems() {
   const onlyFree = elements.freeOnly.checked;
 
   return state.manifest.items.filter((item) => {
-    if (state.segment === "packs") return false;
     if (state.segment === "similar" && state.selectedAsset && item.category !== state.selectedAsset.category) return false;
     if (category !== "all" && item.category !== category) return false;
     if (onlyFree && !item.isFree) return false;
@@ -319,8 +353,8 @@ function renderAssetGrid() {
   elements.catalogCount.textContent = `${items.length} 个样机`;
   elements.catalogEmpty.hidden = items.length !== 0;
   if (!items.length) {
-    elements.catalogEmpty.querySelector("strong").textContent = state.segment === "packs" ? "套装即将开放" : "没有找到样机";
-    elements.catalogEmpty.querySelector("span").textContent = state.segment === "packs" ? "当前版本先验证单个样机流程" : "换个关键词或分类试试";
+    elements.catalogEmpty.querySelector("strong").textContent = "没有找到样机";
+    elements.catalogEmpty.querySelector("span").textContent = "换个关键词或分类试试";
   }
 
   for (const item of items) {
@@ -360,6 +394,7 @@ async function selectAsset(id) {
   const asset = state.manifest?.items.find((item) => item.id === id);
   if (!asset) return;
   state.selectedAsset = asset;
+  state.customQuad = asset.screen.quad.map((point) => [...point]);
   rememberRecent(id);
   elements.fitMode.value = asset.screen.defaultFit || "cover";
   elements.assetName.textContent = asset.name;
@@ -374,15 +409,21 @@ async function selectAsset(id) {
     state.baseImage = await loadImage(resolveAssetUrl(asset.layers.base));
     elements.previewCanvas.width = asset.canvas.width;
     elements.previewCanvas.height = asset.canvas.height;
+    updatePerspectiveEditor();
     await renderComposite();
   } catch (error) {
     showToast(error instanceof Error ? error.message : "样机加载失败");
   } finally {
     state.rendering = false;
     elements.renderingBadge.hidden = true;
-    elements.downloadButton.disabled = !state.baseImage;
-    elements.pasteButton.disabled = !state.baseImage;
+    updateOutputAvailability();
   }
+}
+
+function updateOutputAvailability() {
+  const disabled = state.rendering || !state.baseImage || !state.designImage;
+  elements.downloadButton.disabled = disabled;
+  elements.pasteButton.disabled = disabled;
 }
 
 function quadSize(quad) {
@@ -501,6 +542,30 @@ function drawImageToQuad(context, image, originalQuad, fit) {
   }
 }
 
+function adjustedDesignCanvas() {
+  if (!state.designImage) return null;
+  const canvas = document.createElement("canvas");
+  canvas.width = state.designImage.naturalWidth || state.designImage.width;
+  canvas.height = state.designImage.naturalHeight || state.designImage.height;
+  const context = canvas.getContext("2d", { alpha: false });
+  const { scale, offsetX, offsetY, rotation, brightness, contrast, saturation } = state.adjustments;
+  context.fillStyle = "#0d0d0d";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.translate(
+    canvas.width / 2 + offsetX * canvas.width * 0.42,
+    canvas.height / 2 + offsetY * canvas.height * 0.42
+  );
+  context.rotate(rotation * Math.PI / 180);
+  context.scale(scale, scale);
+  context.filter = `brightness(${brightness}) contrast(${contrast}) saturate(${saturation})`;
+  context.drawImage(state.designImage, -canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
+  return canvas;
+}
+
+function activeQuad() {
+  return state.customQuad || state.selectedAsset?.screen.quad || null;
+}
+
 async function renderComposite() {
   if (!state.selectedAsset || !state.baseImage) return;
   const canvas = elements.previewCanvas;
@@ -509,17 +574,158 @@ async function renderComposite() {
   context.clearRect(0, 0, canvas.width, canvas.height);
   context.drawImage(state.baseImage, 0, 0, canvas.width, canvas.height);
   if (state.designImage) {
-    drawImageToQuad(context, state.designImage, state.selectedAsset.screen.quad, elements.fitMode.value);
+    drawImageToQuad(context, adjustedDesignCanvas(), activeQuad(), elements.fitMode.value);
     elements.screenCta.classList.add("has-image");
     elements.screenCta.querySelector("b").textContent = "重新读取选区";
   } else {
     elements.screenCta.classList.remove("has-image");
     elements.screenCta.querySelector("b").textContent = "选择 Figma 画面";
   }
+  updatePerspectiveEditor();
+}
+
+function updatePerspectiveEditor() {
+  const quad = activeQuad();
+  if (!quad || !state.selectedAsset) return;
+  elements.perspectivePolygon.setAttribute("points", quad.map((point) => point.join(",")).join(" "));
+  const svg = elements.perspectivePolygon.ownerSVGElement;
+  svg.setAttribute("viewBox", `0 0 ${state.selectedAsset.canvas.width} ${state.selectedAsset.canvas.height}`);
+  for (const handle of elements.perspectiveEditor.querySelectorAll(".perspective-handle")) {
+    const point = quad[Number(handle.dataset.corner)];
+    handle.style.left = `${point[0] / state.selectedAsset.canvas.width * 100}%`;
+    handle.style.top = `${point[1] / state.selectedAsset.canvas.height * 100}%`;
+  }
+}
+
+function setMode(mode) {
+  state.mode = mode;
+  document.querySelectorAll(".mode-tab").forEach((tab) => tab.classList.toggle("active", tab.dataset.mode === mode));
+  elements.catalogView.hidden = mode !== "catalog";
+  elements.adjustPanel.hidden = mode === "catalog";
+  elements.perspectiveEditor.hidden = mode !== "perspective";
+  elements.adjustPanelTitle.textContent = mode === "perspective" ? "透视编辑" : "画面调整";
+  elements.stageTitle.textContent = mode === "perspective" ? "拖动四角控制点" : "预览";
+  elements.designSourceLabel.textContent = mode === "perspective"
+    ? "调整当前样机的屏幕四角，结果会直接写入导出图"
+    : (state.designName || "尚未读取画面");
+  updatePerspectiveEditor();
+}
+
+function syncAdjustmentControls() {
+  const values = state.adjustments;
+  elements.designScale.value = String(Math.round(values.scale * 100));
+  elements.designOffsetX.value = String(Math.round(values.offsetX * 100));
+  elements.designOffsetY.value = String(Math.round(values.offsetY * 100));
+  elements.designRotation.value = String(Math.round(values.rotation));
+  elements.designBrightness.value = String(Math.round(values.brightness * 100));
+  elements.designContrast.value = String(Math.round(values.contrast * 100));
+  elements.designSaturation.value = String(Math.round(values.saturation * 100));
+  elements.designScaleValue.textContent = `${elements.designScale.value}%`;
+  elements.designOffsetXValue.textContent = `${elements.designOffsetX.value}%`;
+  elements.designOffsetYValue.textContent = `${elements.designOffsetY.value}%`;
+  elements.designRotationValue.textContent = `${elements.designRotation.value}°`;
+  elements.designBrightnessValue.textContent = `${elements.designBrightness.value}%`;
+  elements.designContrastValue.textContent = `${elements.designContrast.value}%`;
+  elements.designSaturationValue.textContent = `${elements.designSaturation.value}%`;
+}
+
+function updateAdjustmentsFromControls() {
+  state.adjustments = {
+    scale: Number(elements.designScale.value) / 100,
+    offsetX: Number(elements.designOffsetX.value) / 100,
+    offsetY: Number(elements.designOffsetY.value) / 100,
+    rotation: Number(elements.designRotation.value),
+    brightness: Number(elements.designBrightness.value) / 100,
+    contrast: Number(elements.designContrast.value) / 100,
+    saturation: Number(elements.designSaturation.value) / 100
+  };
+  syncAdjustmentControls();
+  renderComposite();
+}
+
+async function setDesignBytes(bytes, name, mimeType = "image/png") {
+  if (state.designObjectUrl) URL.revokeObjectURL(state.designObjectUrl);
+  state.designObjectUrl = URL.createObjectURL(new Blob([bytes], { type: mimeType }));
+  state.designImage = await loadImage(state.designObjectUrl);
+  state.designName = name;
+  elements.designSourceLabel.textContent = name;
+  elements.clearDesignButton.disabled = false;
+  await renderComposite();
+  updateOutputAvailability();
+}
+
+function clearDesign() {
+  if (state.designObjectUrl) URL.revokeObjectURL(state.designObjectUrl);
+  state.designObjectUrl = null;
+  state.designImage = null;
+  state.designName = "";
+  elements.designSourceLabel.textContent = "尚未读取画面";
+  elements.clearDesignButton.disabled = true;
+  elements.imageInput.value = "";
+  updateOutputAvailability();
+  renderComposite();
+  showToast("已移除画面");
+}
+
+async function importImageFile(file) {
+  if (!file) return;
+  if (!/^image\/(png|jpeg|webp)$/.test(file.type)) {
+    showToast("请选择 PNG、JPG 或 WebP 图片");
+    elements.imageInput.value = "";
+    return;
+  }
+  if (file.size > 20 * 1024 * 1024) {
+    showToast("图片不能超过 20 MB");
+    elements.imageInput.value = "";
+    return;
+  }
+  try {
+    await setDesignBytes(new Uint8Array(await file.arrayBuffer()), file.name, file.type);
+    showToast(`已导入：${file.name}`);
+  } catch {
+    showToast("图片读取失败，请换一张图片重试");
+  }
+}
+
+function resetAdjustments() {
+  state.adjustments = { ...DEFAULT_ADJUSTMENTS };
+  elements.fitMode.value = state.selectedAsset?.screen.defaultFit || "cover";
+  syncAdjustmentControls();
+  renderComposite();
+  showToast("画面调整已恢复默认");
+}
+
+function resetPerspective() {
+  if (!state.selectedAsset) return;
+  state.customQuad = state.selectedAsset.screen.quad.map((point) => [...point]);
+  renderComposite();
+  showToast("样机透视已恢复默认");
+}
+
+function enablePerspectiveEditing() {
+  for (const handle of elements.perspectiveEditor.querySelectorAll(".perspective-handle")) {
+    handle.addEventListener("pointerdown", (event) => {
+      handle.setPointerCapture(event.pointerId);
+      event.preventDefault();
+    });
+    handle.addEventListener("pointermove", (event) => {
+      if (!handle.hasPointerCapture(event.pointerId) || !state.selectedAsset) return;
+      const rect = elements.previewCanvas.getBoundingClientRect();
+      const x = Math.max(0, Math.min(state.selectedAsset.canvas.width, (event.clientX - rect.left) / rect.width * state.selectedAsset.canvas.width));
+      const y = Math.max(0, Math.min(state.selectedAsset.canvas.height, (event.clientY - rect.top) / rect.height * state.selectedAsset.canvas.height));
+      state.customQuad[Number(handle.dataset.corner)] = [x, y];
+      updatePerspectiveEditor();
+      renderComposite();
+    });
+    handle.addEventListener("pointerup", (event) => {
+      if (handle.hasPointerCapture(event.pointerId)) handle.releasePointerCapture(event.pointerId);
+    });
+  }
 }
 
 function requestSelection() {
   if (!state.selection?.available) {
+    setMode("adjust");
     showToast(state.selection?.message || "请先在 Figma 画布中选择一个图层");
     return;
   }
@@ -577,13 +783,13 @@ async function pasteRender() {
 function updateZoom(delta) {
   state.zoom = Math.max(0.7, Math.min(1.5, state.zoom + delta));
   elements.canvasWrap.style.transform = `scale(${state.zoom})`;
-  elements.zoomLabel.textContent = `${Math.round(state.zoom * 100)}%`;
+  elements.zoomReset.textContent = `${Math.round(state.zoom * 100)}%`;
 }
 
 function fitStage() {
   state.zoom = 1;
   elements.canvasWrap.style.transform = "scale(1)";
-  elements.zoomLabel.textContent = "适应";
+  elements.zoomReset.textContent = "适应";
 }
 
 function setWindowState(windowState) {
@@ -628,13 +834,7 @@ function enableWindowResize() {
 }
 
 for (const tab of document.querySelectorAll(".mode-tab")) {
-  tab.addEventListener("click", () => {
-    if (tab.dataset.mode !== "static") {
-      showToast(`${tab.textContent.replace(/开发中|规划中/g, "").trim()}尚未实现；当前只开放真实可用的静态样机`);
-      return;
-    }
-    document.querySelectorAll(".mode-tab").forEach((item) => item.classList.toggle("active", item === tab));
-  });
+  tab.addEventListener("click", () => setMode(tab.dataset.mode));
 }
 
 for (const segment of document.querySelectorAll(".segment")) {
@@ -646,9 +846,13 @@ for (const segment of document.querySelectorAll(".segment")) {
 }
 
 elements.refreshButton.addEventListener("click", fetchCatalog);
-elements.searchInput.addEventListener("input", renderAssetGrid);
+elements.searchInput.addEventListener("input", () => {
+  elements.clearSearch.hidden = !elements.searchInput.value;
+  renderAssetGrid();
+});
 elements.clearSearch.addEventListener("click", () => {
   elements.searchInput.value = "";
+  elements.clearSearch.hidden = true;
   elements.searchInput.focus();
   renderAssetGrid();
 });
@@ -656,22 +860,34 @@ elements.categorySelect.addEventListener("change", renderAssetGrid);
 elements.freeOnly.addEventListener("change", renderAssetGrid);
 elements.fitMode.addEventListener("change", renderComposite);
 elements.readSelectionButton.addEventListener("click", requestSelection);
+elements.imageInput.addEventListener("change", () => importImageFile(elements.imageInput.files?.[0]));
+elements.clearDesignButton.addEventListener("click", clearDesign);
+for (const control of [
+  elements.designScale,
+  elements.designOffsetX,
+  elements.designOffsetY,
+  elements.designRotation,
+  elements.designBrightness,
+  elements.designContrast,
+  elements.designSaturation
+]) control.addEventListener("input", updateAdjustmentsFromControls);
+elements.resetAdjustmentsButton.addEventListener("click", resetAdjustments);
+elements.resetPerspectiveButton.addEventListener("click", resetPerspective);
 elements.screenCta.addEventListener("click", requestSelection);
 elements.downloadButton.addEventListener("click", downloadRender);
 elements.pasteButton.addEventListener("click", pasteRender);
 elements.backgroundToggle.addEventListener("click", () => elements.stage.classList.toggle("light"));
 elements.zoomIn.addEventListener("click", () => updateZoom(0.1));
 elements.zoomOut.addEventListener("click", () => updateZoom(-0.1));
-elements.fitStageButton.addEventListener("click", fitStage);
+elements.zoomReset.addEventListener("click", fitStage);
 elements.clearRecent.addEventListener("click", () => {
   safeStorage.removeItem(RECENT_KEY);
   renderRecentStrip();
 });
 elements.collapseButton.addEventListener("click", () => setWindowState("collapsed"));
 elements.expandButton.addEventListener("click", () => setWindowState("expanded"));
-elements.menuButton.addEventListener("click", () => showToast(`样机工作室 v${PLUGIN_VERSION} · 远程素材目录`));
-document.querySelector("#settingsButton").addEventListener("click", () => showToast("设置将在远程素材链路验证后开放"));
-document.querySelector("#aboutButton").addEventListener("click", () => showToast("样机工作室 · 自有素材与渲染引擎"));
+syncAdjustmentControls();
+enablePerspectiveEditing();
 enableWindowResize();
 
 window.onmessage = async (event) => {
@@ -703,11 +919,8 @@ window.onmessage = async (event) => {
 
   if (message.type === "selection-image") {
     elements.readSelectionButton.disabled = false;
-    elements.readSelectionButton.textContent = "重新读取";
-    if (state.designObjectUrl) URL.revokeObjectURL(state.designObjectUrl);
-    state.designObjectUrl = URL.createObjectURL(new Blob([message.bytes], { type: "image/png" }));
-    state.designImage = await loadImage(state.designObjectUrl);
-    await renderComposite();
+    elements.readSelectionButton.textContent = "重新读取 Figma 选区";
+    await setDesignBytes(message.bytes, message.name);
     showToast(`已放入：${message.name}`);
     return;
   }
