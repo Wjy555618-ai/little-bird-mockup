@@ -1,0 +1,13 @@
+{
+  "name": "样机工作室 · Mockup Studio",
+  "id": "mockup-studio-cn-development",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "editorType": ["figma"],
+  "documentAccess": "dynamic-page",
+  "networkAccess": {
+    "allowedDomains": ["https://assets.mockup-studio.example"],
+    "devAllowedDomains": ["http://localhost:4173"]
+  }
+}

@@ -1,0 +1,34 @@
+# 样机工作室（开发代号）
+
+一个中文优先、素材与插件解耦的 Figma 样机插件。插件负责读取 Figma 选区、渲染样机和写回画布；样机内容由独立远程目录提供，因此新增样机不需要重新发布插件。
+
+## 当前验证目标
+
+先跑通一条真实链路：
+
+1. 插件从远程 `manifest.json` 拉取样机目录。
+2. 用户在 Figma 中选择一个图层或画框。
+3. 插件导出选区并放入样机屏幕区域。
+4. 用户将合成结果粘贴回 Figma。
+5. 素材目录新增条目后，插件刷新即可看到，不需要重新发版。
+
+当前版本是受限真实 MVP：`Static` 主流程实现；`Live`、`3D Studio`、`Warp`、`Distort` 先保留产品入口，但不会伪装成已完成能力。
+
+## 本地运行素材服务
+
+本机 Node 不在系统 PATH 时，使用 Codex 自带运行时：
+
+```bash
+/Users/wangzhentao/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node scripts/serve-catalog.mjs
+```
+
+服务默认运行在 `http://localhost:4173`。然后在 Figma 的“开发”菜单中导入 [`plugin/manifest.json`](plugin/manifest.json)。
+
+## 发布前必须替换
+
+`plugin/ui.js` 中的 `PRODUCTION_CATALOG_URL` 目前是占位地址。正式发布前需确定一个长期不变、支持 HTTPS 与 CORS 的素材域名，并同步更新 `plugin/manifest.json` 的 `allowedDomains`。域名固定后，后续只更新该域名下的清单和素材即可。
+
+## Git 节点
+
+工程按可验证里程碑提交：架构、真实替换链路、视觉/测试。不要把未完成入口描述成已实现功能。
+

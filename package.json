@@ -1,0 +1,16 @@
+{
+  "name": "mockup-studio-cn",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A Chinese-first Figma mockup plugin backed by an independently updated remote catalog.",
+  "scripts": {
+    "catalog": "node scripts/serve-catalog.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "check": "node --check plugin/code.js && node --check plugin/ui.js && node --check scripts/serve-catalog.mjs && node --test tests/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
+
