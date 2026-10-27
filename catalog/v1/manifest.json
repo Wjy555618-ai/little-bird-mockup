@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "catalogVersion": "2026.10.28.1",
+  "publishedAt": "2026-10-28T00:00:00+08:00",
+  "minimumPluginVersion": "0.1.0",
+  "categories": [
+    { "id": "display", "label": "显示器" }
+  ],
+  "items": [
+    {
+      "id": "studio-display-front",
+      "revision": 1,
+      "name": "工作室显示器 · 正面",
+      "category": "display",
+      "tags": ["显示器", "桌面", "正面", "金属", "studio display", "monitor"],
+      "isFree": true,
+      "renderer": "static-screen-v1",
+      "canvas": { "width": 1448, "height": 1086 },
+      "screen": {
+        "quad": [[260, 185], [1190, 185], [1190, 702], [260, 702]],
+        "defaultFit": "cover"
+      },
+      "layers": {
+        "base": "assets/studio-display-front-r1.png"
+      },
+      "thumbnail": "thumbnails/studio-display-front-r1.png",
+      "integrity": {
+        "baseSha256": "9af4efe18bbbc3a899d57902e71960a4d9f135389da99833a7b0e922764b0eeb"
+      }
+    }
+  ]
+}
+

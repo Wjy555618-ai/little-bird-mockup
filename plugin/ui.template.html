@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>样机工作室</title>
+    <style>/*__STYLES__*/</style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">样机工作室</span>
+          <span class="version" id="versionLabel">DEV</span>
+        </div>
+
+        <nav class="mode-tabs" aria-label="样机模式">
+          <button class="mode-tab active" data-mode="static"><span>▧</span>静态样机</button>
+          <button class="mode-tab" data-mode="live"><span>✦</span>动态样机<i>开发中</i></button>
+          <button class="mode-tab" data-mode="3d"><span>▱</span>3D 工作室<i>开发中</i></button>
+          <span class="mode-divider"></span>
+          <button class="mode-tab" data-mode="warp"><span>⌁</span>弯曲<i>规划中</i></button>
+          <button class="mode-tab" data-mode="distort"><span>◇</span>透视变形<i>规划中</i></button>
+        </nav>
+
+        <div class="top-actions">
+          <span class="catalog-state" id="catalogState"><i></i>连接素材库</span>
+          <button class="icon-button" id="refreshButton" aria-label="刷新素材库" title="刷新素材库">↻</button>
+          <button class="profile-button" aria-label="本地版本">本地版</button>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <aside class="rail" aria-label="功能栏">
+          <button class="rail-button active" title="样机目录">▧</button>
+          <button class="rail-button" id="settingsButton" title="设置">⌘</button>
+          <div class="rail-spacer"></div>
+          <button class="rail-button" id="aboutButton" title="关于">?</button>
+        </aside>
+
+        <aside class="catalog-panel">
+          <div class="catalog-segments" role="tablist">
+            <button class="segment active" data-filter="all">全部</button>
+            <button class="segment" data-filter="packs">套装</button>
+            <button class="segment" data-filter="recent">最近</button>
+          </div>
+
+          <div class="catalog-tools">
+            <label class="search-field">
+              <span>⌕</span>
+              <input id="searchInput" type="search" placeholder="搜索样机" autocomplete="off" />
+              <button id="clearSearch" aria-label="清空搜索">×</button>
+            </label>
+            <div class="filter-row">
+              <label class="category-select">
+                <span>☰</span>
+                <select id="categorySelect" aria-label="样机分类">
+                  <option value="all">全部分类</option>
+                </select>
+              </label>
+              <label class="toggle-label">
+                <input id="freeOnly" type="checkbox" />
+                <span class="toggle"></span>
+                仅免费
+              </label>
+            </div>
+          </div>
+
+          <div class="catalog-summary">
+            <span id="catalogCount">0 个样机</span>
+            <span id="catalogVersion">—</span>
+          </div>
+
+          <div class="asset-grid" id="assetGrid" aria-live="polite"></div>
+
+          <div class="catalog-empty" id="catalogEmpty" hidden>
+            <strong>没有找到样机</strong>
+            <span>换个关键词或刷新素材库</span>
+          </div>
+        </aside>
+
+        <section class="stage-panel">
+          <div class="stage-toolbar">
+            <div>
+              <button class="tool-button active" title="适应画布">⌗</button>
+              <button class="tool-button" id="zoomOut" title="缩小">−</button>
+              <span class="zoom-label" id="zoomLabel">适应</span>
+              <button class="tool-button" id="zoomIn" title="放大">＋</button>
+            </div>
+            <div class="selection-chip" id="selectionChip">
+              <span class="selection-dot"></span>
+              <span id="selectionText">未选择 Figma 图层</span>
+              <button id="readSelectionButton">读取选区</button>
+            </div>
+            <div>
+              <label class="fit-select">
+                适配
+                <select id="fitMode">
+                  <option value="cover">填满</option>
+                  <option value="contain">完整显示</option>
+                  <option value="stretch">拉伸</option>
+                </select>
+              </label>
+              <button class="tool-button" id="backgroundToggle" title="切换舞台背景">◐</button>
+            </div>
+          </div>
+
+          <div class="stage" id="stage">
+            <div class="canvas-wrap" id="canvasWrap">
+              <canvas id="previewCanvas" width="1448" height="1086"></canvas>
+              <button class="screen-cta" id="screenCta">
+                <span>＋</span>
+                选择 Figma 画面
+              </button>
+              <div class="rendering-badge" id="renderingBadge" hidden>正在渲染</div>
+            </div>
+          </div>
+
+          <footer class="actionbar">
+            <div class="asset-meta">
+              <strong id="assetName">请选择样机</strong>
+              <span id="assetMeta">等待素材目录</span>
+            </div>
+            <div class="action-buttons">
+              <button class="secondary-button" id="downloadButton">导出 PNG</button>
+              <button class="primary-button" id="pasteButton">粘贴到画布</button>
+              <span class="resolution-pill">PNG · 原始尺寸</span>
+            </div>
+          </footer>
+        </section>
+      </main>
+
+      <div class="toast" id="toast" role="status" hidden></div>
+    </div>
+
+    <script>/*__SCRIPT__*/</script>
+  </body>
+</html>
+

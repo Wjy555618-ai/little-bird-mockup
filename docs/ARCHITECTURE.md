@@ -46,7 +46,7 @@ Figma 插件发布时会展示并限制联网域名。让用户任意填写 URL 
 
 ## 缓存与回滚
 
-- 成功拉取后将 manifest 写入 `localStorage`。
+- 成功拉取后由插件主线程将 manifest 写入 Figma `clientStorage`；UI 沙箱只保留非关键的会话状态。
 - 网络失败时读取最后一次成功版本，并显示“离线目录”。
 - manifest 保留 `catalogVersion`；素材发布出错时，把入口指回上一版清单即可回滚，不需要改插件。
 - 插件永远不执行远程脚本，只读取 JSON 和媒体文件。
