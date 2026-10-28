@@ -58,6 +58,7 @@ const elements = {
   selectionChip: document.querySelector("#selectionChip"),
   selectionText: document.querySelector("#selectionText"),
   readSelectionButton: document.querySelector("#readSelectionButton"),
+  importFileButton: document.querySelector("#importFileButton"),
   imageInput: document.querySelector("#imageInput"),
   clearDesignButton: document.querySelector("#clearDesignButton"),
   designSourceLabel: document.querySelector("#designSourceLabel"),
@@ -96,6 +97,13 @@ const elements = {
   zoomIn: document.querySelector("#zoomIn"),
   zoomReset: document.querySelector("#zoomReset"),
   stageTitle: document.querySelector("#stageTitle"),
+  replaceSourceButton: document.querySelector("#replaceSourceButton"),
+  resetCurrentButton: document.querySelector("#resetCurrentButton"),
+  sourcePopover: document.querySelector("#sourcePopover"),
+  quickReadSelectionButton: document.querySelector("#quickReadSelectionButton"),
+  quickImportFileButton: document.querySelector("#quickImportFileButton"),
+  quickClearDesignButton: document.querySelector("#quickClearDesignButton"),
+  quickSelectionLabel: document.querySelector("#quickSelectionLabel"),
   designEditor: document.querySelector("#designEditor"),
   designPolygon: document.querySelector("#designPolygon"),
   designDragTarget: document.querySelector("#designDragTarget"),
@@ -129,6 +137,9 @@ const state = {
   segment: "all",
   mode: "catalog",
   zoom: 1,
+  panX: 0,
+  panY: 0,
+  designSelected: false,
   rendering: false,
   pluginCatalogCache: null,
   customQuad: null,
@@ -349,6 +360,12 @@ function filteredItems() {
   });
 }
 
+function hoverTiltFor(id) {
+  let hash = 0;
+  for (const character of id) hash = (hash * 31 + character.charCodeAt(0)) | 0;
+  return Math.abs(hash) % 2 === 0 ? -10 : 10;
+}
+
 function renderAssetGrid() {
   const items = filteredItems();
   elements.assetGrid.replaceChildren();
@@ -363,6 +380,7 @@ function renderAssetGrid() {
     const button = document.createElement("button");
     button.className = `asset-card${state.selectedAsset?.id === item.id ? " active" : ""}`;
     button.dataset.assetId = item.id;
+    button.style.setProperty("--hover-tilt", `${hoverTiltFor(item.id)}deg`);
 
     const image = document.createElement("img");
     image.alt = item.name;
@@ -395,9 +413,14 @@ function loadImage(url) {
 async function selectAsset(id) {
   const asset = state.manifest?.items.find((item) => item.id === id);
   if (!asset) return;
+  const assetChanged = state.selectedAsset?.id !== id;
   state.selectedAsset = asset;
-  state.customQuad = asset.screen.quad.map((point) => [...point]);
-  state.adjustments = { ...DEFAULT_ADJUSTMENTS };
+  if (assetChanged) {
+    state.customQuad = asset.screen.quad.map((point) => [...point]);
+    state.adjustments = { ...DEFAULT_ADJUSTMENTS };
+    state.designSelected = state.mode === "adjust" && Boolean(state.designImage);
+  }
+  closeSourcePopover();
   rememberRecent(id);
   elements.fitMode.value = asset.screen.defaultFit || "contain";
   syncAdjustmentControls();
@@ -419,6 +442,7 @@ async function selectAsset(id) {
     state.layerImages = Object.fromEntries(optionalLayers.filter(([, image]) => image));
     elements.previewCanvas.width = asset.canvas.width;
     elements.previewCanvas.height = asset.canvas.height;
+    if (assetChanged) fitStage();
     updatePerspectiveEditor();
     updateDesignEditor();
     await renderComposite();
@@ -435,6 +459,36 @@ function updateOutputAvailability() {
   const disabled = state.rendering || !state.baseImage || !state.designImage;
   elements.downloadButton.disabled = disabled;
   elements.pasteButton.disabled = disabled;
+}
+
+function updateSourceActions() {
+  const hasDesign = Boolean(state.designImage);
+  const hasSelection = Boolean(state.selection?.available);
+  elements.replaceSourceButton.textContent = hasDesign ? "换画面" : "添加画面";
+  elements.screenCta.querySelector("b").textContent = hasDesign ? "换画面" : "添加画面";
+  elements.quickClearDesignButton.hidden = !hasDesign;
+  elements.quickReadSelectionButton.disabled = !hasSelection;
+  elements.quickSelectionLabel.textContent = hasSelection
+    ? state.selection.message.replace(/^已选择[： ]*/, "")
+    : "先在 Figma 画布中选择内容";
+}
+
+function openSourcePopover() {
+  updateSourceActions();
+  elements.sourcePopover.hidden = false;
+  requestAnimationFrame(() => {
+    const target = elements.quickReadSelectionButton.disabled ? elements.quickImportFileButton : elements.quickReadSelectionButton;
+    target.focus();
+  });
+}
+
+function closeSourcePopover() {
+  elements.sourcePopover.hidden = true;
+}
+
+function toggleSourcePopover() {
+  if (elements.sourcePopover.hidden) openSourcePopover();
+  else closeSourcePopover();
 }
 
 function activeQuad() {
@@ -491,18 +545,38 @@ function designControlPoints() {
   });
 }
 
+function midpoint(first, second) {
+  return [(first[0] + second[0]) / 2, (first[1] + second[1]) / 2];
+}
+
+function designHandlePoints(points) {
+  if (points.length !== 4) return {};
+  return {
+    nw: points[0],
+    n: midpoint(points[0], points[1]),
+    ne: points[1],
+    e: midpoint(points[1], points[2]),
+    se: points[2],
+    s: midpoint(points[2], points[3]),
+    sw: points[3],
+    w: midpoint(points[3], points[0])
+  };
+}
+
 function updateDesignEditor() {
   const points = designControlPoints();
-  const visible = state.mode === "adjust" && points.length === 4;
+  const visible = state.mode !== "perspective" && points.length === 4;
   elements.designEditor.hidden = !visible;
   if (!visible) return;
+  elements.designEditor.classList.toggle("is-selected", state.designSelected);
   const pointString = points.map((point) => point.join(",")).join(" ");
   elements.designPolygon.setAttribute("points", pointString);
   elements.designDragTarget.setAttribute("points", pointString);
   const svg = elements.designPolygon.ownerSVGElement;
   svg.setAttribute("viewBox", `0 0 ${state.selectedAsset.canvas.width} ${state.selectedAsset.canvas.height}`);
+  const handlePoints = designHandlePoints(points);
   for (const handle of elements.designEditor.querySelectorAll(".design-scale-handle")) {
-    const point = points[Number(handle.dataset.corner)];
+    const point = handlePoints[handle.dataset.handle];
     handle.style.left = `${point[0] / state.selectedAsset.canvas.width * 100}%`;
     handle.style.top = `${point[1] / state.selectedAsset.canvas.height * 100}%`;
   }
@@ -542,22 +616,32 @@ function commitDirectAdjustment() {
 
 function enableDesignEditing() {
   let interaction = null;
+  const oppositeHandle = { nw: "se", n: "s", ne: "sw", e: "w", se: "nw", s: "n", sw: "ne", w: "e" };
   const start = (event, type) => {
     if (!state.designImage || !state.selectedAsset) return;
     const points = designControlPoints();
+    const handles = designHandlePoints(points);
     const center = points.reduce((sum, point) => [sum[0] + point[0] / 4, sum[1] + point[1] / 4], [0, 0]);
     const pointer = pointOnCanvas(event);
+    const handleName = event.currentTarget.dataset.handle;
+    const anchor = handleName ? handles[oppositeHandle[handleName]] : center;
+    const handlePoint = handleName ? handles[handleName] : pointer;
+    state.designSelected = true;
+    updateDesignEditor();
     interaction = {
       type,
+      handleName,
       startPointer: pointer,
       center,
+      anchor,
       startScale: state.adjustments.scale,
       startOffsetX: state.adjustments.offsetX,
       startOffsetY: state.adjustments.offsetY,
-      startDistance: Math.max(1, Math.hypot(pointer[0] - center[0], pointer[1] - center[1]))
+      startDistance: Math.max(1, Math.hypot(handlePoint[0] - anchor[0], handlePoint[1] - anchor[1]))
     };
     event.currentTarget.setPointerCapture(event.pointerId);
     event.preventDefault();
+    event.stopPropagation();
   };
   const move = (event) => {
     if (!interaction || !event.currentTarget.hasPointerCapture(event.pointerId)) return;
@@ -567,20 +651,35 @@ function enableDesignEditing() {
       state.adjustments.offsetX = Math.max(-1, Math.min(1, interaction.startOffsetX + du / 0.42));
       state.adjustments.offsetY = Math.max(-1, Math.min(1, interaction.startOffsetY + dv / 0.42));
     } else {
-      const distance = Math.hypot(pointer[0] - interaction.center[0], pointer[1] - interaction.center[1]);
-      state.adjustments.scale = Math.max(0.5, Math.min(3, interaction.startScale * distance / interaction.startDistance));
+      const distance = Math.hypot(pointer[0] - interaction.anchor[0], pointer[1] - interaction.anchor[1]);
+      const ratio = Math.max(0.2 / interaction.startScale, Math.min(4 / interaction.startScale, distance / interaction.startDistance));
+      const nextCenter = [
+        interaction.anchor[0] + (interaction.center[0] - interaction.anchor[0]) * ratio,
+        interaction.anchor[1] + (interaction.center[1] - interaction.anchor[1]) * ratio
+      ];
+      const [du, dv] = deltaToScreenCoordinates(nextCenter[0] - interaction.center[0], nextCenter[1] - interaction.center[1]);
+      state.adjustments.scale = interaction.startScale * ratio;
+      state.adjustments.offsetX = Math.max(-1, Math.min(1, interaction.startOffsetX + du / 0.42));
+      state.adjustments.offsetY = Math.max(-1, Math.min(1, interaction.startOffsetY + dv / 0.42));
     }
     commitDirectAdjustment();
+    event.preventDefault();
   };
   const end = (event) => {
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
     interaction = null;
     renderFinalComposite();
+    event.stopPropagation();
   };
   elements.designDragTarget.addEventListener("pointerdown", (event) => start(event, "move"));
   elements.designDragTarget.addEventListener("pointermove", move);
   elements.designDragTarget.addEventListener("pointerup", end);
   elements.designDragTarget.addEventListener("pointercancel", end);
+  elements.designDragTarget.addEventListener("dblclick", (event) => {
+    openSourcePopover();
+    event.preventDefault();
+    event.stopPropagation();
+  });
   elements.designDragTarget.addEventListener("keydown", (event) => {
     const step = event.shiftKey ? 0.05 : 0.01;
     if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
@@ -602,7 +701,7 @@ function enableDesignEditing() {
     handle.addEventListener("keydown", (event) => {
       if (!["ArrowUp", "ArrowRight", "ArrowDown", "ArrowLeft"].includes(event.key)) return;
       const direction = ["ArrowUp", "ArrowRight"].includes(event.key) ? 1 : -1;
-      state.adjustments.scale = Math.max(0.5, Math.min(3, state.adjustments.scale + direction * (event.shiftKey ? 0.1 : 0.02)));
+      state.adjustments.scale = Math.max(0.2, Math.min(4, state.adjustments.scale + direction * (event.shiftKey ? 0.1 : 0.02)));
       commitDirectAdjustment();
       renderFinalComposite();
       event.preventDefault();
@@ -628,11 +727,10 @@ function renderComposite(quality = "final") {
   });
   if (state.designImage) {
     elements.screenCta.classList.add("has-image");
-    elements.screenCta.querySelector("b").textContent = "重新读取选区";
   } else {
     elements.screenCta.classList.remove("has-image");
-    elements.screenCta.querySelector("b").textContent = "选择 Figma 画面";
   }
+  updateSourceActions();
   updateDesignEditor();
   updatePerspectiveEditor();
 }
@@ -673,15 +771,18 @@ function updatePerspectiveEditor() {
 
 function setMode(mode) {
   state.mode = mode;
+  if (mode === "adjust" && state.designImage) state.designSelected = true;
+  if (mode === "perspective") state.designSelected = false;
+  closeSourcePopover();
   document.querySelectorAll(".mode-tab").forEach((tab) => tab.classList.toggle("active", tab.dataset.mode === mode));
   elements.catalogView.hidden = mode !== "catalog";
   elements.adjustPanel.hidden = mode === "catalog";
   elements.adjustControls.hidden = mode !== "adjust";
   elements.perspectiveControls.hidden = mode !== "perspective";
-  elements.designEditor.hidden = mode !== "adjust" || !state.designImage;
+  elements.designEditor.hidden = mode === "perspective" || !state.designImage;
   elements.perspectiveEditor.hidden = mode !== "perspective";
   elements.adjustPanelTitle.textContent = mode === "perspective" ? "透视编辑" : "画面调整";
-  elements.stageTitle.textContent = mode === "perspective" ? "拖动四角控制点" : "预览";
+  elements.stageTitle.textContent = mode === "perspective" ? "拖动四角控制点" : mode === "adjust" ? "拖动画面或八向缩放" : "预览";
   elements.designSourceLabel.textContent = state.designName || "尚未读取画面";
   updateDesignEditor();
   updatePerspectiveEditor();
@@ -734,11 +835,14 @@ async function setDesignBytes(bytes, name, mimeType = "image/png", metadata = {}
     height: Math.round(metadata.height || state.designImage.naturalHeight || state.designImage.height),
     type: metadata.type || "图片"
   };
+  state.designSelected = true;
   state.adjustments = { ...DEFAULT_ADJUSTMENTS };
   elements.fitMode.value = state.selectedAsset?.screen.defaultFit || "contain";
   syncAdjustmentControls();
   elements.designSourceLabel.textContent = name;
   elements.clearDesignButton.disabled = false;
+  closeSourcePopover();
+  updateSourceActions();
   updateSourceGuide();
   await renderComposite();
   updateOutputAvailability();
@@ -750,9 +854,12 @@ function clearDesign() {
   state.designImage = null;
   state.designName = "";
   state.designSource = null;
+  state.designSelected = false;
   elements.designSourceLabel.textContent = "尚未读取画面";
   elements.clearDesignButton.disabled = true;
   elements.imageInput.value = "";
+  closeSourcePopover();
+  updateSourceActions();
   updateSourceGuide();
   updateOutputAvailability();
   renderFinalComposite();
@@ -869,6 +976,18 @@ function resetPerspective() {
   showToast("样机透视已恢复默认");
 }
 
+function resetCurrentMockup() {
+  if (!state.selectedAsset) return;
+  state.adjustments = { ...DEFAULT_ADJUSTMENTS };
+  state.customQuad = state.selectedAsset.screen.quad.map((point) => [...point]);
+  elements.fitMode.value = state.selectedAsset.screen.defaultFit || "contain";
+  state.designSelected = Boolean(state.designImage);
+  syncAdjustmentControls();
+  fitStage();
+  renderFinalComposite();
+  showToast("已恢复当前样机默认效果");
+}
+
 function enablePerspectiveEditing() {
   for (const handle of elements.perspectiveEditor.querySelectorAll(".perspective-handle")) {
     handle.addEventListener("pointerdown", (event) => {
@@ -899,6 +1018,8 @@ function requestSelection() {
   }
   elements.readSelectionButton.disabled = true;
   elements.readSelectionButton.textContent = "读取中";
+  elements.quickReadSelectionButton.disabled = true;
+  closeSourcePopover();
   postPluginMessage({ type: "request-selection" });
 }
 
@@ -950,16 +1071,94 @@ async function pasteRender() {
   }
 }
 
+function applyStageView() {
+  elements.canvasWrap.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.zoom})`;
+  elements.zoomReset.textContent = state.zoom === 1 && state.panX === 0 && state.panY === 0 ? "适应" : `${Math.round(state.zoom * 100)}%`;
+}
+
+function setStageZoom(nextZoom, clientX, clientY) {
+  const zoom = Math.max(0.5, Math.min(3, nextZoom));
+  const rect = elements.stage.getBoundingClientRect();
+  const focusX = Number.isFinite(clientX) ? clientX - (rect.left + rect.width / 2) : 0;
+  const focusY = Number.isFinite(clientY) ? clientY - (rect.top + rect.height / 2) : 0;
+  const contentX = (focusX - state.panX) / state.zoom;
+  const contentY = (focusY - state.panY) / state.zoom;
+  state.panX = focusX - contentX * zoom;
+  state.panY = focusY - contentY * zoom;
+  state.zoom = zoom;
+  applyStageView();
+}
+
 function updateZoom(delta) {
-  state.zoom = Math.max(0.7, Math.min(1.5, state.zoom + delta));
-  elements.canvasWrap.style.transform = `scale(${state.zoom})`;
-  elements.zoomReset.textContent = `${Math.round(state.zoom * 100)}%`;
+  setStageZoom(state.zoom + delta);
 }
 
 function fitStage() {
   state.zoom = 1;
-  elements.canvasWrap.style.transform = "scale(1)";
-  elements.zoomReset.textContent = "适应";
+  state.panX = 0;
+  state.panY = 0;
+  applyStageView();
+}
+
+function enableStageNavigation() {
+  let interaction = null;
+  let spacePressed = false;
+
+  window.addEventListener("keydown", (event) => {
+    if (event.code === "Space" && !/INPUT|SELECT|TEXTAREA|BUTTON/.test(document.activeElement?.tagName || "")) {
+      spacePressed = true;
+      event.preventDefault();
+    }
+    if (event.key === "Escape") {
+      closeSourcePopover();
+      state.designSelected = false;
+      updateDesignEditor();
+    }
+  });
+  window.addEventListener("keyup", (event) => {
+    if (event.code === "Space") spacePressed = false;
+  });
+
+  elements.stage.addEventListener("wheel", (event) => {
+    event.preventDefault();
+    if (event.ctrlKey || event.metaKey) {
+      const factor = Math.exp(-event.deltaY * 0.01);
+      setStageZoom(state.zoom * factor, event.clientX, event.clientY);
+    } else {
+      state.panX -= event.deltaX;
+      state.panY -= event.deltaY;
+      applyStageView();
+    }
+  }, { passive: false });
+
+  elements.stage.addEventListener("pointerdown", (event) => {
+    const overInteractive = event.target.closest("button, .design-drag-target, .design-scale-handle, .perspective-handle, .source-popover");
+    const canPan = event.button === 1 || spacePressed || (!overInteractive && event.button === 0);
+    if (!canPan) return;
+    if (!overInteractive && state.designSelected) {
+      state.designSelected = false;
+      updateDesignEditor();
+    }
+    interaction = { x: event.clientX, y: event.clientY, panX: state.panX, panY: state.panY };
+    elements.stage.setPointerCapture(event.pointerId);
+    elements.stage.classList.add("is-panning");
+    event.preventDefault();
+  });
+
+  elements.stage.addEventListener("pointermove", (event) => {
+    if (!interaction || !elements.stage.hasPointerCapture(event.pointerId)) return;
+    state.panX = interaction.panX + event.clientX - interaction.x;
+    state.panY = interaction.panY + event.clientY - interaction.y;
+    applyStageView();
+  });
+
+  const finishPan = (event) => {
+    if (elements.stage.hasPointerCapture(event.pointerId)) elements.stage.releasePointerCapture(event.pointerId);
+    interaction = null;
+    elements.stage.classList.remove("is-panning");
+  };
+  elements.stage.addEventListener("pointerup", finishPan);
+  elements.stage.addEventListener("pointercancel", finishPan);
 }
 
 function setWindowState(windowState) {
@@ -1032,6 +1231,7 @@ elements.fitMode.addEventListener("change", () => {
   renderFinalComposite();
 });
 elements.readSelectionButton.addEventListener("click", requestSelection);
+elements.importFileButton.addEventListener("click", () => elements.imageInput.click());
 elements.imageInput.addEventListener("change", () => importDesignFile(elements.imageInput.files?.[0]));
 elements.clearDesignButton.addEventListener("click", clearDesign);
 for (const control of [
@@ -1048,7 +1248,20 @@ for (const control of [
 }
 elements.resetAdjustmentsButton.addEventListener("click", resetAdjustments);
 elements.resetPerspectiveButton.addEventListener("click", resetPerspective);
-elements.screenCta.addEventListener("click", requestSelection);
+elements.resetCurrentButton.addEventListener("click", resetCurrentMockup);
+elements.replaceSourceButton.addEventListener("click", toggleSourcePopover);
+elements.screenCta.addEventListener("click", toggleSourcePopover);
+elements.quickReadSelectionButton.addEventListener("click", requestSelection);
+elements.quickImportFileButton.addEventListener("click", () => {
+  closeSourcePopover();
+  elements.imageInput.click();
+});
+elements.quickClearDesignButton.addEventListener("click", clearDesign);
+document.addEventListener("pointerdown", (event) => {
+  if (elements.sourcePopover.hidden) return;
+  if (elements.sourcePopover.contains(event.target) || elements.replaceSourceButton.contains(event.target) || elements.screenCta.contains(event.target)) return;
+  closeSourcePopover();
+});
 elements.downloadButton.addEventListener("click", downloadRender);
 elements.pasteButton.addEventListener("click", pasteRender);
 elements.backgroundToggle.addEventListener("click", () => elements.stage.classList.toggle("light"));
@@ -1062,8 +1275,10 @@ elements.clearRecent.addEventListener("click", () => {
 elements.collapseButton.addEventListener("click", () => setWindowState("collapsed"));
 elements.expandButton.addEventListener("click", () => setWindowState("expanded"));
 syncAdjustmentControls();
+updateSourceActions();
 enableDesignEditing();
 enablePerspectiveEditing();
+enableStageNavigation();
 enableWindowResize();
 
 window.onmessage = async (event) => {
@@ -1075,6 +1290,7 @@ window.onmessage = async (event) => {
     elements.selectionText.textContent = message.selection.message;
     elements.selectionChip.classList.toggle("ready", Boolean(message.selection.available));
     elements.readSelectionButton.disabled = !message.selection.available;
+    updateSourceActions();
     return;
   }
 
@@ -1095,6 +1311,7 @@ window.onmessage = async (event) => {
 
   if (message.type === "selection-image") {
     elements.readSelectionButton.disabled = false;
+    elements.quickReadSelectionButton.disabled = false;
     elements.readSelectionButton.textContent = "重新读取 Figma 选区";
     await setDesignBytes(message.bytes, message.name, "image/png", { type: message.sourceType || "Figma 选区" });
     showToast(`已放入：${message.name}`);
@@ -1103,6 +1320,7 @@ window.onmessage = async (event) => {
 
   if (message.type === "selection-composite") {
     elements.readSelectionButton.disabled = false;
+    elements.quickReadSelectionButton.disabled = false;
     elements.readSelectionButton.textContent = "重新读取 Figma 选区";
     await composeSelectionLayers(message);
     showToast(`已整体放入：${message.name}`);
@@ -1111,6 +1329,7 @@ window.onmessage = async (event) => {
 
   if (message.type === "selection-error") {
     elements.readSelectionButton.disabled = false;
+    updateSourceActions();
     elements.readSelectionButton.textContent = "读取选区";
     showToast(message.message);
     return;

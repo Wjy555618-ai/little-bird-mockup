@@ -100,10 +100,7 @@
 
             <div class="source-actions">
               <button class="panel-button primary-panel-button" id="readSelectionButton">读取 Figma 选区</button>
-              <label class="panel-button file-button">
-                导入文件
-                <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,video/mp4,video/webm,video/quicktime,application/pdf,.svg,.mov,.pdf" hidden />
-              </label>
+              <button class="panel-button file-button" id="importFileButton">导入文件</button>
               <button class="panel-button" id="clearDesignButton" disabled>移除画面</button>
             </div>
 
@@ -122,7 +119,7 @@
                     <option value="cover">裁切填满</option>
                   </select>
                 </label>
-                <label class="range-control"><span>缩放</span><input id="designScale" type="range" min="50" max="300" value="100" /><output id="designScaleValue">100%</output></label>
+                <label class="range-control"><span>缩放</span><input id="designScale" type="range" min="20" max="400" value="100" /><output id="designScaleValue">100%</output></label>
                 <label class="range-control"><span>水平</span><input id="designOffsetX" type="range" min="-100" max="100" value="0" /><output id="designOffsetXValue">0%</output></label>
                 <label class="range-control"><span>垂直</span><input id="designOffsetY" type="range" min="-100" max="100" value="0" /><output id="designOffsetYValue">0%</output></label>
                 <label class="range-control"><span>旋转</span><input id="designRotation" type="range" min="-30" max="30" value="0" /><output id="designRotationValue">0°</output></label>
@@ -156,7 +153,11 @@
 
         <section class="stage-panel">
           <div class="stage-toolbar">
-            <span class="stage-title" id="stageTitle">预览</span>
+            <div class="stage-context">
+              <span class="stage-title" id="stageTitle">预览</span>
+              <button class="context-button" id="replaceSourceButton">添加画面</button>
+              <button class="context-button" id="resetCurrentButton" title="恢复当前样机默认效果">复位</button>
+            </div>
             <div class="stage-tools-right">
               <span class="zoom-controls">
                 <button class="tool-button" id="zoomOut" title="缩小" aria-label="缩小">−</button>
@@ -175,11 +176,15 @@
                   <polygon class="design-outline" id="designPolygon" points="" />
                   <polygon class="design-drag-target" id="designDragTarget" points="" role="button" tabindex="0" aria-label="拖动画面位置" />
                 </svg>
-                <button class="design-scale-handle" data-corner="0" aria-label="左上角等比缩放"></button>
-                <button class="design-scale-handle" data-corner="1" aria-label="右上角等比缩放"></button>
-                <button class="design-scale-handle" data-corner="2" aria-label="右下角等比缩放"></button>
-                <button class="design-scale-handle" data-corner="3" aria-label="左下角等比缩放"></button>
-                <span class="design-editor-hint" id="designEditorHint">拖动 · 角点等比缩放</span>
+                <button class="design-scale-handle handle-nw" data-handle="nw" aria-label="左上等比缩放"></button>
+                <button class="design-scale-handle handle-n" data-handle="n" aria-label="向上等比缩放"></button>
+                <button class="design-scale-handle handle-ne" data-handle="ne" aria-label="右上等比缩放"></button>
+                <button class="design-scale-handle handle-e" data-handle="e" aria-label="向右等比缩放"></button>
+                <button class="design-scale-handle handle-se" data-handle="se" aria-label="右下等比缩放"></button>
+                <button class="design-scale-handle handle-s" data-handle="s" aria-label="向下等比缩放"></button>
+                <button class="design-scale-handle handle-sw" data-handle="sw" aria-label="左下等比缩放"></button>
+                <button class="design-scale-handle handle-w" data-handle="w" aria-label="向左等比缩放"></button>
+                <span class="design-editor-hint" id="designEditorHint">拖动移动 · 八向等比缩放</span>
               </div>
               <div class="perspective-editor" id="perspectiveEditor" hidden>
                 <svg viewBox="0 0 1448 1086" preserveAspectRatio="none" aria-hidden="true"><polygon id="perspectivePolygon" points="" /></svg>
@@ -190,9 +195,20 @@
               </div>
               <button class="screen-cta" id="screenCta">
                 <span>＋</span>
-                <b>选择 Figma 画面</b>
+                <b>添加画面</b>
               </button>
               <div class="rendering-badge" id="renderingBadge" hidden>正在渲染</div>
+            </div>
+            <div class="source-popover" id="sourcePopover" hidden role="dialog" aria-label="选择画面来源">
+              <button id="quickReadSelectionButton">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z" /><path d="m7 15 3-3 2 2 2-2 3 3" /></svg>
+                <span><strong>读取 Figma 选区</strong><small id="quickSelectionLabel">选择画布内容后读取</small></span>
+              </button>
+              <button id="quickImportFileButton">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M8 8l4-4 4 4" /><path d="M4 14v5h16v-5" /></svg>
+                <span><strong>导入文件</strong><small>图片、SVG、视频或 PDF</small></span>
+              </button>
+              <button class="source-remove" id="quickClearDesignButton" hidden>移除当前画面</button>
             </div>
           </div>
 
@@ -216,6 +232,7 @@
       <div class="toast" id="toast" role="status" hidden></div>
     </div>
 
+    <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,video/mp4,video/webm,video/quicktime,application/pdf,.svg,.mov,.pdf" hidden />
     <span id="versionLabel" hidden>DEV</span>
     <script>/*__PDFJS__*/</script>
     <script>/*__PDF_WORKER__*/</script>

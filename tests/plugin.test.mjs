@@ -118,6 +118,33 @@ test("the design is one directly manipulable object inside the mockup", () => {
   assert.match(uiScript, /\.design-scale-handle/);
   assert.match(uiScript, /deltaToScreenCoordinates/);
   assert.match(uiStyles, /\.design-drag-target\s*\{[^}]*cursor:\s*move/s);
+  assert.equal((uiHtml.match(/class="design-scale-handle/g) || []).length, 8);
+  assert.match(uiScript, /oppositeHandle/);
+  assert.match(uiScript, /state\.adjustments\.scale = interaction\.startScale \* ratio/);
+});
+
+test("source replacement and recovery stay visible in the preview workflow", () => {
+  for (const id of ["replaceSourceButton", "resetCurrentButton", "sourcePopover", "quickReadSelectionButton", "quickImportFileButton"]) {
+    assert.match(uiHtml, new RegExp(`id="${id}"`));
+  }
+  assert.equal((uiHtml.match(/id="imageInput"/g) || []).length, 1);
+  assert.match(uiScript, /function resetCurrentMockup/);
+  assert.match(uiScript, /elements\.replaceSourceButton\.addEventListener\("click", toggleSourcePopover\)/);
+});
+
+test("the preview supports Figma-like pointer and trackpad navigation", () => {
+  assert.match(uiScript, /function enableStageNavigation/);
+  assert.match(uiScript, /elements\.stage\.addEventListener\("wheel"/);
+  assert.match(uiScript, /event\.ctrlKey \|\| event\.metaKey/);
+  assert.match(uiScript, /state\.panX -= event\.deltaX/);
+  assert.match(uiScript, /translate\(\$\{state\.panX\}px, \$\{state\.panY\}px\) scale/);
+});
+
+test("catalog spacing stays contained and hover never impersonates selection", () => {
+  assert.match(uiStyles, /\.catalog-panel\s*\{[^}]*overflow:\s*hidden/s);
+  assert.match(uiStyles, /\.recent-strip > div\s*\{[^}]*grid-template-columns:\s*repeat\(3/s);
+  assert.match(uiStyles, /\.asset-card:hover:not\(\.active\)[^{]*\{[^}]*rotate\(var\(--hover-tilt/s);
+  assert.match(uiScript, /function hoverTiltFor/);
 });
 
 test("Figma and local sources flatten to one static design object", () => {
