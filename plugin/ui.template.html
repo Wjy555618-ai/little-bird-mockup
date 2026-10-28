@@ -114,7 +114,7 @@
               <section class="control-section">
                 <input id="fitMode" type="hidden" value="cover" />
                 <div class="fill-rule"><span>填充</span><strong>自动填满 · 不变形</strong></div>
-                <label class="range-control"><span>缩放</span><input id="designScale" type="range" min="100" max="400" value="100" /><output id="designScaleValue">100%</output></label>
+                <label class="range-control"><span>缩放</span><input id="designScale" type="range" min="20" max="400" value="100" /><output id="designScaleValue">100%</output></label>
                 <label class="range-control"><span>水平</span><input id="designOffsetX" type="range" min="-100" max="100" value="0" /><output id="designOffsetXValue">0%</output></label>
                 <label class="range-control"><span>垂直</span><input id="designOffsetY" type="range" min="-100" max="100" value="0" /><output id="designOffsetYValue">0%</output></label>
                 <label class="range-control"><span>旋转</span><input id="designRotation" type="range" min="-30" max="30" value="0" /><output id="designRotationValue">0°</output></label>
@@ -168,18 +168,18 @@
               <div class="design-editor" id="designEditor" hidden>
                 <svg viewBox="0 0 1448 1086" preserveAspectRatio="none">
                   <path class="crop-shade" id="cropShade" d="" fill-rule="evenodd" />
-                  <polygon class="crop-frame" id="cropFrame" points="" />
+                  <path class="crop-frame" id="cropFrame" d="" />
                   <polygon class="design-outline" id="designPolygon" points="" />
                   <polygon class="design-drag-target" id="designDragTarget" points="" role="button" tabindex="0" aria-label="拖动画面位置" />
                 </svg>
                 <button class="design-scale-handle handle-nw" data-handle="nw" aria-label="左上等比缩放"></button>
-                <button class="design-scale-handle handle-n" data-handle="n" aria-label="向上等比缩放"></button>
+                <button class="design-scale-handle handle-n" data-handle="n" aria-label="向上单边缩放"></button>
                 <button class="design-scale-handle handle-ne" data-handle="ne" aria-label="右上等比缩放"></button>
-                <button class="design-scale-handle handle-e" data-handle="e" aria-label="向右等比缩放"></button>
+                <button class="design-scale-handle handle-e" data-handle="e" aria-label="向右单边缩放"></button>
                 <button class="design-scale-handle handle-se" data-handle="se" aria-label="右下等比缩放"></button>
-                <button class="design-scale-handle handle-s" data-handle="s" aria-label="向下等比缩放"></button>
+                <button class="design-scale-handle handle-s" data-handle="s" aria-label="向下单边缩放"></button>
                 <button class="design-scale-handle handle-sw" data-handle="sw" aria-label="左下等比缩放"></button>
-                <button class="design-scale-handle handle-w" data-handle="w" aria-label="向左等比缩放"></button>
+                <button class="design-scale-handle handle-w" data-handle="w" aria-label="向左单边缩放"></button>
               </div>
               <button class="screen-cta" id="screenCta">
                 <span>＋</span>
@@ -188,7 +188,7 @@
               <div class="rendering-badge" id="renderingBadge" hidden>正在渲染</div>
             </div>
             <div class="crop-toolbar" id="cropToolbar" hidden>
-              <span>拖动或缩放画面完成裁切</span>
+              <span>移动或缩放裁切框</span>
               <button id="cropCancelButton">取消</button>
               <button class="crop-done" id="cropDoneButton">完成</button>
             </div>

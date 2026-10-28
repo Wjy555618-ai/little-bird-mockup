@@ -148,6 +148,8 @@ const state = {
   rendering: false,
   pluginCatalogCache: null,
   customQuad: null,
+  contentFrame: null,
+  imageFrame: null,
   designName: "",
   adjustments: { ...DEFAULT_ADJUSTMENTS },
   crop: { ...DEFAULT_CROP },
@@ -164,6 +166,8 @@ function editorSnapshot() {
     adjustments: { ...state.adjustments },
     crop: { ...state.crop },
     customQuad: cloneQuad(state.customQuad),
+    contentFrame: state.contentFrame ? { ...state.contentFrame } : null,
+    imageFrame: state.imageFrame ? { ...state.imageFrame } : null,
     fit: elements.fitMode.value,
     designImage: state.designImage,
     designObjectUrl: state.designObjectUrl,
@@ -177,6 +181,8 @@ function snapshotSignature(snapshot) {
     adjustments: snapshot.adjustments,
     crop: snapshot.crop,
     customQuad: snapshot.customQuad,
+    contentFrame: snapshot.contentFrame,
+    imageFrame: snapshot.imageFrame,
     fit: snapshot.fit,
     designName: snapshot.designName,
     designSource: snapshot.designSource
@@ -198,6 +204,8 @@ function restoreEditorSnapshot(snapshot) {
   state.adjustments = { ...snapshot.adjustments };
   state.crop = { ...DEFAULT_CROP, ...(snapshot.crop || {}) };
   state.customQuad = cloneQuad(snapshot.customQuad);
+  state.contentFrame = snapshot.contentFrame ? { ...snapshot.contentFrame } : null;
+  state.imageFrame = snapshot.imageFrame ? { ...snapshot.imageFrame } : null;
   state.designImage = snapshot.designImage;
   state.designObjectUrl = snapshot.designObjectUrl;
   state.designName = snapshot.designName;
@@ -403,7 +411,7 @@ function recentIds() {
 }
 
 function rememberRecent(id) {
-  const next = [id, ...recentIds().filter((value) => value !== id)].slice(0, 12);
+  const next = [id, ...recentIds().filter((value) => value !== id)].slice(0, 10);
   safeStorage.setItem(RECENT_KEY, JSON.stringify(next));
 }
 
@@ -412,7 +420,7 @@ function renderRecentStrip() {
   const items = recentIds()
     .map((id) => state.manifest.items.find((item) => item.id === id))
     .filter(Boolean)
-    .slice(0, 3);
+    .slice(0, 10);
   elements.recentItems.replaceChildren();
   elements.recentStrip.hidden = items.length === 0;
   for (const item of items) {
@@ -426,6 +434,37 @@ function renderRecentStrip() {
     button.addEventListener("click", () => selectAsset(item.id));
     elements.recentItems.appendChild(button);
   }
+}
+
+function enableRecentScrolling() {
+  let drag = null;
+  elements.recentItems.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) return;
+    drag = { x: event.clientX, left: elements.recentItems.scrollLeft, moved: false };
+    elements.recentItems.setPointerCapture(event.pointerId);
+  });
+  elements.recentItems.addEventListener("pointermove", (event) => {
+    if (!drag || !elements.recentItems.hasPointerCapture(event.pointerId)) return;
+    const delta = event.clientX - drag.x;
+    if (Math.abs(delta) > 4) drag.moved = true;
+    elements.recentItems.scrollLeft = drag.left - delta;
+  });
+  elements.recentItems.addEventListener("click", (event) => {
+    if (!drag?.moved) return;
+    event.preventDefault();
+    event.stopPropagation();
+  }, true);
+  const finish = (event) => {
+    if (elements.recentItems.hasPointerCapture(event.pointerId)) elements.recentItems.releasePointerCapture(event.pointerId);
+    requestAnimationFrame(() => { drag = null; });
+  };
+  elements.recentItems.addEventListener("pointerup", finish);
+  elements.recentItems.addEventListener("pointercancel", finish);
+  elements.recentItems.addEventListener("wheel", (event) => {
+    if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+    elements.recentItems.scrollLeft += event.deltaY;
+    event.preventDefault();
+  }, { passive: false });
 }
 
 function filteredItems() {
@@ -514,6 +553,9 @@ async function selectAsset(id) {
     state.customQuad = asset.screen.quad.map((point) => [...point]);
     state.adjustments = { ...DEFAULT_ADJUSTMENTS };
     state.crop = { ...DEFAULT_CROP };
+    state.contentFrame = null;
+    state.imageFrame = null;
+    if (state.designImage) resetContentGeometry();
     state.designSelected = false;
     state.cropMode = false;
     state.cropSnapshot = null;
@@ -624,44 +666,43 @@ function updateSourceGuide() {
     : `${sourceLabel} · 比例不同，已自动裁切填满`;
 }
 
-function normalizedEditorGeometry() {
+function screenPlane() {
+  const recommended = state.selectedAsset?.screen?.recommendedSize;
+  return renderer.screenPlane(recommended ? recommended.width / recommended.height : 1);
+}
+
+function resetContentGeometry() {
+  const plane = screenPlane();
+  const frame = { cx: plane.width / 2, cy: plane.height / 2, width: plane.width, height: plane.height, rotation: 0 };
+  state.contentFrame = { ...frame };
+  state.imageFrame = state.designImage ? renderer.imageFrameForCover(state.designImage, frame) : { ...frame };
+}
+
+function ensureContentGeometry() {
   if (!state.selectedAsset || !state.designImage) return null;
-  const recommended = state.selectedAsset.screen.recommendedSize;
-  const screenWidth = 1200;
-  const screenHeight = screenWidth / (recommended.width / recommended.height);
-  const cropGeometry = renderer.cropGeometry(state.designImage, recommended.width / recommended.height, state.crop);
-  state.crop = { ...cropGeometry.crop };
-  state.adjustments = renderer.constrainCoverAdjustments(state.adjustments, screenWidth, screenHeight);
-  return { screenWidth, screenHeight, cropGeometry, adjustments: state.adjustments };
+  const plane = screenPlane();
+  state.contentFrame = renderer.normalizeFrame(state.contentFrame, plane.width, plane.height);
+  state.imageFrame = renderer.constrainImageFrameToCover(
+    state.designImage,
+    renderer.normalizeFrame(state.imageFrame, plane.width, plane.height),
+    state.contentFrame
+  );
+  return { plane, frame: state.contentFrame, imageFrame: state.imageFrame };
+}
+
+function planePointToCanvas(point) {
+  const plane = screenPlane();
+  return renderer.bilinearPoint(activeQuad(), point[0] / plane.width, point[1] / plane.height);
+}
+
+function frameCanvasPoints(frame = state.contentFrame) {
+  if (!frame) return [];
+  return renderer.frameCorners(frame).map(planePointToCanvas);
 }
 
 function designControlPoints() {
-  if (state.cropMode) return cloneQuad(activeQuad()) || [];
-  const geometry = normalizedEditorGeometry();
-  if (!geometry) return [];
-  const { screenWidth, screenHeight, adjustments } = geometry;
-  const sourceWidth = screenWidth;
-  const sourceHeight = screenHeight;
-  const sourceCenterX = 0;
-  const sourceCenterY = 0;
-  const centerX = screenWidth / 2 + adjustments.offsetX * screenWidth * 0.42;
-  const centerY = screenHeight / 2 + adjustments.offsetY * screenHeight * 0.42;
-  const angle = adjustments.rotation * Math.PI / 180;
-  const cosine = Math.cos(angle);
-  const sine = Math.sin(angle);
-  const halfWidth = sourceWidth / 2;
-  const halfHeight = sourceHeight / 2;
-  const corners = [
-    [sourceCenterX - halfWidth, sourceCenterY - halfHeight],
-    [sourceCenterX + halfWidth, sourceCenterY - halfHeight],
-    [sourceCenterX + halfWidth, sourceCenterY + halfHeight],
-    [sourceCenterX - halfWidth, sourceCenterY + halfHeight]
-  ];
-  return corners.map(([x, y]) => {
-    const u = (centerX + (x * cosine - y * sine) * adjustments.scale) / screenWidth;
-    const v = (centerY + (x * sine + y * cosine) * adjustments.scale) / screenHeight;
-    return renderer.bilinearPoint(activeQuad(), u, v);
-  });
+  if (!ensureContentGeometry()) return [];
+  return frameCanvasPoints();
 }
 
 function midpoint(first, second) {
@@ -682,6 +723,35 @@ function designHandlePoints(points) {
   };
 }
 
+function roundedFramePath(frame, radiusRatio = 0) {
+  if (!frame) return "";
+  const radius = Math.max(0, Math.min(frame.width, frame.height) * Math.min(0.49, radiusRatio));
+  const localPoint = (x, y) => {
+    const angle = frame.rotation * Math.PI / 180;
+    const cosine = Math.cos(angle);
+    const sine = Math.sin(angle);
+    return planePointToCanvas([frame.cx + x * cosine - y * sine, frame.cy + x * sine + y * cosine]);
+  };
+  const left = -frame.width / 2;
+  const right = frame.width / 2;
+  const top = -frame.height / 2;
+  const bottom = frame.height / 2;
+  const point = (value) => `${value[0]} ${value[1]}`;
+  const p0 = localPoint(left + radius, top);
+  const p1 = localPoint(right - radius, top);
+  const c1 = localPoint(right, top);
+  const p2 = localPoint(right, top + radius);
+  const p3 = localPoint(right, bottom - radius);
+  const c2 = localPoint(right, bottom);
+  const p4 = localPoint(right - radius, bottom);
+  const p5 = localPoint(left + radius, bottom);
+  const c3 = localPoint(left, bottom);
+  const p6 = localPoint(left, bottom - radius);
+  const p7 = localPoint(left, top + radius);
+  const c4 = localPoint(left, top);
+  return `M${point(p0)}L${point(p1)}Q${point(c1)} ${point(p2)}L${point(p3)}Q${point(c2)} ${point(p4)}L${point(p5)}Q${point(c3)} ${point(p6)}L${point(p7)}Q${point(c4)} ${point(p0)}Z`;
+}
+
 function updateDesignEditor() {
   const points = designControlPoints();
   const visible = points.length === 4;
@@ -696,12 +766,12 @@ function updateDesignEditor() {
   elements.designDragTarget.setAttribute("points", pointString);
   const svg = elements.designPolygon.ownerSVGElement;
   svg.setAttribute("viewBox", `0 0 ${state.selectedAsset.canvas.width} ${state.selectedAsset.canvas.height}`);
-  const cropPoints = activeQuad();
-  const cropPointString = cropPoints.map((point) => point.join(",")).join(" ");
-  elements.cropFrame.setAttribute("points", cropPointString);
+  const cornerRadius = state.selectedAsset.screen.cornerRadius || 0;
+  elements.cropFrame.setAttribute("d", roundedFramePath(state.contentFrame, cornerRadius));
+  const outerFrame = { ...screenPlane(), cx: screenPlane().width / 2, cy: screenPlane().height / 2, rotation: 0 };
   elements.cropShade.setAttribute(
     "d",
-    `M0 0H${state.selectedAsset.canvas.width}V${state.selectedAsset.canvas.height}H0Z M${cropPoints.map((point) => point.join(" ")).join("L")}Z`
+    `${roundedFramePath(outerFrame, cornerRadius)} ${roundedFramePath(state.contentFrame, cornerRadius)}`
   );
   const handlePoints = designHandlePoints(points);
   for (const handle of elements.designEditor.querySelectorAll(".design-scale-handle")) {
@@ -719,22 +789,14 @@ function pointOnCanvas(event) {
   ];
 }
 
-function deltaToScreenCoordinates(dx, dy) {
-  const quad = activeQuad();
-  const center = renderer.bilinearPoint(quad, 0.5, 0.5);
-  const alongX = renderer.bilinearPoint(quad, 0.51, 0.5);
-  const alongY = renderer.bilinearPoint(quad, 0.5, 0.51);
-  const ux = (alongX[0] - center[0]) * 100;
-  const uy = (alongX[1] - center[1]) * 100;
-  const vx = (alongY[0] - center[0]) * 100;
-  const vy = (alongY[1] - center[1]) * 100;
-  const determinant = ux * vy - uy * vx;
-  if (Math.abs(determinant) < 0.0001) return [0, 0];
-  return [(dx * vy - dy * vx) / determinant, (ux * dy - uy * dx) / determinant];
+function pointOnScreenPlane(event) {
+  const point = pointOnCanvas(event);
+  const [u, v] = renderer.inverseBilinearPoint(activeQuad(), point);
+  const plane = screenPlane();
+  return [u * plane.width, v * plane.height];
 }
 
 function commitDirectAdjustment() {
-  normalizedEditorGeometry();
   syncAdjustmentControls();
   updateDesignEditor();
   scheduleComposite("preview");
@@ -762,6 +824,8 @@ function finishCropMode(commit = true) {
     state.adjustments = { ...snapshot.adjustments };
     state.crop = { ...DEFAULT_CROP, ...(snapshot.crop || {}) };
     state.customQuad = cloneQuad(snapshot.customQuad);
+    state.contentFrame = snapshot.contentFrame ? { ...snapshot.contentFrame } : null;
+    state.imageFrame = snapshot.imageFrame ? { ...snapshot.imageFrame } : null;
     elements.fitMode.value = "cover";
     syncAdjustmentControls();
     renderFinalComposite();
@@ -771,34 +835,106 @@ function finishCropMode(commit = true) {
   }
 }
 
+function localPoint(point, frame) {
+  const angle = -frame.rotation * Math.PI / 180;
+  const cosine = Math.cos(angle);
+  const sine = Math.sin(angle);
+  const dx = point[0] - frame.cx;
+  const dy = point[1] - frame.cy;
+  return [dx * cosine - dy * sine, dx * sine + dy * cosine];
+}
+
+function worldPoint(point, frame) {
+  const angle = frame.rotation * Math.PI / 180;
+  const cosine = Math.cos(angle);
+  const sine = Math.sin(angle);
+  return [frame.cx + point[0] * cosine - point[1] * sine, frame.cy + point[0] * sine + point[1] * cosine];
+}
+
+function resizeFrame(startFrame, handleName, pointer, proportional) {
+  const minimum = Math.max(20, Math.min(screenPlane().width, screenPlane().height) * 0.05);
+  const localPointer = localPoint(pointer, startFrame);
+  const handles = {
+    nw: [-startFrame.width / 2, -startFrame.height / 2], n: [0, -startFrame.height / 2], ne: [startFrame.width / 2, -startFrame.height / 2],
+    e: [startFrame.width / 2, 0], se: [startFrame.width / 2, startFrame.height / 2], s: [0, startFrame.height / 2],
+    sw: [-startFrame.width / 2, startFrame.height / 2], w: [-startFrame.width / 2, 0]
+  };
+  const opposite = { nw: "se", n: "s", ne: "sw", e: "w", se: "nw", s: "n", sw: "ne", w: "e" };
+  const startHandle = handles[handleName];
+  const anchor = handles[opposite[handleName]];
+  let nextHandle = [...localPointer];
+  const isCorner = handleName.length === 2;
+  if (isCorner && proportional) {
+    const vector = [startHandle[0] - anchor[0], startHandle[1] - anchor[1]];
+    const desired = [localPointer[0] - anchor[0], localPointer[1] - anchor[1]];
+    const minimumRatio = Math.max(minimum / startFrame.width, minimum / startFrame.height);
+    const ratio = Math.max(minimumRatio, Math.min(6, (desired[0] * vector[0] + desired[1] * vector[1]) / (vector[0] ** 2 + vector[1] ** 2)));
+    nextHandle = [anchor[0] + vector[0] * ratio, anchor[1] + vector[1] * ratio];
+  } else {
+    if (!handleName.includes("e") && !handleName.includes("w")) nextHandle[0] = startHandle[0];
+    if (!handleName.includes("n") && !handleName.includes("s")) nextHandle[1] = startHandle[1];
+    if (handleName.includes("e")) nextHandle[0] = Math.max(anchor[0] + minimum, nextHandle[0]);
+    if (handleName.includes("w")) nextHandle[0] = Math.min(anchor[0] - minimum, nextHandle[0]);
+    if (handleName.includes("s")) nextHandle[1] = Math.max(anchor[1] + minimum, nextHandle[1]);
+    if (handleName.includes("n")) nextHandle[1] = Math.min(anchor[1] - minimum, nextHandle[1]);
+  }
+  const width = handleName.includes("e") || handleName.includes("w") ? Math.abs(nextHandle[0] - anchor[0]) : startFrame.width;
+  const height = handleName.includes("n") || handleName.includes("s") ? Math.abs(nextHandle[1] - anchor[1]) : startFrame.height;
+  const centerLocal = [
+    handleName.includes("e") || handleName.includes("w") ? (nextHandle[0] + anchor[0]) / 2 : 0,
+    handleName.includes("n") || handleName.includes("s") ? (nextHandle[1] + anchor[1]) / 2 : 0
+  ];
+  const center = worldPoint(centerLocal, startFrame);
+  return { cx: center[0], cy: center[1], width, height, rotation: startFrame.rotation };
+}
+
+function transformImageFrame(startImageFrame, startFrame, nextFrame) {
+  const localCenter = localPoint([startImageFrame.cx, startImageFrame.cy], startFrame);
+  const scaleX = nextFrame.width / startFrame.width;
+  const scaleY = nextFrame.height / startFrame.height;
+  const nextCenter = worldPoint([localCenter[0] * scaleX, localCenter[1] * scaleY], nextFrame);
+  return {
+    cx: nextCenter[0],
+    cy: nextCenter[1],
+    width: Math.max(12, startImageFrame.width * scaleX),
+    height: Math.max(12, startImageFrame.height * scaleY),
+    rotation: nextFrame.rotation + (startImageFrame.rotation - startFrame.rotation)
+  };
+}
+
+function syncAdjustmentsFromFrame() {
+  const geometry = ensureContentGeometry();
+  if (!geometry) return;
+  const { plane, frame } = geometry;
+  state.adjustments = {
+    ...state.adjustments,
+    scale: Math.sqrt(frame.width / plane.width * frame.height / plane.height),
+    offsetX: (frame.cx - plane.width / 2) / (plane.width * 0.42),
+    offsetY: (frame.cy - plane.height / 2) / (plane.height * 0.42),
+    rotation: frame.rotation
+  };
+}
+
 function enableDesignEditing() {
   let interaction = null;
-  const oppositeHandle = { nw: "se", n: "s", ne: "sw", e: "w", se: "nw", s: "n", sw: "ne", w: "e" };
   const warpHandles = { nw: [0], n: [0, 1], ne: [1], e: [1, 2], se: [2], s: [3, 2], sw: [3], w: [0, 3] };
   const start = (event, type) => {
     if (!state.designImage || !state.selectedAsset) return;
-    const points = designControlPoints();
-    const handles = designHandlePoints(points);
-    const center = points.reduce((sum, point) => [sum[0] + point[0] / 4, sum[1] + point[1] / 4], [0, 0]);
-    const pointer = pointOnCanvas(event);
+    ensureContentGeometry();
     const handleName = event.currentTarget.dataset.handle;
-    const anchor = handleName ? handles[oppositeHandle[handleName]] : center;
-    const handlePoint = handleName ? handles[handleName] : pointer;
     state.designSelected = true;
     updateDesignEditor();
     interaction = {
+      pointerId: event.pointerId,
+      target: event.currentTarget,
       type,
       handleName,
       freeTransform: !state.cropMode && type === "scale" && (state.mode === "perspective" || event.metaKey || event.ctrlKey),
       startQuad: cloneQuad(activeQuad()),
-      startCrop: { ...state.crop },
-      startPointer: pointer,
-      center,
-      anchor,
-      startScale: state.adjustments.scale,
-      startOffsetX: state.adjustments.offsetX,
-      startOffsetY: state.adjustments.offsetY,
-      startDistance: Math.max(1, Math.hypot(handlePoint[0] - anchor[0], handlePoint[1] - anchor[1])),
+      startFrame: { ...state.contentFrame },
+      startImageFrame: { ...state.imageFrame },
+      startPointerPlane: pointOnScreenPlane(event),
+      startPointerCanvas: pointOnCanvas(event),
       changed: false,
       historyPushed: false
     };
@@ -807,56 +943,53 @@ function enableDesignEditing() {
     event.stopPropagation();
   };
   const move = (event) => {
-    if (!interaction || !event.currentTarget.hasPointerCapture(event.pointerId)) return;
-    const pointer = pointOnCanvas(event);
-    const dx = pointer[0] - interaction.startPointer[0];
-    const dy = pointer[1] - interaction.startPointer[1];
-    if (!interaction.changed && Math.hypot(dx, dy) < 2) return;
+    if (!interaction || interaction.pointerId !== event.pointerId) return;
+    const pointerPlane = pointOnScreenPlane(event);
+    const pointerCanvas = pointOnCanvas(event);
+    const dx = pointerPlane[0] - interaction.startPointerPlane[0];
+    const dy = pointerPlane[1] - interaction.startPointerPlane[1];
+    if (!interaction.changed && Math.hypot(dx, dy) < 1.5) return;
     interaction.changed = true;
     if (!interaction.historyPushed) {
       pushHistory();
       interaction.historyPushed = true;
     }
     if (interaction.type === "move") {
-      const [du, dv] = deltaToScreenCoordinates(dx, dy);
       if (state.cropMode) {
-        state.crop.offsetX = Math.max(-1, Math.min(1, interaction.startCrop.offsetX + du / 0.42));
-        state.crop.offsetY = Math.max(-1, Math.min(1, interaction.startCrop.offsetY + dv / 0.42));
+        state.imageFrame = renderer.constrainImageFrameToCover(
+          state.designImage,
+          { ...interaction.startImageFrame, cx: interaction.startImageFrame.cx + dx, cy: interaction.startImageFrame.cy + dy },
+          interaction.startFrame
+        );
       } else {
-        state.adjustments.offsetX = Math.max(-1, Math.min(1, interaction.startOffsetX + du / 0.42));
-        state.adjustments.offsetY = Math.max(-1, Math.min(1, interaction.startOffsetY + dv / 0.42));
+        state.contentFrame = { ...interaction.startFrame, cx: interaction.startFrame.cx + dx, cy: interaction.startFrame.cy + dy };
+        state.imageFrame = { ...interaction.startImageFrame, cx: interaction.startImageFrame.cx + dx, cy: interaction.startImageFrame.cy + dy };
       }
     } else if (interaction.freeTransform) {
       const canvas = state.selectedAsset.canvas;
       const nextQuad = cloneQuad(interaction.startQuad);
+      const canvasDx = pointerCanvas[0] - interaction.startPointerCanvas[0];
+      const canvasDy = pointerCanvas[1] - interaction.startPointerCanvas[1];
       for (const index of warpHandles[interaction.handleName]) {
         nextQuad[index] = [
-          Math.max(0, Math.min(canvas.width, interaction.startQuad[index][0] + dx)),
-          Math.max(0, Math.min(canvas.height, interaction.startQuad[index][1] + dy))
+          Math.max(0, Math.min(canvas.width, interaction.startQuad[index][0] + canvasDx)),
+          Math.max(0, Math.min(canvas.height, interaction.startQuad[index][1] + canvasDy))
         ];
       }
       state.customQuad = nextQuad;
-    } else if (state.cropMode) {
-      const distance = Math.hypot(pointer[0] - interaction.anchor[0], pointer[1] - interaction.anchor[1]);
-      const ratio = Math.max(1 / interaction.startCrop.zoom, Math.min(8 / interaction.startCrop.zoom, distance / interaction.startDistance));
-      state.crop.zoom = interaction.startCrop.zoom * ratio;
     } else {
-      const distance = Math.hypot(pointer[0] - interaction.anchor[0], pointer[1] - interaction.anchor[1]);
-      const ratio = Math.max(0.2 / interaction.startScale, Math.min(4 / interaction.startScale, distance / interaction.startDistance));
-      const nextCenter = [
-        interaction.anchor[0] + (interaction.center[0] - interaction.anchor[0]) * ratio,
-        interaction.anchor[1] + (interaction.center[1] - interaction.anchor[1]) * ratio
-      ];
-      const [du, dv] = deltaToScreenCoordinates(nextCenter[0] - interaction.center[0], nextCenter[1] - interaction.center[1]);
-      state.adjustments.scale = interaction.startScale * ratio;
-      state.adjustments.offsetX = Math.max(-1, Math.min(1, interaction.startOffsetX + du / 0.42));
-      state.adjustments.offsetY = Math.max(-1, Math.min(1, interaction.startOffsetY + dv / 0.42));
+      const nextFrame = resizeFrame(interaction.startFrame, interaction.handleName, pointerPlane, !state.cropMode);
+      state.contentFrame = nextFrame;
+      if (!state.cropMode) state.imageFrame = transformImageFrame(interaction.startImageFrame, interaction.startFrame, nextFrame);
+      else state.imageFrame = renderer.constrainImageFrameToCover(state.designImage, interaction.startImageFrame, nextFrame);
     }
+    syncAdjustmentsFromFrame();
     commitDirectAdjustment();
     event.preventDefault();
   };
   const end = (event) => {
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    if (!interaction || interaction.pointerId !== event.pointerId) return;
+    if (interaction.target.hasPointerCapture(event.pointerId)) interaction.target.releasePointerCapture(event.pointerId);
     const changed = interaction?.changed;
     interaction = null;
     if (changed) renderFinalComposite();
@@ -864,42 +997,47 @@ function enableDesignEditing() {
     event.stopPropagation();
   };
   elements.designDragTarget.addEventListener("pointerdown", (event) => start(event, "move"));
-  elements.designDragTarget.addEventListener("pointermove", move);
-  elements.designDragTarget.addEventListener("pointerup", end);
-  elements.designDragTarget.addEventListener("pointercancel", end);
+  window.addEventListener("pointermove", move, { passive: false });
+  window.addEventListener("pointerup", end);
+  window.addEventListener("pointercancel", end);
   elements.designDragTarget.addEventListener("dblclick", (event) => {
     enterCropMode();
     event.preventDefault();
     event.stopPropagation();
   });
   elements.designDragTarget.addEventListener("keydown", (event) => {
-    const step = event.shiftKey ? 0.05 : 0.01;
+    const step = event.shiftKey ? 10 : 1;
     if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
     pushHistory();
     const dx = event.key === "ArrowLeft" ? -step : event.key === "ArrowRight" ? step : 0;
     const dy = event.key === "ArrowUp" ? -step : event.key === "ArrowDown" ? step : 0;
     if (state.cropMode) {
-      state.crop.offsetX = Math.max(-1, Math.min(1, state.crop.offsetX + dx));
-      state.crop.offsetY = Math.max(-1, Math.min(1, state.crop.offsetY + dy));
+      state.imageFrame = renderer.constrainImageFrameToCover(
+        state.designImage,
+        { ...state.imageFrame, cx: state.imageFrame.cx + dx, cy: state.imageFrame.cy + dy },
+        state.contentFrame
+      );
     } else {
-      state.adjustments.offsetX = Math.max(-1, Math.min(1, state.adjustments.offsetX + dx));
-      state.adjustments.offsetY = Math.max(-1, Math.min(1, state.adjustments.offsetY + dy));
+      state.contentFrame = { ...state.contentFrame, cx: state.contentFrame.cx + dx, cy: state.contentFrame.cy + dy };
+      state.imageFrame = { ...state.imageFrame, cx: state.imageFrame.cx + dx, cy: state.imageFrame.cy + dy };
     }
+    syncAdjustmentsFromFrame();
     commitDirectAdjustment();
     renderFinalComposite();
     event.preventDefault();
   });
   for (const handle of elements.designEditor.querySelectorAll(".design-scale-handle")) {
     handle.addEventListener("pointerdown", (event) => start(event, "scale"));
-    handle.addEventListener("pointermove", move);
-    handle.addEventListener("pointerup", end);
-    handle.addEventListener("pointercancel", end);
     handle.addEventListener("keydown", (event) => {
       if (!["ArrowUp", "ArrowRight", "ArrowDown", "ArrowLeft"].includes(event.key)) return;
       pushHistory();
       const direction = ["ArrowUp", "ArrowRight"].includes(event.key) ? 1 : -1;
-      if (state.cropMode) state.crop.zoom = Math.max(1, Math.min(8, state.crop.zoom + direction * (event.shiftKey ? 0.2 : 0.05)));
-      else state.adjustments.scale = Math.max(1, Math.min(4, state.adjustments.scale + direction * (event.shiftKey ? 0.1 : 0.02)));
+      const factor = 1 + direction * (event.shiftKey ? 0.1 : 0.02);
+      const startFrame = { ...state.contentFrame };
+      const nextFrame = { ...startFrame, width: Math.max(20, startFrame.width * factor), height: Math.max(20, startFrame.height * factor) };
+      state.contentFrame = nextFrame;
+      if (!state.cropMode) state.imageFrame = transformImageFrame(state.imageFrame, startFrame, nextFrame);
+      syncAdjustmentsFromFrame();
       commitDirectAdjustment();
       renderFinalComposite();
       event.preventDefault();
@@ -914,7 +1052,7 @@ let scheduledRenderQuality = "preview";
 
 function renderComposite(quality = "final") {
   if (!state.selectedAsset || !state.baseImage) return;
-  if (state.designImage) normalizedEditorGeometry();
+  if (state.designImage) ensureContentGeometry();
   renderer.renderComposite({
     canvas: elements.previewCanvas,
     asset: state.selectedAsset,
@@ -923,6 +1061,7 @@ function renderComposite(quality = "final") {
     fit: "cover",
     adjustments: state.adjustments,
     crop: state.crop,
+    content: state.designImage ? { frame: state.contentFrame, imageFrame: state.imageFrame } : null,
     quad: screenQuad(),
     designQuad: activeQuad(),
     layerImages: state.layerImages,
@@ -1003,7 +1142,7 @@ function syncAdjustmentControls() {
 }
 
 function updateAdjustmentsFromControls() {
-  state.adjustments = {
+  const nextAdjustments = {
     scale: Number(elements.designScale.value) / 100,
     offsetX: Number(elements.designOffsetX.value) / 100,
     offsetY: Number(elements.designOffsetY.value) / 100,
@@ -1012,7 +1151,22 @@ function updateAdjustmentsFromControls() {
     contrast: Number(elements.designContrast.value) / 100,
     saturation: Number(elements.designSaturation.value) / 100
   };
-  normalizedEditorGeometry();
+  if (state.designImage && ensureContentGeometry()) {
+    const plane = screenPlane();
+    const startFrame = { ...state.contentFrame };
+    const currentScale = Math.max(0.01, Math.sqrt(startFrame.width / plane.width * startFrame.height / plane.height));
+    const ratio = nextAdjustments.scale / currentScale;
+    const nextFrame = {
+      cx: plane.width / 2 + nextAdjustments.offsetX * plane.width * 0.42,
+      cy: plane.height / 2 + nextAdjustments.offsetY * plane.height * 0.42,
+      width: Math.max(20, startFrame.width * ratio),
+      height: Math.max(20, startFrame.height * ratio),
+      rotation: nextAdjustments.rotation
+    };
+    state.imageFrame = transformImageFrame(state.imageFrame, startFrame, nextFrame);
+    state.contentFrame = nextFrame;
+  }
+  state.adjustments = nextAdjustments;
   syncAdjustmentControls();
   updateDesignEditor();
   scheduleComposite("preview");
@@ -1033,6 +1187,7 @@ async function setDesignBytes(bytes, name, mimeType = "image/png", metadata = {}
   state.cropSnapshot = null;
   state.adjustments = { ...DEFAULT_ADJUSTMENTS };
   state.crop = { ...DEFAULT_CROP };
+  resetContentGeometry();
   elements.fitMode.value = "cover";
   syncAdjustmentControls();
   elements.designSourceLabel.textContent = name;
@@ -1053,6 +1208,8 @@ function clearDesign() {
   state.designSelected = false;
   state.cropMode = false;
   state.cropSnapshot = null;
+  state.contentFrame = null;
+  state.imageFrame = null;
   elements.designSourceLabel.textContent = "尚未读取画面";
   elements.clearDesignButton.disabled = true;
   elements.imageInput.value = "";
@@ -1163,6 +1320,7 @@ function resetAdjustments() {
   pushHistory();
   state.adjustments = { ...DEFAULT_ADJUSTMENTS };
   state.crop = { ...DEFAULT_CROP };
+  if (state.designImage) resetContentGeometry();
   elements.fitMode.value = "cover";
   syncAdjustmentControls();
   renderFinalComposite();
@@ -1173,6 +1331,7 @@ function resetPerspective() {
   if (!state.selectedAsset) return;
   pushHistory();
   state.customQuad = state.selectedAsset.screen.quad.map((point) => [...point]);
+  if (state.designImage) resetContentGeometry();
   renderFinalComposite();
   showToast("样机透视已恢复默认");
 }
@@ -1183,6 +1342,10 @@ function resetCurrentMockup() {
   state.adjustments = { ...DEFAULT_ADJUSTMENTS };
   state.crop = { ...DEFAULT_CROP };
   state.customQuad = state.selectedAsset.screen.quad.map((point) => [...point]);
+  // A global reset must restore the content geometry as well as colour and
+  // perspective settings. Leaving the edited crop frame in place made the
+  // source appear as a small or offset rectangle even after “复位”.
+  if (state.designImage) resetContentGeometry();
   elements.fitMode.value = "cover";
   state.designSelected = false;
   state.cropMode = false;
@@ -1362,26 +1525,29 @@ function enableStageNavigation() {
       state.designSelected = false;
       updateDesignEditor();
     }
-    interaction = { x: event.clientX, y: event.clientY, panX: state.panX, panY: state.panY };
-    elements.stage.setPointerCapture(event.pointerId);
+    interaction = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, panX: state.panX, panY: state.panY };
     elements.stage.classList.add("is-panning");
     event.preventDefault();
   });
 
-  elements.stage.addEventListener("pointermove", (event) => {
-    if (!interaction || !elements.stage.hasPointerCapture(event.pointerId)) return;
+  // Figma's plugin webview can drop element-level pointer capture when the
+  // pointer crosses the transformed canvas. Window-level listeners keep pan
+  // continuous in both the browser harness and the real host.
+  window.addEventListener("pointermove", (event) => {
+    if (!interaction || interaction.pointerId !== event.pointerId) return;
     state.panX = interaction.panX + event.clientX - interaction.x;
     state.panY = interaction.panY + event.clientY - interaction.y;
     applyStageView();
-  });
+    event.preventDefault();
+  }, { passive: false });
 
   const finishPan = (event) => {
-    if (elements.stage.hasPointerCapture(event.pointerId)) elements.stage.releasePointerCapture(event.pointerId);
+    if (!interaction || interaction.pointerId !== event.pointerId) return;
     interaction = null;
     elements.stage.classList.remove("is-panning");
   };
-  elements.stage.addEventListener("pointerup", finishPan);
-  elements.stage.addEventListener("pointercancel", finishPan);
+  window.addEventListener("pointerup", finishPan);
+  window.addEventListener("pointercancel", finishPan);
   window.addEventListener("resize", () => {
     sizeCanvasWrap();
     applyStageView();
@@ -1504,6 +1670,7 @@ syncAdjustmentControls();
 updateSourceActions();
 enableDesignEditing();
 enableStageNavigation();
+enableRecentScrolling();
 enableWindowResize();
 
 window.onmessage = async (event) => {

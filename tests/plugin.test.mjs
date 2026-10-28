@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import { runInNewContext } from "node:vm";
 
 const projectRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const pluginRoot = resolve(projectRoot, "plugin");
@@ -19,6 +20,43 @@ const [pluginManifest, code, uiScript, uiHtml, uiStyles, rendererScript, labHtml
   readFile(resolve(projectRoot, "netlify.toml"), "utf8"),
   readFile(resolve(projectRoot, ".gitignore"), "utf8")
 ]);
+const rendererHost = {};
+runInNewContext(rendererScript, { window: rendererHost });
+const renderer = rendererHost.MockupRenderer;
+
+test("shared geometry converts between screen plane and perspective canvas without drift", () => {
+  const quad = [[120, 80], [880, 110], [830, 690], [150, 650]];
+  for (const [u, v] of [[0, 0], [1, 0], [1, 1], [0, 1], [0.22, 0.74], [0.61, 0.38]]) {
+    const canvasPoint = renderer.bilinearPoint(quad, u, v);
+    const resolved = renderer.inverseBilinearPoint(quad, canvasPoint);
+    assert.ok(Math.abs(resolved[0] - u) < 0.0001);
+    assert.ok(Math.abs(resolved[1] - v) < 0.0001);
+  }
+  assert.deepEqual({ ...renderer.screenPlane(16 / 9) }, { width: 1200, height: 675 });
+  assert.deepEqual(JSON.parse(JSON.stringify(renderer.frameCorners({ cx: 50, cy: 40, width: 20, height: 10, rotation: 0 }))), [[40, 35], [60, 35], [60, 45], [40, 45]]);
+  const frame = { cx: 610, cy: 320, width: 360, height: 240, rotation: 7 };
+  const surfaceQuad = [[120, 80], [880, 110], [830, 690], [150, 650]];
+  const plane = renderer.screenPlane(16 / 9);
+  const expectedFrameQuad = renderer.frameCorners(frame).map(([x, y]) => renderer.bilinearPoint(surfaceQuad, x / plane.width, y / plane.height));
+  const actualFrameQuad = renderer.frameQuadOnSurface(frame, 16 / 9, surfaceQuad);
+  for (let index = 0; index < 4; index += 1) {
+    assert.ok(Math.abs(actualFrameQuad[index][0] - expectedFrameQuad[index][0]) < 0.000001);
+    assert.ok(Math.abs(actualFrameQuad[index][1] - expectedFrameQuad[index][1]) < 0.000001);
+  }
+  const coverFrame = renderer.imageFrameForCover({ width: 900, height: 1600 }, { cx: 600, cy: 300, width: 1200, height: 600, rotation: 0 });
+  assert.equal(Math.round(coverFrame.width), 1200);
+  assert.equal(Math.round(coverFrame.height), 2133);
+  const constrainedFrame = renderer.constrainImageFrameToCover(
+    { width: 900, height: 1600 },
+    { cx: 9999, cy: -9999, width: 300, height: 400, rotation: 12 },
+    { cx: 600, cy: 300, width: 1200, height: 600, rotation: 0 }
+  );
+  assert.equal(Math.round(constrainedFrame.width), 1200);
+  assert.equal(Math.round(constrainedFrame.height), 2133);
+  assert.equal(constrainedFrame.rotation, 0);
+  assert.equal(Math.round(constrainedFrame.cx), 600);
+  assert.ok(constrainedFrame.cy <= 1067 && constrainedFrame.cy >= -467);
+});
 
 test("plugin uses a fixed production domain and a development-only local catalog", () => {
   assert.deepEqual(pluginManifest.networkAccess.allowedDomains, ["https://assets.mockup-studio.example"]);
@@ -105,28 +143,39 @@ test("continuous editing uses responsive preview rendering and a final-quality c
   assert.match(uiScript, /renderFinalComposite\(\);\s*const blob = await canvasBlob\(\)/);
 });
 
-test("content uses a fixed crop window, keeps its ratio and always fills the mockup screen", () => {
+test("content, crop frame and source image have independent geometry", () => {
   assert.match(rendererScript, /asset\.screen\.recommendedSize/);
   assert.doesNotMatch(uiHtml, /<option value="stretch">/);
   assert.match(uiHtml, /自动填满 · 不变形/);
   assert.match(uiHtml, /id="fitMode" type="hidden" value="cover"/);
-  assert.match(rendererScript, /function cropGeometry/);
-  assert.match(rendererScript, /function constrainCoverAdjustments/);
-  assert.match(uiScript, /crop: state\.crop/);
+  assert.match(rendererScript, /function screenPlane/);
+  assert.match(rendererScript, /function normalizeFrame/);
+  assert.match(rendererScript, /function frameQuadOnSurface/);
+  assert.match(rendererScript, /function imageFrameForCover/);
+  assert.match(rendererScript, /function constrainImageFrameToCover/);
+  assert.match(rendererScript, /function createContentCanvas/);
+  assert.match(rendererScript, /frameQuadOnSurface\(content\.frame, targetAspect, surfaceQuad\)/);
+  assert.doesNotMatch(rendererScript, /createScreenCanvas\([^\n]+content\);/);
+  assert.match(uiScript, /contentFrame:/);
+  assert.match(uiScript, /imageFrame:/);
+  assert.match(uiScript, /content: state\.designImage \? \{ frame: state\.contentFrame, imageFrame: state\.imageFrame \}/);
+  assert.doesNotMatch(uiScript, /constrainCoverAdjustments|cropGeometry/);
   assert.match(uiHtml, /id="recommendedSize"/);
 });
 
-test("the design is one directly manipulable object inside the mockup", () => {
+test("the design supports direct move, four-corner proportional resize and four-edge resize", () => {
   assert.match(uiScript, /function enableDesignEditing/);
   assert.match(uiScript, /designDragTarget\.addEventListener\("pointerdown"/);
   assert.match(uiScript, /\.design-scale-handle/);
-  assert.match(uiScript, /deltaToScreenCoordinates/);
+  assert.match(uiScript, /pointOnScreenPlane/);
+  assert.match(uiScript, /function resizeFrame/);
+  assert.match(uiScript, /const opposite = \{ nw: "se", n: "s", ne: "sw", e: "w", se: "nw", s: "n", sw: "ne", w: "e" \}/);
+  assert.match(uiScript, /const isCorner = handleName\.length === 2/);
+  assert.match(uiScript, /window\.addEventListener\("pointermove", move/);
   assert.match(uiStyles, /\.design-drag-target\s*\{[^}]*cursor:\s*move/s);
   assert.equal((uiHtml.match(/class="design-scale-handle/g) || []).length, 8);
-  assert.match(uiScript, /oppositeHandle/);
-  assert.match(uiScript, /state\.adjustments\.scale = interaction\.startScale \* ratio/);
   assert.match(uiScript, /enterCropMode/);
-  assert.match(uiScript, /event\.metaKey \|\| event\.ctrlKey/);
+  assert.match(uiScript, /state\.mode === "perspective" \|\| event\.metaKey \|\| event\.ctrlKey/);
 });
 
 test("source replacement and recovery stay visible in the preview workflow", () => {
@@ -135,6 +184,7 @@ test("source replacement and recovery stay visible in the preview workflow", () 
   }
   assert.equal((uiHtml.match(/id="imageInput"/g) || []).length, 1);
   assert.match(uiScript, /function resetCurrentMockup/);
+  assert.match(uiScript, /function resetCurrentMockup\(\)[\s\S]*if \(state\.designImage\) resetContentGeometry\(\);/);
   assert.match(uiScript, /elements\.replaceSourceButton\.addEventListener\("click", toggleSourcePopover\)/);
 });
 
@@ -147,16 +197,21 @@ test("the preview supports Figma-like pointer and trackpad navigation", () => {
   assert.match(uiScript, /const minimumVisible = 0\.11/);
   assert.match(uiScript, /width \* minimumVisible/);
   assert.match(uiScript, /height \* minimumVisible/);
+  assert.match(uiScript, /interaction = \{ pointerId: event\.pointerId/);
+  assert.match(uiScript, /window\.addEventListener\("pointermove", \(event\) => \{\s*if \(!interaction \|\| interaction\.pointerId !== event\.pointerId\) return;/s);
 });
 
 test("catalog spacing stays contained and hover never impersonates selection", () => {
   assert.match(uiStyles, /\.catalog-panel\s*\{[^}]*overflow:\s*hidden/s);
-  assert.match(uiStyles, /\.asset-grid\s*\{[^}]*padding:\s*8px 14px 16px/s);
-  assert.match(uiStyles, /\.recent-strip > div\s*\{[^}]*grid-template-columns:\s*repeat\(3/s);
+  assert.match(uiStyles, /\.asset-grid\s*\{[^}]*padding:\s*14px 14px 18px/s);
+  assert.match(uiStyles, /\.recent-strip > div\s*\{[^}]*overflow-x:\s*auto[^}]*display:\s*flex[^}]*justify-content:\s*flex-start/s);
   assert.match(uiStyles, /\.recent-item\s*\{[^}]*width:\s*62px[^}]*height:\s*62px/s);
+  assert.match(uiStyles, /\.recent-item\s*\{[^}]*margin:\s*0[^}]*padding:\s*0/s);
   assert.match(uiStyles, /\.asset-card:hover:not\(\.active\)[^{]*\{[^}]*rotate\(var\(--hover-tilt/s);
   assert.match(uiScript, /function hoverTiltFor/);
   assert.match(uiScript, /\? -4 : 4/);
+  assert.match(uiScript, /\.slice\(0, 10\)/);
+  assert.match(uiScript, /function enableRecentScrolling/);
 });
 
 test("Figma and local sources flatten to one static design object", () => {
@@ -178,13 +233,17 @@ test("one editor owns selection crop perspective and constant-size handles", () 
   assert.match(uiStyles, /--overlay-inverse-scale/);
   assert.match(uiStyles, /\.crop-toolbar/);
   assert.match(uiHtml, /id="cropShade"/);
-  assert.match(uiScript, /startCrop/);
-  assert.match(uiScript, /state\.crop\.zoom/);
+  assert.match(uiScript, /enterCropMode/);
+  assert.match(uiScript, /state\.cropSnapshot = editorSnapshot\(\)/);
+  assert.match(uiScript, /state\.contentFrame = \{ \.\.\.interaction\.startFrame, cx:/);
+  assert.match(uiScript, /state\.imageFrame = \{ \.\.\.interaction\.startImageFrame, cx:/);
   assert.match(uiStyles, /\.design-editor\.is-cropping \.crop-shade/);
   assert.match(uiScript, /state\.mode === "perspective" \|\| event\.metaKey \|\| event\.ctrlKey/);
   assert.match(uiScript, /function undoEditor/);
   assert.match(uiScript, /function redoEditor/);
-  assert.match(rendererScript, /designQuad \|\| activeQuad/);
+  assert.match(rendererScript, /const surfaceQuad = designQuad \|\| screenMaskQuad/);
+  assert.match(rendererScript, /frameQuadOnSurface\(content\.frame, targetAspect, surfaceQuad\)/);
+  assert.match(rendererScript, /clipQuad\(context, renderQuad\)/);
 });
 
 test("plugin and asset lab use one shared renderer and one catalog schema", () => {

@@ -66,6 +66,118 @@
     return [topX + (bottomX - topX) * v, topY + (bottomY - topY) * v];
   }
 
+  function inverseBilinearPoint(quad, point) {
+    let u = 0.5;
+    let v = 0.5;
+    for (let iteration = 0; iteration < 12; iteration += 1) {
+      const current = bilinearPoint(quad, u, v);
+      const errorX = current[0] - point[0];
+      const errorY = current[1] - point[1];
+      if (Math.hypot(errorX, errorY) < 0.001) break;
+      const epsilon = 0.0001;
+      const alongU = bilinearPoint(quad, u + epsilon, v);
+      const alongV = bilinearPoint(quad, u, v + epsilon);
+      const ux = (alongU[0] - current[0]) / epsilon;
+      const uy = (alongU[1] - current[1]) / epsilon;
+      const vx = (alongV[0] - current[0]) / epsilon;
+      const vy = (alongV[1] - current[1]) / epsilon;
+      const determinant = ux * vy - uy * vx;
+      if (Math.abs(determinant) < 0.000001) break;
+      u -= (errorX * vy - errorY * vx) / determinant;
+      v -= (ux * errorY - uy * errorX) / determinant;
+    }
+    return [u, v];
+  }
+
+  function screenPlane(targetAspect) {
+    const width = 1200;
+    return { width, height: Math.max(120, Math.round(width / targetAspect)) };
+  }
+
+  function normalizeFrame(frame, width, height) {
+    return {
+      cx: Number.isFinite(frame?.cx) ? frame.cx : width / 2,
+      cy: Number.isFinite(frame?.cy) ? frame.cy : height / 2,
+      width: Math.max(12, Number.isFinite(frame?.width) ? frame.width : width),
+      height: Math.max(12, Number.isFinite(frame?.height) ? frame.height : height),
+      rotation: Number.isFinite(frame?.rotation) ? frame.rotation : 0
+    };
+  }
+
+  function frameCorners(frame) {
+    const angle = frame.rotation * Math.PI / 180;
+    const cosine = Math.cos(angle);
+    const sine = Math.sin(angle);
+    const local = [
+      [-frame.width / 2, -frame.height / 2],
+      [frame.width / 2, -frame.height / 2],
+      [frame.width / 2, frame.height / 2],
+      [-frame.width / 2, frame.height / 2]
+    ];
+    return local.map(([x, y]) => [frame.cx + x * cosine - y * sine, frame.cy + x * sine + y * cosine]);
+  }
+
+  function frameQuadOnSurface(frame, targetAspect, surfaceQuad) {
+    const plane = screenPlane(targetAspect);
+    const normalized = normalizeFrame(frame, plane.width, plane.height);
+    return frameCorners(normalized).map((point) => bilinearPoint(
+      surfaceQuad,
+      point[0] / plane.width,
+      point[1] / plane.height
+    ));
+  }
+
+  function imageFrameForCover(image, frame) {
+    const sourceWidth = Math.max(1, image?.naturalWidth || image?.width || 1);
+    const sourceHeight = Math.max(1, image?.naturalHeight || image?.height || 1);
+    const scale = Math.max(frame.width / sourceWidth, frame.height / sourceHeight);
+    return {
+      cx: frame.cx,
+      cy: frame.cy,
+      width: sourceWidth * scale,
+      height: sourceHeight * scale,
+      rotation: frame.rotation
+    };
+  }
+
+  function constrainImageFrameToCover(image, imageFrame, frame) {
+    const sourceWidth = Math.max(1, image?.naturalWidth || image?.width || 1);
+    const sourceHeight = Math.max(1, image?.naturalHeight || image?.height || 1);
+    const sourceAspect = sourceWidth / sourceHeight;
+    const normalizedFrame = normalizeFrame(frame, frame.width, frame.height);
+    const normalizedImage = normalizeFrame(imageFrame, normalizedFrame.width, normalizedFrame.height);
+
+    // imageFrame is the actual source-image rectangle. Preserve its source
+    // aspect, enlarge it only when needed, then keep it covering the visible
+    // content frame so the editor can never expose an unrelated underlay.
+    let width = Math.max(normalizedImage.width, normalizedImage.height * sourceAspect);
+    let height = width / sourceAspect;
+    if (height < normalizedImage.height) {
+      height = normalizedImage.height;
+      width = height * sourceAspect;
+    }
+    const coverScale = Math.max(1, normalizedFrame.width / width, normalizedFrame.height / height);
+    width *= coverScale;
+    height *= coverScale;
+
+    const angle = normalizedFrame.rotation * Math.PI / 180;
+    const dx = normalizedImage.cx - normalizedFrame.cx;
+    const dy = normalizedImage.cy - normalizedFrame.cy;
+    const localX = dx * Math.cos(angle) + dy * Math.sin(angle);
+    const localY = -dx * Math.sin(angle) + dy * Math.cos(angle);
+    const maxX = Math.max(0, (width - normalizedFrame.width) / 2);
+    const maxY = Math.max(0, (height - normalizedFrame.height) / 2);
+    const clampedX = Math.max(-maxX, Math.min(maxX, localX));
+    const clampedY = Math.max(-maxY, Math.min(maxY, localY));
+    return {
+      cx: normalizedFrame.cx + clampedX * Math.cos(angle) - clampedY * Math.sin(angle),
+      cy: normalizedFrame.cy + clampedX * Math.sin(angle) + clampedY * Math.cos(angle),
+      width,
+      height,
+      rotation: normalizedFrame.rotation
+    };
+  }
+
   function expandQuad(quad, bleed = 0) {
     if (!bleed) return quad;
     const center = quad.reduce((sum, point) => [sum[0] + point[0] / quad.length, sum[1] + point[1] / quad.length], [0, 0]);
@@ -158,9 +270,51 @@
     };
   }
 
-  function createScreenCanvas(image, targetAspect, fit, adjustments, cornerRadius = 0, transparent = false, crop) {
-    const width = 1200;
-    const height = Math.max(120, Math.round(width / targetAspect));
+  function createScreenCanvas(image, targetAspect, fit, adjustments, cornerRadius = 0, transparent = false, crop, content) {
+    const plane = screenPlane(targetAspect);
+    const { width, height } = plane;
+    if (content?.frame || content?.imageFrame) {
+      const frame = normalizeFrame(content.frame, width, height);
+      const imageFrame = normalizeFrame(content.imageFrame, width, height);
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext("2d");
+      const outerRadius = Math.max(0, Math.min(width, height) * Math.min(0.49, cornerRadius));
+      context.save();
+      context.beginPath();
+      context.roundRect(0, 0, width, height, outerRadius);
+      context.clip();
+      if (!transparent) {
+        context.fillStyle = "#0d0d0d";
+        context.fillRect(0, 0, width, height);
+      }
+
+      context.translate(frame.cx, frame.cy);
+      context.rotate(frame.rotation * Math.PI / 180);
+      context.beginPath();
+      const frameRadius = Math.max(0, Math.min(frame.width, frame.height) * Math.min(0.49, cornerRadius));
+      context.roundRect(-frame.width / 2, -frame.height / 2, frame.width, frame.height, frameRadius);
+      context.clip();
+      context.rotate(-frame.rotation * Math.PI / 180);
+      context.translate(-frame.cx, -frame.cy);
+
+      const sourceWidth = image.naturalWidth || image.width;
+      const sourceHeight = image.naturalHeight || image.height;
+      const imageScale = fit === "contain"
+        ? Math.min(imageFrame.width / sourceWidth, imageFrame.height / sourceHeight)
+        : Math.max(imageFrame.width / sourceWidth, imageFrame.height / sourceHeight);
+      const drawWidth = sourceWidth * imageScale;
+      const drawHeight = sourceHeight * imageScale;
+      const values = { ...DEFAULT_ADJUSTMENTS, ...(adjustments || {}) };
+      context.translate(imageFrame.cx, imageFrame.cy);
+      context.rotate(imageFrame.rotation * Math.PI / 180);
+      context.filter = `brightness(${values.brightness}) contrast(${values.contrast}) saturate(${values.saturation})`;
+      context.drawImage(image, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+      context.restore();
+      return canvas;
+    }
+
     const cropCanvas = document.createElement("canvas");
     cropCanvas.width = width;
     cropCanvas.height = height;
@@ -193,6 +347,41 @@
     context.scale(values.scale, values.scale);
     context.filter = `brightness(${values.brightness}) contrast(${values.contrast}) saturate(${values.saturation})`;
     context.drawImage(cropCanvas, -width / 2, -height / 2, width, height);
+    context.restore();
+    return canvas;
+  }
+
+  function createContentCanvas(image, targetAspect, fit, adjustments, cornerRadius = 0, content) {
+    const plane = screenPlane(targetAspect);
+    const frame = normalizeFrame(content?.frame, plane.width, plane.height);
+    const imageFrame = normalizeFrame(content?.imageFrame, plane.width, plane.height);
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(frame.width));
+    canvas.height = Math.max(1, Math.round(frame.height));
+    const context = canvas.getContext("2d");
+    const scaleX = canvas.width / frame.width;
+    const scaleY = canvas.height / frame.height;
+    const radius = Math.max(0, Math.min(frame.width, frame.height) * Math.min(0.49, cornerRadius));
+
+    // Work only in frame-local coordinates. The resulting bitmap is mapped
+    // directly to the exact same four points used by the editor handles.
+    // This removes the former second transform through the full screen plane.
+    context.scale(scaleX, scaleY);
+    context.save();
+    context.beginPath();
+    context.roundRect(0, 0, frame.width, frame.height, radius);
+    context.clip();
+
+    const frameAngle = frame.rotation * Math.PI / 180;
+    const dx = imageFrame.cx - frame.cx;
+    const dy = imageFrame.cy - frame.cy;
+    const localX = dx * Math.cos(frameAngle) + dy * Math.sin(frameAngle);
+    const localY = -dx * Math.sin(frameAngle) + dy * Math.cos(frameAngle);
+    const values = { ...DEFAULT_ADJUSTMENTS, ...(adjustments || {}) };
+    context.translate(frame.width / 2 + localX, frame.height / 2 + localY);
+    context.rotate((imageFrame.rotation - frame.rotation) * Math.PI / 180);
+    context.filter = `brightness(${values.brightness}) contrast(${values.contrast}) saturate(${values.saturation})`;
+    context.drawImage(image, -imageFrame.width / 2, -imageFrame.height / 2, imageFrame.width, imageFrame.height);
     context.restore();
     return canvas;
   }
@@ -258,7 +447,7 @@
     }
   }
 
-  function renderComposite({ canvas, asset, baseImage, designImage, fit = "cover", adjustments, crop, quad, designQuad, layerImages = {}, quality = "final" }) {
+  function renderComposite({ canvas, asset, baseImage, designImage, fit = "cover", adjustments, crop, content, quad, designQuad, layerImages = {}, quality = "final" }) {
     validateAsset(asset);
     const context = canvas.getContext("2d", { alpha: false });
     context.setTransform(1, 0, 0, 1, 0, 0);
@@ -267,14 +456,25 @@
     context.clearRect(0, 0, canvas.width, canvas.height);
     const preparedBase = preparedBaseImage(baseImage, asset);
     context.drawImage(preparedBase, 0, 0, canvas.width, canvas.height);
-    const activeQuad = expandQuad(quad || asset.screen.quad, asset.screen.bleed || 0);
+    const screenMaskQuad = expandQuad(quad || asset.screen.quad, asset.screen.bleed || 0);
     if (designImage) {
       const recommended = asset.screen.recommendedSize;
-      const screenCanvas = createScreenCanvas(designImage, recommended.width / recommended.height, fit, adjustments, asset.screen.cornerRadius || 0, true, crop);
-      fillQuad(context, activeQuad, asset.screen.underlay || "#080808");
+      const targetAspect = recommended.width / recommended.height;
+      const surfaceQuad = designQuad || screenMaskQuad;
+      const hasContentGeometry = Boolean(content?.frame || content?.imageFrame);
+      const screenCanvas = hasContentGeometry
+        ? createContentCanvas(designImage, targetAspect, fit, adjustments, asset.screen.cornerRadius || 0, content)
+        : createScreenCanvas(designImage, targetAspect, fit, adjustments, asset.screen.cornerRadius || 0, true, crop, null);
+      // Rendering and editing deliberately derive from one frame quad. Mapping
+      // the whole transparent screen plane here used to apply geometry twice,
+      // which made pixels drift away from their handles after crop or zoom.
+      const renderQuad = hasContentGeometry
+        ? frameQuadOnSurface(content.frame, targetAspect, surfaceQuad)
+        : surfaceQuad;
+      fillQuad(context, renderQuad, asset.screen.underlay || "#080808");
       context.save();
-      clipQuad(context, activeQuad);
-      drawImageToQuad(context, screenCanvas, designQuad || activeQuad, quality);
+      clipQuad(context, renderQuad);
+      drawImageToQuad(context, screenCanvas, renderQuad, quality);
       context.restore();
       restoreOcclusions(context, preparedBase, asset);
     }
@@ -289,5 +489,5 @@
     return canvas;
   }
 
-  global.MockupRenderer = Object.freeze({ VERSION, DEFAULT_ADJUSTMENTS, DEFAULT_CROP, validateAsset, quadSize, bilinearPoint, expandQuad, cropGeometry, constrainCoverAdjustments, createScreenCanvas, drawImageToQuad, renderComposite });
+  global.MockupRenderer = Object.freeze({ VERSION, DEFAULT_ADJUSTMENTS, DEFAULT_CROP, validateAsset, quadSize, bilinearPoint, inverseBilinearPoint, screenPlane, normalizeFrame, frameCorners, frameQuadOnSurface, imageFrameForCover, constrainImageFrameToCover, expandQuad, cropGeometry, constrainCoverAdjustments, createScreenCanvas, createContentCanvas, drawImageToQuad, renderComposite });
 })(window);

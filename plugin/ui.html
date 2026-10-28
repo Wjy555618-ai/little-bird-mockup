@@ -72,13 +72,13 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .category-select select, .fit-select select { min-width: 0; flex: 1; border: 0; outline: 0; color: #d5d4d9; background: transparent; }
 .catalog-summary { height: 28px; padding: 0 var(--panel-pad); display: flex; align-items: center; justify-content: space-between; color: #69686e; font-size: 10px; }
 
-.asset-grid { min-width: 0; min-height: 0; overflow: auto; padding: 8px 14px 16px; display: grid; align-content: start; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 10px; scroll-padding: 8px; }
+.asset-grid { min-width: 0; min-height: 0; overflow: auto; padding: 14px 14px 18px; display: grid; align-content: start; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 10px; scroll-padding: 14px; isolation: isolate; }
 .asset-grid::-webkit-scrollbar { width: 6px; }
 .asset-grid::-webkit-scrollbar-thumb { background: #36363a; border-radius: 99px; }
-.asset-card { min-width: 0; padding: 0; overflow: hidden; position: relative; z-index: 0; transform-origin: center; border: 1px solid transparent; border-radius: 12px; background: #232323; cursor: pointer; text-align: left; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+.asset-card { min-width: 0; padding: 0; overflow: hidden; position: relative; z-index: 0; transform-origin: center; border: 1px solid transparent; border-radius: 10px; background: #232323; cursor: pointer; text-align: left; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
 .asset-card.active { border-color: #e0dfe3; box-shadow: 0 0 0 1px #e0dfe344; }
 .asset-card img { width: 100%; aspect-ratio: 4 / 3; display: block; object-fit: cover; background: #2d2d2d; }
-.asset-card footer { position: absolute; inset: auto 0 0; padding: 18px 8px 7px; display: grid; gap: 2px; background: linear-gradient(transparent, #101010d9); opacity: 0; transition: opacity .15s ease; }
+.asset-card footer { position: absolute; inset: auto 0 0; padding: 18px 8px 7px; display: grid; justify-items: start; gap: 2px; background: linear-gradient(transparent, #101010d9); opacity: 0; text-align: left; transition: opacity .15s ease; }
 .asset-card:hover footer, .asset-card:focus-visible footer { opacity: 1; }
 .asset-card strong { overflow: hidden; color: #f0eff2; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 .asset-card span { display: none; }
@@ -88,10 +88,12 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 
 .recent-strip { width: 100%; height: 104px; overflow: hidden; padding: 9px 14px 11px; display: grid; grid-template-rows: 20px 62px; gap: 3px; border-top: 1px solid var(--line-soft); background: #171717; }
 .recent-strip[hidden] { display: none; }
-.recent-strip header { min-width: 0; height: 20px; display: flex; align-items: center; justify-content: space-between; color: #86858b; }
+.recent-strip header { min-width: 0; height: 20px; margin: 0; padding: 0; display: flex; align-items: center; justify-content: space-between; color: #86858b; text-align: left; }
 .recent-strip header button { line-height: 1; }
-.recent-strip > div { width: 100%; height: 62px; display: grid; grid-template-columns: repeat(3, 62px); justify-content: start; gap: 9px; }
-.recent-item { width: 62px; height: 62px; min-width: 0; overflow: hidden; border: 1px solid #3b3a3f; border-radius: 9px; background: #202020; cursor: pointer; }
+.recent-strip > div { width: 100%; height: 62px; margin: 0; padding: 0; overflow-x: auto; overflow-y: hidden; display: flex; justify-content: flex-start; gap: 9px; scroll-behavior: smooth; scrollbar-width: none; touch-action: pan-y; cursor: grab; }
+.recent-strip > div::-webkit-scrollbar { display: none; }
+.recent-strip > div:active { cursor: grabbing; }
+.recent-item { width: 62px; height: 62px; min-width: 62px; margin: 0; padding: 0; flex: 0 0 62px; overflow: hidden; border: 1px solid #3b3a3f; border-radius: 9px; background: #202020; cursor: pointer; }
 .recent-item.active { border-color: #dedde1; }
 .recent-item img { width: 100%; height: 100%; display: block; object-fit: cover; }
 
@@ -362,7 +364,7 @@ html.is-collapsed .collapsed-bar[aria-hidden="true"] { visibility: visible; }
               <section class="control-section">
                 <input id="fitMode" type="hidden" value="cover" />
                 <div class="fill-rule"><span>填充</span><strong>自动填满 · 不变形</strong></div>
-                <label class="range-control"><span>缩放</span><input id="designScale" type="range" min="100" max="400" value="100" /><output id="designScaleValue">100%</output></label>
+                <label class="range-control"><span>缩放</span><input id="designScale" type="range" min="20" max="400" value="100" /><output id="designScaleValue">100%</output></label>
                 <label class="range-control"><span>水平</span><input id="designOffsetX" type="range" min="-100" max="100" value="0" /><output id="designOffsetXValue">0%</output></label>
                 <label class="range-control"><span>垂直</span><input id="designOffsetY" type="range" min="-100" max="100" value="0" /><output id="designOffsetYValue">0%</output></label>
                 <label class="range-control"><span>旋转</span><input id="designRotation" type="range" min="-30" max="30" value="0" /><output id="designRotationValue">0°</output></label>
@@ -416,18 +418,18 @@ html.is-collapsed .collapsed-bar[aria-hidden="true"] { visibility: visible; }
               <div class="design-editor" id="designEditor" hidden>
                 <svg viewBox="0 0 1448 1086" preserveAspectRatio="none">
                   <path class="crop-shade" id="cropShade" d="" fill-rule="evenodd" />
-                  <polygon class="crop-frame" id="cropFrame" points="" />
+                  <path class="crop-frame" id="cropFrame" d="" />
                   <polygon class="design-outline" id="designPolygon" points="" />
                   <polygon class="design-drag-target" id="designDragTarget" points="" role="button" tabindex="0" aria-label="拖动画面位置" />
                 </svg>
                 <button class="design-scale-handle handle-nw" data-handle="nw" aria-label="左上等比缩放"></button>
-                <button class="design-scale-handle handle-n" data-handle="n" aria-label="向上等比缩放"></button>
+                <button class="design-scale-handle handle-n" data-handle="n" aria-label="向上单边缩放"></button>
                 <button class="design-scale-handle handle-ne" data-handle="ne" aria-label="右上等比缩放"></button>
-                <button class="design-scale-handle handle-e" data-handle="e" aria-label="向右等比缩放"></button>
+                <button class="design-scale-handle handle-e" data-handle="e" aria-label="向右单边缩放"></button>
                 <button class="design-scale-handle handle-se" data-handle="se" aria-label="右下等比缩放"></button>
-                <button class="design-scale-handle handle-s" data-handle="s" aria-label="向下等比缩放"></button>
+                <button class="design-scale-handle handle-s" data-handle="s" aria-label="向下单边缩放"></button>
                 <button class="design-scale-handle handle-sw" data-handle="sw" aria-label="左下等比缩放"></button>
-                <button class="design-scale-handle handle-w" data-handle="w" aria-label="向左等比缩放"></button>
+                <button class="design-scale-handle handle-w" data-handle="w" aria-label="向左单边缩放"></button>
               </div>
               <button class="screen-cta" id="screenCta">
                 <span>＋</span>
@@ -436,7 +438,7 @@ html.is-collapsed .collapsed-bar[aria-hidden="true"] { visibility: visible; }
               <div class="rendering-badge" id="renderingBadge" hidden>正在渲染</div>
             </div>
             <div class="crop-toolbar" id="cropToolbar" hidden>
-              <span>拖动或缩放画面完成裁切</span>
+              <span>移动或缩放裁切框</span>
               <button id="cropCancelButton">取消</button>
               <button class="crop-done" id="cropDoneButton">完成</button>
             </div>
@@ -600,6 +602,118 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
     return [topX + (bottomX - topX) * v, topY + (bottomY - topY) * v];
   }
 
+  function inverseBilinearPoint(quad, point) {
+    let u = 0.5;
+    let v = 0.5;
+    for (let iteration = 0; iteration < 12; iteration += 1) {
+      const current = bilinearPoint(quad, u, v);
+      const errorX = current[0] - point[0];
+      const errorY = current[1] - point[1];
+      if (Math.hypot(errorX, errorY) < 0.001) break;
+      const epsilon = 0.0001;
+      const alongU = bilinearPoint(quad, u + epsilon, v);
+      const alongV = bilinearPoint(quad, u, v + epsilon);
+      const ux = (alongU[0] - current[0]) / epsilon;
+      const uy = (alongU[1] - current[1]) / epsilon;
+      const vx = (alongV[0] - current[0]) / epsilon;
+      const vy = (alongV[1] - current[1]) / epsilon;
+      const determinant = ux * vy - uy * vx;
+      if (Math.abs(determinant) < 0.000001) break;
+      u -= (errorX * vy - errorY * vx) / determinant;
+      v -= (ux * errorY - uy * errorX) / determinant;
+    }
+    return [u, v];
+  }
+
+  function screenPlane(targetAspect) {
+    const width = 1200;
+    return { width, height: Math.max(120, Math.round(width / targetAspect)) };
+  }
+
+  function normalizeFrame(frame, width, height) {
+    return {
+      cx: Number.isFinite(frame?.cx) ? frame.cx : width / 2,
+      cy: Number.isFinite(frame?.cy) ? frame.cy : height / 2,
+      width: Math.max(12, Number.isFinite(frame?.width) ? frame.width : width),
+      height: Math.max(12, Number.isFinite(frame?.height) ? frame.height : height),
+      rotation: Number.isFinite(frame?.rotation) ? frame.rotation : 0
+    };
+  }
+
+  function frameCorners(frame) {
+    const angle = frame.rotation * Math.PI / 180;
+    const cosine = Math.cos(angle);
+    const sine = Math.sin(angle);
+    const local = [
+      [-frame.width / 2, -frame.height / 2],
+      [frame.width / 2, -frame.height / 2],
+      [frame.width / 2, frame.height / 2],
+      [-frame.width / 2, frame.height / 2]
+    ];
+    return local.map(([x, y]) => [frame.cx + x * cosine - y * sine, frame.cy + x * sine + y * cosine]);
+  }
+
+  function frameQuadOnSurface(frame, targetAspect, surfaceQuad) {
+    const plane = screenPlane(targetAspect);
+    const normalized = normalizeFrame(frame, plane.width, plane.height);
+    return frameCorners(normalized).map((point) => bilinearPoint(
+      surfaceQuad,
+      point[0] / plane.width,
+      point[1] / plane.height
+    ));
+  }
+
+  function imageFrameForCover(image, frame) {
+    const sourceWidth = Math.max(1, image?.naturalWidth || image?.width || 1);
+    const sourceHeight = Math.max(1, image?.naturalHeight || image?.height || 1);
+    const scale = Math.max(frame.width / sourceWidth, frame.height / sourceHeight);
+    return {
+      cx: frame.cx,
+      cy: frame.cy,
+      width: sourceWidth * scale,
+      height: sourceHeight * scale,
+      rotation: frame.rotation
+    };
+  }
+
+  function constrainImageFrameToCover(image, imageFrame, frame) {
+    const sourceWidth = Math.max(1, image?.naturalWidth || image?.width || 1);
+    const sourceHeight = Math.max(1, image?.naturalHeight || image?.height || 1);
+    const sourceAspect = sourceWidth / sourceHeight;
+    const normalizedFrame = normalizeFrame(frame, frame.width, frame.height);
+    const normalizedImage = normalizeFrame(imageFrame, normalizedFrame.width, normalizedFrame.height);
+
+    // imageFrame is the actual source-image rectangle. Preserve its source
+    // aspect, enlarge it only when needed, then keep it covering the visible
+    // content frame so the editor can never expose an unrelated underlay.
+    let width = Math.max(normalizedImage.width, normalizedImage.height * sourceAspect);
+    let height = width / sourceAspect;
+    if (height < normalizedImage.height) {
+      height = normalizedImage.height;
+      width = height * sourceAspect;
+    }
+    const coverScale = Math.max(1, normalizedFrame.width / width, normalizedFrame.height / height);
+    width *= coverScale;
+    height *= coverScale;
+
+    const angle = normalizedFrame.rotation * Math.PI / 180;
+    const dx = normalizedImage.cx - normalizedFrame.cx;
+    const dy = normalizedImage.cy - normalizedFrame.cy;
+    const localX = dx * Math.cos(angle) + dy * Math.sin(angle);
+    const localY = -dx * Math.sin(angle) + dy * Math.cos(angle);
+    const maxX = Math.max(0, (width - normalizedFrame.width) / 2);
+    const maxY = Math.max(0, (height - normalizedFrame.height) / 2);
+    const clampedX = Math.max(-maxX, Math.min(maxX, localX));
+    const clampedY = Math.max(-maxY, Math.min(maxY, localY));
+    return {
+      cx: normalizedFrame.cx + clampedX * Math.cos(angle) - clampedY * Math.sin(angle),
+      cy: normalizedFrame.cy + clampedX * Math.sin(angle) + clampedY * Math.cos(angle),
+      width,
+      height,
+      rotation: normalizedFrame.rotation
+    };
+  }
+
   function expandQuad(quad, bleed = 0) {
     if (!bleed) return quad;
     const center = quad.reduce((sum, point) => [sum[0] + point[0] / quad.length, sum[1] + point[1] / quad.length], [0, 0]);
@@ -692,9 +806,51 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
     };
   }
 
-  function createScreenCanvas(image, targetAspect, fit, adjustments, cornerRadius = 0, transparent = false, crop) {
-    const width = 1200;
-    const height = Math.max(120, Math.round(width / targetAspect));
+  function createScreenCanvas(image, targetAspect, fit, adjustments, cornerRadius = 0, transparent = false, crop, content) {
+    const plane = screenPlane(targetAspect);
+    const { width, height } = plane;
+    if (content?.frame || content?.imageFrame) {
+      const frame = normalizeFrame(content.frame, width, height);
+      const imageFrame = normalizeFrame(content.imageFrame, width, height);
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext("2d");
+      const outerRadius = Math.max(0, Math.min(width, height) * Math.min(0.49, cornerRadius));
+      context.save();
+      context.beginPath();
+      context.roundRect(0, 0, width, height, outerRadius);
+      context.clip();
+      if (!transparent) {
+        context.fillStyle = "#0d0d0d";
+        context.fillRect(0, 0, width, height);
+      }
+
+      context.translate(frame.cx, frame.cy);
+      context.rotate(frame.rotation * Math.PI / 180);
+      context.beginPath();
+      const frameRadius = Math.max(0, Math.min(frame.width, frame.height) * Math.min(0.49, cornerRadius));
+      context.roundRect(-frame.width / 2, -frame.height / 2, frame.width, frame.height, frameRadius);
+      context.clip();
+      context.rotate(-frame.rotation * Math.PI / 180);
+      context.translate(-frame.cx, -frame.cy);
+
+      const sourceWidth = image.naturalWidth || image.width;
+      const sourceHeight = image.naturalHeight || image.height;
+      const imageScale = fit === "contain"
+        ? Math.min(imageFrame.width / sourceWidth, imageFrame.height / sourceHeight)
+        : Math.max(imageFrame.width / sourceWidth, imageFrame.height / sourceHeight);
+      const drawWidth = sourceWidth * imageScale;
+      const drawHeight = sourceHeight * imageScale;
+      const values = { ...DEFAULT_ADJUSTMENTS, ...(adjustments || {}) };
+      context.translate(imageFrame.cx, imageFrame.cy);
+      context.rotate(imageFrame.rotation * Math.PI / 180);
+      context.filter = `brightness(${values.brightness}) contrast(${values.contrast}) saturate(${values.saturation})`;
+      context.drawImage(image, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+      context.restore();
+      return canvas;
+    }
+
     const cropCanvas = document.createElement("canvas");
     cropCanvas.width = width;
     cropCanvas.height = height;
@@ -727,6 +883,41 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
     context.scale(values.scale, values.scale);
     context.filter = `brightness(${values.brightness}) contrast(${values.contrast}) saturate(${values.saturation})`;
     context.drawImage(cropCanvas, -width / 2, -height / 2, width, height);
+    context.restore();
+    return canvas;
+  }
+
+  function createContentCanvas(image, targetAspect, fit, adjustments, cornerRadius = 0, content) {
+    const plane = screenPlane(targetAspect);
+    const frame = normalizeFrame(content?.frame, plane.width, plane.height);
+    const imageFrame = normalizeFrame(content?.imageFrame, plane.width, plane.height);
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(frame.width));
+    canvas.height = Math.max(1, Math.round(frame.height));
+    const context = canvas.getContext("2d");
+    const scaleX = canvas.width / frame.width;
+    const scaleY = canvas.height / frame.height;
+    const radius = Math.max(0, Math.min(frame.width, frame.height) * Math.min(0.49, cornerRadius));
+
+    // Work only in frame-local coordinates. The resulting bitmap is mapped
+    // directly to the exact same four points used by the editor handles.
+    // This removes the former second transform through the full screen plane.
+    context.scale(scaleX, scaleY);
+    context.save();
+    context.beginPath();
+    context.roundRect(0, 0, frame.width, frame.height, radius);
+    context.clip();
+
+    const frameAngle = frame.rotation * Math.PI / 180;
+    const dx = imageFrame.cx - frame.cx;
+    const dy = imageFrame.cy - frame.cy;
+    const localX = dx * Math.cos(frameAngle) + dy * Math.sin(frameAngle);
+    const localY = -dx * Math.sin(frameAngle) + dy * Math.cos(frameAngle);
+    const values = { ...DEFAULT_ADJUSTMENTS, ...(adjustments || {}) };
+    context.translate(frame.width / 2 + localX, frame.height / 2 + localY);
+    context.rotate((imageFrame.rotation - frame.rotation) * Math.PI / 180);
+    context.filter = `brightness(${values.brightness}) contrast(${values.contrast}) saturate(${values.saturation})`;
+    context.drawImage(image, -imageFrame.width / 2, -imageFrame.height / 2, imageFrame.width, imageFrame.height);
     context.restore();
     return canvas;
   }
@@ -792,7 +983,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
     }
   }
 
-  function renderComposite({ canvas, asset, baseImage, designImage, fit = "cover", adjustments, crop, quad, designQuad, layerImages = {}, quality = "final" }) {
+  function renderComposite({ canvas, asset, baseImage, designImage, fit = "cover", adjustments, crop, content, quad, designQuad, layerImages = {}, quality = "final" }) {
     validateAsset(asset);
     const context = canvas.getContext("2d", { alpha: false });
     context.setTransform(1, 0, 0, 1, 0, 0);
@@ -801,14 +992,25 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
     context.clearRect(0, 0, canvas.width, canvas.height);
     const preparedBase = preparedBaseImage(baseImage, asset);
     context.drawImage(preparedBase, 0, 0, canvas.width, canvas.height);
-    const activeQuad = expandQuad(quad || asset.screen.quad, asset.screen.bleed || 0);
+    const screenMaskQuad = expandQuad(quad || asset.screen.quad, asset.screen.bleed || 0);
     if (designImage) {
       const recommended = asset.screen.recommendedSize;
-      const screenCanvas = createScreenCanvas(designImage, recommended.width / recommended.height, fit, adjustments, asset.screen.cornerRadius || 0, true, crop);
-      fillQuad(context, activeQuad, asset.screen.underlay || "#080808");
+      const targetAspect = recommended.width / recommended.height;
+      const surfaceQuad = designQuad || screenMaskQuad;
+      const hasContentGeometry = Boolean(content?.frame || content?.imageFrame);
+      const screenCanvas = hasContentGeometry
+        ? createContentCanvas(designImage, targetAspect, fit, adjustments, asset.screen.cornerRadius || 0, content)
+        : createScreenCanvas(designImage, targetAspect, fit, adjustments, asset.screen.cornerRadius || 0, true, crop, null);
+      // Rendering and editing deliberately derive from one frame quad. Mapping
+      // the whole transparent screen plane here used to apply geometry twice,
+      // which made pixels drift away from their handles after crop or zoom.
+      const renderQuad = hasContentGeometry
+        ? frameQuadOnSurface(content.frame, targetAspect, surfaceQuad)
+        : surfaceQuad;
+      fillQuad(context, renderQuad, asset.screen.underlay || "#080808");
       context.save();
-      clipQuad(context, activeQuad);
-      drawImageToQuad(context, screenCanvas, designQuad || activeQuad, quality);
+      clipQuad(context, renderQuad);
+      drawImageToQuad(context, screenCanvas, renderQuad, quality);
       context.restore();
       restoreOcclusions(context, preparedBase, asset);
     }
@@ -823,7 +1025,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
     return canvas;
   }
 
-  global.MockupRenderer = Object.freeze({ VERSION, DEFAULT_ADJUSTMENTS, DEFAULT_CROP, validateAsset, quadSize, bilinearPoint, expandQuad, cropGeometry, constrainCoverAdjustments, createScreenCanvas, drawImageToQuad, renderComposite });
+  global.MockupRenderer = Object.freeze({ VERSION, DEFAULT_ADJUSTMENTS, DEFAULT_CROP, validateAsset, quadSize, bilinearPoint, inverseBilinearPoint, screenPlane, normalizeFrame, frameCorners, frameQuadOnSurface, imageFrameForCover, constrainImageFrameToCover, expandQuad, cropGeometry, constrainCoverAdjustments, createScreenCanvas, createContentCanvas, drawImageToQuad, renderComposite });
 })(window);
 </script>
     <script>const PLUGIN_VERSION = "0.1.0";
@@ -976,6 +1178,8 @@ const state = {
   rendering: false,
   pluginCatalogCache: null,
   customQuad: null,
+  contentFrame: null,
+  imageFrame: null,
   designName: "",
   adjustments: { ...DEFAULT_ADJUSTMENTS },
   crop: { ...DEFAULT_CROP },
@@ -992,6 +1196,8 @@ function editorSnapshot() {
     adjustments: { ...state.adjustments },
     crop: { ...state.crop },
     customQuad: cloneQuad(state.customQuad),
+    contentFrame: state.contentFrame ? { ...state.contentFrame } : null,
+    imageFrame: state.imageFrame ? { ...state.imageFrame } : null,
     fit: elements.fitMode.value,
     designImage: state.designImage,
     designObjectUrl: state.designObjectUrl,
@@ -1005,6 +1211,8 @@ function snapshotSignature(snapshot) {
     adjustments: snapshot.adjustments,
     crop: snapshot.crop,
     customQuad: snapshot.customQuad,
+    contentFrame: snapshot.contentFrame,
+    imageFrame: snapshot.imageFrame,
     fit: snapshot.fit,
     designName: snapshot.designName,
     designSource: snapshot.designSource
@@ -1026,6 +1234,8 @@ function restoreEditorSnapshot(snapshot) {
   state.adjustments = { ...snapshot.adjustments };
   state.crop = { ...DEFAULT_CROP, ...(snapshot.crop || {}) };
   state.customQuad = cloneQuad(snapshot.customQuad);
+  state.contentFrame = snapshot.contentFrame ? { ...snapshot.contentFrame } : null;
+  state.imageFrame = snapshot.imageFrame ? { ...snapshot.imageFrame } : null;
   state.designImage = snapshot.designImage;
   state.designObjectUrl = snapshot.designObjectUrl;
   state.designName = snapshot.designName;
@@ -1231,7 +1441,7 @@ function recentIds() {
 }
 
 function rememberRecent(id) {
-  const next = [id, ...recentIds().filter((value) => value !== id)].slice(0, 12);
+  const next = [id, ...recentIds().filter((value) => value !== id)].slice(0, 10);
   safeStorage.setItem(RECENT_KEY, JSON.stringify(next));
 }
 
@@ -1240,7 +1450,7 @@ function renderRecentStrip() {
   const items = recentIds()
     .map((id) => state.manifest.items.find((item) => item.id === id))
     .filter(Boolean)
-    .slice(0, 3);
+    .slice(0, 10);
   elements.recentItems.replaceChildren();
   elements.recentStrip.hidden = items.length === 0;
   for (const item of items) {
@@ -1254,6 +1464,37 @@ function renderRecentStrip() {
     button.addEventListener("click", () => selectAsset(item.id));
     elements.recentItems.appendChild(button);
   }
+}
+
+function enableRecentScrolling() {
+  let drag = null;
+  elements.recentItems.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) return;
+    drag = { x: event.clientX, left: elements.recentItems.scrollLeft, moved: false };
+    elements.recentItems.setPointerCapture(event.pointerId);
+  });
+  elements.recentItems.addEventListener("pointermove", (event) => {
+    if (!drag || !elements.recentItems.hasPointerCapture(event.pointerId)) return;
+    const delta = event.clientX - drag.x;
+    if (Math.abs(delta) > 4) drag.moved = true;
+    elements.recentItems.scrollLeft = drag.left - delta;
+  });
+  elements.recentItems.addEventListener("click", (event) => {
+    if (!drag?.moved) return;
+    event.preventDefault();
+    event.stopPropagation();
+  }, true);
+  const finish = (event) => {
+    if (elements.recentItems.hasPointerCapture(event.pointerId)) elements.recentItems.releasePointerCapture(event.pointerId);
+    requestAnimationFrame(() => { drag = null; });
+  };
+  elements.recentItems.addEventListener("pointerup", finish);
+  elements.recentItems.addEventListener("pointercancel", finish);
+  elements.recentItems.addEventListener("wheel", (event) => {
+    if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+    elements.recentItems.scrollLeft += event.deltaY;
+    event.preventDefault();
+  }, { passive: false });
 }
 
 function filteredItems() {
@@ -1342,6 +1583,9 @@ async function selectAsset(id) {
     state.customQuad = asset.screen.quad.map((point) => [...point]);
     state.adjustments = { ...DEFAULT_ADJUSTMENTS };
     state.crop = { ...DEFAULT_CROP };
+    state.contentFrame = null;
+    state.imageFrame = null;
+    if (state.designImage) resetContentGeometry();
     state.designSelected = false;
     state.cropMode = false;
     state.cropSnapshot = null;
@@ -1452,44 +1696,43 @@ function updateSourceGuide() {
     : `${sourceLabel} · 比例不同，已自动裁切填满`;
 }
 
-function normalizedEditorGeometry() {
+function screenPlane() {
+  const recommended = state.selectedAsset?.screen?.recommendedSize;
+  return renderer.screenPlane(recommended ? recommended.width / recommended.height : 1);
+}
+
+function resetContentGeometry() {
+  const plane = screenPlane();
+  const frame = { cx: plane.width / 2, cy: plane.height / 2, width: plane.width, height: plane.height, rotation: 0 };
+  state.contentFrame = { ...frame };
+  state.imageFrame = state.designImage ? renderer.imageFrameForCover(state.designImage, frame) : { ...frame };
+}
+
+function ensureContentGeometry() {
   if (!state.selectedAsset || !state.designImage) return null;
-  const recommended = state.selectedAsset.screen.recommendedSize;
-  const screenWidth = 1200;
-  const screenHeight = screenWidth / (recommended.width / recommended.height);
-  const cropGeometry = renderer.cropGeometry(state.designImage, recommended.width / recommended.height, state.crop);
-  state.crop = { ...cropGeometry.crop };
-  state.adjustments = renderer.constrainCoverAdjustments(state.adjustments, screenWidth, screenHeight);
-  return { screenWidth, screenHeight, cropGeometry, adjustments: state.adjustments };
+  const plane = screenPlane();
+  state.contentFrame = renderer.normalizeFrame(state.contentFrame, plane.width, plane.height);
+  state.imageFrame = renderer.constrainImageFrameToCover(
+    state.designImage,
+    renderer.normalizeFrame(state.imageFrame, plane.width, plane.height),
+    state.contentFrame
+  );
+  return { plane, frame: state.contentFrame, imageFrame: state.imageFrame };
+}
+
+function planePointToCanvas(point) {
+  const plane = screenPlane();
+  return renderer.bilinearPoint(activeQuad(), point[0] / plane.width, point[1] / plane.height);
+}
+
+function frameCanvasPoints(frame = state.contentFrame) {
+  if (!frame) return [];
+  return renderer.frameCorners(frame).map(planePointToCanvas);
 }
 
 function designControlPoints() {
-  if (state.cropMode) return cloneQuad(activeQuad()) || [];
-  const geometry = normalizedEditorGeometry();
-  if (!geometry) return [];
-  const { screenWidth, screenHeight, adjustments } = geometry;
-  const sourceWidth = screenWidth;
-  const sourceHeight = screenHeight;
-  const sourceCenterX = 0;
-  const sourceCenterY = 0;
-  const centerX = screenWidth / 2 + adjustments.offsetX * screenWidth * 0.42;
-  const centerY = screenHeight / 2 + adjustments.offsetY * screenHeight * 0.42;
-  const angle = adjustments.rotation * Math.PI / 180;
-  const cosine = Math.cos(angle);
-  const sine = Math.sin(angle);
-  const halfWidth = sourceWidth / 2;
-  const halfHeight = sourceHeight / 2;
-  const corners = [
-    [sourceCenterX - halfWidth, sourceCenterY - halfHeight],
-    [sourceCenterX + halfWidth, sourceCenterY - halfHeight],
-    [sourceCenterX + halfWidth, sourceCenterY + halfHeight],
-    [sourceCenterX - halfWidth, sourceCenterY + halfHeight]
-  ];
-  return corners.map(([x, y]) => {
-    const u = (centerX + (x * cosine - y * sine) * adjustments.scale) / screenWidth;
-    const v = (centerY + (x * sine + y * cosine) * adjustments.scale) / screenHeight;
-    return renderer.bilinearPoint(activeQuad(), u, v);
-  });
+  if (!ensureContentGeometry()) return [];
+  return frameCanvasPoints();
 }
 
 function midpoint(first, second) {
@@ -1510,6 +1753,35 @@ function designHandlePoints(points) {
   };
 }
 
+function roundedFramePath(frame, radiusRatio = 0) {
+  if (!frame) return "";
+  const radius = Math.max(0, Math.min(frame.width, frame.height) * Math.min(0.49, radiusRatio));
+  const localPoint = (x, y) => {
+    const angle = frame.rotation * Math.PI / 180;
+    const cosine = Math.cos(angle);
+    const sine = Math.sin(angle);
+    return planePointToCanvas([frame.cx + x * cosine - y * sine, frame.cy + x * sine + y * cosine]);
+  };
+  const left = -frame.width / 2;
+  const right = frame.width / 2;
+  const top = -frame.height / 2;
+  const bottom = frame.height / 2;
+  const point = (value) => `${value[0]} ${value[1]}`;
+  const p0 = localPoint(left + radius, top);
+  const p1 = localPoint(right - radius, top);
+  const c1 = localPoint(right, top);
+  const p2 = localPoint(right, top + radius);
+  const p3 = localPoint(right, bottom - radius);
+  const c2 = localPoint(right, bottom);
+  const p4 = localPoint(right - radius, bottom);
+  const p5 = localPoint(left + radius, bottom);
+  const c3 = localPoint(left, bottom);
+  const p6 = localPoint(left, bottom - radius);
+  const p7 = localPoint(left, top + radius);
+  const c4 = localPoint(left, top);
+  return `M${point(p0)}L${point(p1)}Q${point(c1)} ${point(p2)}L${point(p3)}Q${point(c2)} ${point(p4)}L${point(p5)}Q${point(c3)} ${point(p6)}L${point(p7)}Q${point(c4)} ${point(p0)}Z`;
+}
+
 function updateDesignEditor() {
   const points = designControlPoints();
   const visible = points.length === 4;
@@ -1524,12 +1796,12 @@ function updateDesignEditor() {
   elements.designDragTarget.setAttribute("points", pointString);
   const svg = elements.designPolygon.ownerSVGElement;
   svg.setAttribute("viewBox", `0 0 ${state.selectedAsset.canvas.width} ${state.selectedAsset.canvas.height}`);
-  const cropPoints = activeQuad();
-  const cropPointString = cropPoints.map((point) => point.join(",")).join(" ");
-  elements.cropFrame.setAttribute("points", cropPointString);
+  const cornerRadius = state.selectedAsset.screen.cornerRadius || 0;
+  elements.cropFrame.setAttribute("d", roundedFramePath(state.contentFrame, cornerRadius));
+  const outerFrame = { ...screenPlane(), cx: screenPlane().width / 2, cy: screenPlane().height / 2, rotation: 0 };
   elements.cropShade.setAttribute(
     "d",
-    `M0 0H${state.selectedAsset.canvas.width}V${state.selectedAsset.canvas.height}H0Z M${cropPoints.map((point) => point.join(" ")).join("L")}Z`
+    `${roundedFramePath(outerFrame, cornerRadius)} ${roundedFramePath(state.contentFrame, cornerRadius)}`
   );
   const handlePoints = designHandlePoints(points);
   for (const handle of elements.designEditor.querySelectorAll(".design-scale-handle")) {
@@ -1547,22 +1819,14 @@ function pointOnCanvas(event) {
   ];
 }
 
-function deltaToScreenCoordinates(dx, dy) {
-  const quad = activeQuad();
-  const center = renderer.bilinearPoint(quad, 0.5, 0.5);
-  const alongX = renderer.bilinearPoint(quad, 0.51, 0.5);
-  const alongY = renderer.bilinearPoint(quad, 0.5, 0.51);
-  const ux = (alongX[0] - center[0]) * 100;
-  const uy = (alongX[1] - center[1]) * 100;
-  const vx = (alongY[0] - center[0]) * 100;
-  const vy = (alongY[1] - center[1]) * 100;
-  const determinant = ux * vy - uy * vx;
-  if (Math.abs(determinant) < 0.0001) return [0, 0];
-  return [(dx * vy - dy * vx) / determinant, (ux * dy - uy * dx) / determinant];
+function pointOnScreenPlane(event) {
+  const point = pointOnCanvas(event);
+  const [u, v] = renderer.inverseBilinearPoint(activeQuad(), point);
+  const plane = screenPlane();
+  return [u * plane.width, v * plane.height];
 }
 
 function commitDirectAdjustment() {
-  normalizedEditorGeometry();
   syncAdjustmentControls();
   updateDesignEditor();
   scheduleComposite("preview");
@@ -1590,6 +1854,8 @@ function finishCropMode(commit = true) {
     state.adjustments = { ...snapshot.adjustments };
     state.crop = { ...DEFAULT_CROP, ...(snapshot.crop || {}) };
     state.customQuad = cloneQuad(snapshot.customQuad);
+    state.contentFrame = snapshot.contentFrame ? { ...snapshot.contentFrame } : null;
+    state.imageFrame = snapshot.imageFrame ? { ...snapshot.imageFrame } : null;
     elements.fitMode.value = "cover";
     syncAdjustmentControls();
     renderFinalComposite();
@@ -1599,34 +1865,106 @@ function finishCropMode(commit = true) {
   }
 }
 
+function localPoint(point, frame) {
+  const angle = -frame.rotation * Math.PI / 180;
+  const cosine = Math.cos(angle);
+  const sine = Math.sin(angle);
+  const dx = point[0] - frame.cx;
+  const dy = point[1] - frame.cy;
+  return [dx * cosine - dy * sine, dx * sine + dy * cosine];
+}
+
+function worldPoint(point, frame) {
+  const angle = frame.rotation * Math.PI / 180;
+  const cosine = Math.cos(angle);
+  const sine = Math.sin(angle);
+  return [frame.cx + point[0] * cosine - point[1] * sine, frame.cy + point[0] * sine + point[1] * cosine];
+}
+
+function resizeFrame(startFrame, handleName, pointer, proportional) {
+  const minimum = Math.max(20, Math.min(screenPlane().width, screenPlane().height) * 0.05);
+  const localPointer = localPoint(pointer, startFrame);
+  const handles = {
+    nw: [-startFrame.width / 2, -startFrame.height / 2], n: [0, -startFrame.height / 2], ne: [startFrame.width / 2, -startFrame.height / 2],
+    e: [startFrame.width / 2, 0], se: [startFrame.width / 2, startFrame.height / 2], s: [0, startFrame.height / 2],
+    sw: [-startFrame.width / 2, startFrame.height / 2], w: [-startFrame.width / 2, 0]
+  };
+  const opposite = { nw: "se", n: "s", ne: "sw", e: "w", se: "nw", s: "n", sw: "ne", w: "e" };
+  const startHandle = handles[handleName];
+  const anchor = handles[opposite[handleName]];
+  let nextHandle = [...localPointer];
+  const isCorner = handleName.length === 2;
+  if (isCorner && proportional) {
+    const vector = [startHandle[0] - anchor[0], startHandle[1] - anchor[1]];
+    const desired = [localPointer[0] - anchor[0], localPointer[1] - anchor[1]];
+    const minimumRatio = Math.max(minimum / startFrame.width, minimum / startFrame.height);
+    const ratio = Math.max(minimumRatio, Math.min(6, (desired[0] * vector[0] + desired[1] * vector[1]) / (vector[0] ** 2 + vector[1] ** 2)));
+    nextHandle = [anchor[0] + vector[0] * ratio, anchor[1] + vector[1] * ratio];
+  } else {
+    if (!handleName.includes("e") && !handleName.includes("w")) nextHandle[0] = startHandle[0];
+    if (!handleName.includes("n") && !handleName.includes("s")) nextHandle[1] = startHandle[1];
+    if (handleName.includes("e")) nextHandle[0] = Math.max(anchor[0] + minimum, nextHandle[0]);
+    if (handleName.includes("w")) nextHandle[0] = Math.min(anchor[0] - minimum, nextHandle[0]);
+    if (handleName.includes("s")) nextHandle[1] = Math.max(anchor[1] + minimum, nextHandle[1]);
+    if (handleName.includes("n")) nextHandle[1] = Math.min(anchor[1] - minimum, nextHandle[1]);
+  }
+  const width = handleName.includes("e") || handleName.includes("w") ? Math.abs(nextHandle[0] - anchor[0]) : startFrame.width;
+  const height = handleName.includes("n") || handleName.includes("s") ? Math.abs(nextHandle[1] - anchor[1]) : startFrame.height;
+  const centerLocal = [
+    handleName.includes("e") || handleName.includes("w") ? (nextHandle[0] + anchor[0]) / 2 : 0,
+    handleName.includes("n") || handleName.includes("s") ? (nextHandle[1] + anchor[1]) / 2 : 0
+  ];
+  const center = worldPoint(centerLocal, startFrame);
+  return { cx: center[0], cy: center[1], width, height, rotation: startFrame.rotation };
+}
+
+function transformImageFrame(startImageFrame, startFrame, nextFrame) {
+  const localCenter = localPoint([startImageFrame.cx, startImageFrame.cy], startFrame);
+  const scaleX = nextFrame.width / startFrame.width;
+  const scaleY = nextFrame.height / startFrame.height;
+  const nextCenter = worldPoint([localCenter[0] * scaleX, localCenter[1] * scaleY], nextFrame);
+  return {
+    cx: nextCenter[0],
+    cy: nextCenter[1],
+    width: Math.max(12, startImageFrame.width * scaleX),
+    height: Math.max(12, startImageFrame.height * scaleY),
+    rotation: nextFrame.rotation + (startImageFrame.rotation - startFrame.rotation)
+  };
+}
+
+function syncAdjustmentsFromFrame() {
+  const geometry = ensureContentGeometry();
+  if (!geometry) return;
+  const { plane, frame } = geometry;
+  state.adjustments = {
+    ...state.adjustments,
+    scale: Math.sqrt(frame.width / plane.width * frame.height / plane.height),
+    offsetX: (frame.cx - plane.width / 2) / (plane.width * 0.42),
+    offsetY: (frame.cy - plane.height / 2) / (plane.height * 0.42),
+    rotation: frame.rotation
+  };
+}
+
 function enableDesignEditing() {
   let interaction = null;
-  const oppositeHandle = { nw: "se", n: "s", ne: "sw", e: "w", se: "nw", s: "n", sw: "ne", w: "e" };
   const warpHandles = { nw: [0], n: [0, 1], ne: [1], e: [1, 2], se: [2], s: [3, 2], sw: [3], w: [0, 3] };
   const start = (event, type) => {
     if (!state.designImage || !state.selectedAsset) return;
-    const points = designControlPoints();
-    const handles = designHandlePoints(points);
-    const center = points.reduce((sum, point) => [sum[0] + point[0] / 4, sum[1] + point[1] / 4], [0, 0]);
-    const pointer = pointOnCanvas(event);
+    ensureContentGeometry();
     const handleName = event.currentTarget.dataset.handle;
-    const anchor = handleName ? handles[oppositeHandle[handleName]] : center;
-    const handlePoint = handleName ? handles[handleName] : pointer;
     state.designSelected = true;
     updateDesignEditor();
     interaction = {
+      pointerId: event.pointerId,
+      target: event.currentTarget,
       type,
       handleName,
       freeTransform: !state.cropMode && type === "scale" && (state.mode === "perspective" || event.metaKey || event.ctrlKey),
       startQuad: cloneQuad(activeQuad()),
-      startCrop: { ...state.crop },
-      startPointer: pointer,
-      center,
-      anchor,
-      startScale: state.adjustments.scale,
-      startOffsetX: state.adjustments.offsetX,
-      startOffsetY: state.adjustments.offsetY,
-      startDistance: Math.max(1, Math.hypot(handlePoint[0] - anchor[0], handlePoint[1] - anchor[1])),
+      startFrame: { ...state.contentFrame },
+      startImageFrame: { ...state.imageFrame },
+      startPointerPlane: pointOnScreenPlane(event),
+      startPointerCanvas: pointOnCanvas(event),
       changed: false,
       historyPushed: false
     };
@@ -1635,56 +1973,53 @@ function enableDesignEditing() {
     event.stopPropagation();
   };
   const move = (event) => {
-    if (!interaction || !event.currentTarget.hasPointerCapture(event.pointerId)) return;
-    const pointer = pointOnCanvas(event);
-    const dx = pointer[0] - interaction.startPointer[0];
-    const dy = pointer[1] - interaction.startPointer[1];
-    if (!interaction.changed && Math.hypot(dx, dy) < 2) return;
+    if (!interaction || interaction.pointerId !== event.pointerId) return;
+    const pointerPlane = pointOnScreenPlane(event);
+    const pointerCanvas = pointOnCanvas(event);
+    const dx = pointerPlane[0] - interaction.startPointerPlane[0];
+    const dy = pointerPlane[1] - interaction.startPointerPlane[1];
+    if (!interaction.changed && Math.hypot(dx, dy) < 1.5) return;
     interaction.changed = true;
     if (!interaction.historyPushed) {
       pushHistory();
       interaction.historyPushed = true;
     }
     if (interaction.type === "move") {
-      const [du, dv] = deltaToScreenCoordinates(dx, dy);
       if (state.cropMode) {
-        state.crop.offsetX = Math.max(-1, Math.min(1, interaction.startCrop.offsetX + du / 0.42));
-        state.crop.offsetY = Math.max(-1, Math.min(1, interaction.startCrop.offsetY + dv / 0.42));
+        state.imageFrame = renderer.constrainImageFrameToCover(
+          state.designImage,
+          { ...interaction.startImageFrame, cx: interaction.startImageFrame.cx + dx, cy: interaction.startImageFrame.cy + dy },
+          interaction.startFrame
+        );
       } else {
-        state.adjustments.offsetX = Math.max(-1, Math.min(1, interaction.startOffsetX + du / 0.42));
-        state.adjustments.offsetY = Math.max(-1, Math.min(1, interaction.startOffsetY + dv / 0.42));
+        state.contentFrame = { ...interaction.startFrame, cx: interaction.startFrame.cx + dx, cy: interaction.startFrame.cy + dy };
+        state.imageFrame = { ...interaction.startImageFrame, cx: interaction.startImageFrame.cx + dx, cy: interaction.startImageFrame.cy + dy };
       }
     } else if (interaction.freeTransform) {
       const canvas = state.selectedAsset.canvas;
       const nextQuad = cloneQuad(interaction.startQuad);
+      const canvasDx = pointerCanvas[0] - interaction.startPointerCanvas[0];
+      const canvasDy = pointerCanvas[1] - interaction.startPointerCanvas[1];
       for (const index of warpHandles[interaction.handleName]) {
         nextQuad[index] = [
-          Math.max(0, Math.min(canvas.width, interaction.startQuad[index][0] + dx)),
-          Math.max(0, Math.min(canvas.height, interaction.startQuad[index][1] + dy))
+          Math.max(0, Math.min(canvas.width, interaction.startQuad[index][0] + canvasDx)),
+          Math.max(0, Math.min(canvas.height, interaction.startQuad[index][1] + canvasDy))
         ];
       }
       state.customQuad = nextQuad;
-    } else if (state.cropMode) {
-      const distance = Math.hypot(pointer[0] - interaction.anchor[0], pointer[1] - interaction.anchor[1]);
-      const ratio = Math.max(1 / interaction.startCrop.zoom, Math.min(8 / interaction.startCrop.zoom, distance / interaction.startDistance));
-      state.crop.zoom = interaction.startCrop.zoom * ratio;
     } else {
-      const distance = Math.hypot(pointer[0] - interaction.anchor[0], pointer[1] - interaction.anchor[1]);
-      const ratio = Math.max(0.2 / interaction.startScale, Math.min(4 / interaction.startScale, distance / interaction.startDistance));
-      const nextCenter = [
-        interaction.anchor[0] + (interaction.center[0] - interaction.anchor[0]) * ratio,
-        interaction.anchor[1] + (interaction.center[1] - interaction.anchor[1]) * ratio
-      ];
-      const [du, dv] = deltaToScreenCoordinates(nextCenter[0] - interaction.center[0], nextCenter[1] - interaction.center[1]);
-      state.adjustments.scale = interaction.startScale * ratio;
-      state.adjustments.offsetX = Math.max(-1, Math.min(1, interaction.startOffsetX + du / 0.42));
-      state.adjustments.offsetY = Math.max(-1, Math.min(1, interaction.startOffsetY + dv / 0.42));
+      const nextFrame = resizeFrame(interaction.startFrame, interaction.handleName, pointerPlane, !state.cropMode);
+      state.contentFrame = nextFrame;
+      if (!state.cropMode) state.imageFrame = transformImageFrame(interaction.startImageFrame, interaction.startFrame, nextFrame);
+      else state.imageFrame = renderer.constrainImageFrameToCover(state.designImage, interaction.startImageFrame, nextFrame);
     }
+    syncAdjustmentsFromFrame();
     commitDirectAdjustment();
     event.preventDefault();
   };
   const end = (event) => {
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    if (!interaction || interaction.pointerId !== event.pointerId) return;
+    if (interaction.target.hasPointerCapture(event.pointerId)) interaction.target.releasePointerCapture(event.pointerId);
     const changed = interaction?.changed;
     interaction = null;
     if (changed) renderFinalComposite();
@@ -1692,42 +2027,47 @@ function enableDesignEditing() {
     event.stopPropagation();
   };
   elements.designDragTarget.addEventListener("pointerdown", (event) => start(event, "move"));
-  elements.designDragTarget.addEventListener("pointermove", move);
-  elements.designDragTarget.addEventListener("pointerup", end);
-  elements.designDragTarget.addEventListener("pointercancel", end);
+  window.addEventListener("pointermove", move, { passive: false });
+  window.addEventListener("pointerup", end);
+  window.addEventListener("pointercancel", end);
   elements.designDragTarget.addEventListener("dblclick", (event) => {
     enterCropMode();
     event.preventDefault();
     event.stopPropagation();
   });
   elements.designDragTarget.addEventListener("keydown", (event) => {
-    const step = event.shiftKey ? 0.05 : 0.01;
+    const step = event.shiftKey ? 10 : 1;
     if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
     pushHistory();
     const dx = event.key === "ArrowLeft" ? -step : event.key === "ArrowRight" ? step : 0;
     const dy = event.key === "ArrowUp" ? -step : event.key === "ArrowDown" ? step : 0;
     if (state.cropMode) {
-      state.crop.offsetX = Math.max(-1, Math.min(1, state.crop.offsetX + dx));
-      state.crop.offsetY = Math.max(-1, Math.min(1, state.crop.offsetY + dy));
+      state.imageFrame = renderer.constrainImageFrameToCover(
+        state.designImage,
+        { ...state.imageFrame, cx: state.imageFrame.cx + dx, cy: state.imageFrame.cy + dy },
+        state.contentFrame
+      );
     } else {
-      state.adjustments.offsetX = Math.max(-1, Math.min(1, state.adjustments.offsetX + dx));
-      state.adjustments.offsetY = Math.max(-1, Math.min(1, state.adjustments.offsetY + dy));
+      state.contentFrame = { ...state.contentFrame, cx: state.contentFrame.cx + dx, cy: state.contentFrame.cy + dy };
+      state.imageFrame = { ...state.imageFrame, cx: state.imageFrame.cx + dx, cy: state.imageFrame.cy + dy };
     }
+    syncAdjustmentsFromFrame();
     commitDirectAdjustment();
     renderFinalComposite();
     event.preventDefault();
   });
   for (const handle of elements.designEditor.querySelectorAll(".design-scale-handle")) {
     handle.addEventListener("pointerdown", (event) => start(event, "scale"));
-    handle.addEventListener("pointermove", move);
-    handle.addEventListener("pointerup", end);
-    handle.addEventListener("pointercancel", end);
     handle.addEventListener("keydown", (event) => {
       if (!["ArrowUp", "ArrowRight", "ArrowDown", "ArrowLeft"].includes(event.key)) return;
       pushHistory();
       const direction = ["ArrowUp", "ArrowRight"].includes(event.key) ? 1 : -1;
-      if (state.cropMode) state.crop.zoom = Math.max(1, Math.min(8, state.crop.zoom + direction * (event.shiftKey ? 0.2 : 0.05)));
-      else state.adjustments.scale = Math.max(1, Math.min(4, state.adjustments.scale + direction * (event.shiftKey ? 0.1 : 0.02)));
+      const factor = 1 + direction * (event.shiftKey ? 0.1 : 0.02);
+      const startFrame = { ...state.contentFrame };
+      const nextFrame = { ...startFrame, width: Math.max(20, startFrame.width * factor), height: Math.max(20, startFrame.height * factor) };
+      state.contentFrame = nextFrame;
+      if (!state.cropMode) state.imageFrame = transformImageFrame(state.imageFrame, startFrame, nextFrame);
+      syncAdjustmentsFromFrame();
       commitDirectAdjustment();
       renderFinalComposite();
       event.preventDefault();
@@ -1742,7 +2082,7 @@ let scheduledRenderQuality = "preview";
 
 function renderComposite(quality = "final") {
   if (!state.selectedAsset || !state.baseImage) return;
-  if (state.designImage) normalizedEditorGeometry();
+  if (state.designImage) ensureContentGeometry();
   renderer.renderComposite({
     canvas: elements.previewCanvas,
     asset: state.selectedAsset,
@@ -1751,6 +2091,7 @@ function renderComposite(quality = "final") {
     fit: "cover",
     adjustments: state.adjustments,
     crop: state.crop,
+    content: state.designImage ? { frame: state.contentFrame, imageFrame: state.imageFrame } : null,
     quad: screenQuad(),
     designQuad: activeQuad(),
     layerImages: state.layerImages,
@@ -1831,7 +2172,7 @@ function syncAdjustmentControls() {
 }
 
 function updateAdjustmentsFromControls() {
-  state.adjustments = {
+  const nextAdjustments = {
     scale: Number(elements.designScale.value) / 100,
     offsetX: Number(elements.designOffsetX.value) / 100,
     offsetY: Number(elements.designOffsetY.value) / 100,
@@ -1840,7 +2181,22 @@ function updateAdjustmentsFromControls() {
     contrast: Number(elements.designContrast.value) / 100,
     saturation: Number(elements.designSaturation.value) / 100
   };
-  normalizedEditorGeometry();
+  if (state.designImage && ensureContentGeometry()) {
+    const plane = screenPlane();
+    const startFrame = { ...state.contentFrame };
+    const currentScale = Math.max(0.01, Math.sqrt(startFrame.width / plane.width * startFrame.height / plane.height));
+    const ratio = nextAdjustments.scale / currentScale;
+    const nextFrame = {
+      cx: plane.width / 2 + nextAdjustments.offsetX * plane.width * 0.42,
+      cy: plane.height / 2 + nextAdjustments.offsetY * plane.height * 0.42,
+      width: Math.max(20, startFrame.width * ratio),
+      height: Math.max(20, startFrame.height * ratio),
+      rotation: nextAdjustments.rotation
+    };
+    state.imageFrame = transformImageFrame(state.imageFrame, startFrame, nextFrame);
+    state.contentFrame = nextFrame;
+  }
+  state.adjustments = nextAdjustments;
   syncAdjustmentControls();
   updateDesignEditor();
   scheduleComposite("preview");
@@ -1861,6 +2217,7 @@ async function setDesignBytes(bytes, name, mimeType = "image/png", metadata = {}
   state.cropSnapshot = null;
   state.adjustments = { ...DEFAULT_ADJUSTMENTS };
   state.crop = { ...DEFAULT_CROP };
+  resetContentGeometry();
   elements.fitMode.value = "cover";
   syncAdjustmentControls();
   elements.designSourceLabel.textContent = name;
@@ -1881,6 +2238,8 @@ function clearDesign() {
   state.designSelected = false;
   state.cropMode = false;
   state.cropSnapshot = null;
+  state.contentFrame = null;
+  state.imageFrame = null;
   elements.designSourceLabel.textContent = "尚未读取画面";
   elements.clearDesignButton.disabled = true;
   elements.imageInput.value = "";
@@ -1991,6 +2350,7 @@ function resetAdjustments() {
   pushHistory();
   state.adjustments = { ...DEFAULT_ADJUSTMENTS };
   state.crop = { ...DEFAULT_CROP };
+  if (state.designImage) resetContentGeometry();
   elements.fitMode.value = "cover";
   syncAdjustmentControls();
   renderFinalComposite();
@@ -2001,6 +2361,7 @@ function resetPerspective() {
   if (!state.selectedAsset) return;
   pushHistory();
   state.customQuad = state.selectedAsset.screen.quad.map((point) => [...point]);
+  if (state.designImage) resetContentGeometry();
   renderFinalComposite();
   showToast("样机透视已恢复默认");
 }
@@ -2011,6 +2372,10 @@ function resetCurrentMockup() {
   state.adjustments = { ...DEFAULT_ADJUSTMENTS };
   state.crop = { ...DEFAULT_CROP };
   state.customQuad = state.selectedAsset.screen.quad.map((point) => [...point]);
+  // A global reset must restore the content geometry as well as colour and
+  // perspective settings. Leaving the edited crop frame in place made the
+  // source appear as a small or offset rectangle even after “复位”.
+  if (state.designImage) resetContentGeometry();
   elements.fitMode.value = "cover";
   state.designSelected = false;
   state.cropMode = false;
@@ -2190,26 +2555,29 @@ function enableStageNavigation() {
       state.designSelected = false;
       updateDesignEditor();
     }
-    interaction = { x: event.clientX, y: event.clientY, panX: state.panX, panY: state.panY };
-    elements.stage.setPointerCapture(event.pointerId);
+    interaction = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, panX: state.panX, panY: state.panY };
     elements.stage.classList.add("is-panning");
     event.preventDefault();
   });
 
-  elements.stage.addEventListener("pointermove", (event) => {
-    if (!interaction || !elements.stage.hasPointerCapture(event.pointerId)) return;
+  // Figma's plugin webview can drop element-level pointer capture when the
+  // pointer crosses the transformed canvas. Window-level listeners keep pan
+  // continuous in both the browser harness and the real host.
+  window.addEventListener("pointermove", (event) => {
+    if (!interaction || interaction.pointerId !== event.pointerId) return;
     state.panX = interaction.panX + event.clientX - interaction.x;
     state.panY = interaction.panY + event.clientY - interaction.y;
     applyStageView();
-  });
+    event.preventDefault();
+  }, { passive: false });
 
   const finishPan = (event) => {
-    if (elements.stage.hasPointerCapture(event.pointerId)) elements.stage.releasePointerCapture(event.pointerId);
+    if (!interaction || interaction.pointerId !== event.pointerId) return;
     interaction = null;
     elements.stage.classList.remove("is-panning");
   };
-  elements.stage.addEventListener("pointerup", finishPan);
-  elements.stage.addEventListener("pointercancel", finishPan);
+  window.addEventListener("pointerup", finishPan);
+  window.addEventListener("pointercancel", finishPan);
   window.addEventListener("resize", () => {
     sizeCanvasWrap();
     applyStageView();
@@ -2332,6 +2700,7 @@ syncAdjustmentControls();
 updateSourceActions();
 enableDesignEditing();
 enableStageNavigation();
+enableRecentScrolling();
 enableWindowResize();
 
 window.onmessage = async (event) => {
