@@ -80,11 +80,11 @@ test("screen editing is real and exposes only functional controls", () => {
     "designSaturation",
     "designEditor",
     "designDragTarget",
-    "perspectiveEditor",
+    "cropToolbar",
     "resetPerspectiveButton"
   ]) assert.match(uiHtml, new RegExp(`id="${id}"`));
   assert.doesNotMatch(uiScript, /function drawImageToQuad|function adjustedDesignCanvas/);
-  assert.match(uiScript, /enablePerspectiveEditing/);
+  assert.match(uiScript, /freeTransform/);
   assert.match(uiScript, /importDesignFile/);
   assert.doesNotMatch(uiHtml, /id="settingsButton"|id="aboutButton"|id="menuButton"/);
 });
@@ -121,6 +121,8 @@ test("the design is one directly manipulable object inside the mockup", () => {
   assert.equal((uiHtml.match(/class="design-scale-handle/g) || []).length, 8);
   assert.match(uiScript, /oppositeHandle/);
   assert.match(uiScript, /state\.adjustments\.scale = interaction\.startScale \* ratio/);
+  assert.match(uiScript, /enterCropMode/);
+  assert.match(uiScript, /event\.metaKey \|\| event\.ctrlKey/);
 });
 
 test("source replacement and recovery stay visible in the preview workflow", () => {
@@ -138,6 +140,9 @@ test("the preview supports Figma-like pointer and trackpad navigation", () => {
   assert.match(uiScript, /event\.ctrlKey \|\| event\.metaKey/);
   assert.match(uiScript, /state\.panX -= event\.deltaX/);
   assert.match(uiScript, /translate\(\$\{state\.panX\}px, \$\{state\.panY\}px\) scale/);
+  assert.match(uiScript, /const minimumVisible = 0\.11/);
+  assert.match(uiScript, /width \* minimumVisible/);
+  assert.match(uiScript, /height \* minimumVisible/);
 });
 
 test("catalog spacing stays contained and hover never impersonates selection", () => {
@@ -145,6 +150,7 @@ test("catalog spacing stays contained and hover never impersonates selection", (
   assert.match(uiStyles, /\.recent-strip > div\s*\{[^}]*grid-template-columns:\s*repeat\(3/s);
   assert.match(uiStyles, /\.asset-card:hover:not\(\.active\)[^{]*\{[^}]*rotate\(var\(--hover-tilt/s);
   assert.match(uiScript, /function hoverTiltFor/);
+  assert.match(uiScript, /\? -4 : 4/);
 });
 
 test("Figma and local sources flatten to one static design object", () => {
@@ -161,10 +167,14 @@ test("similar filtering respects an explicitly selected category", () => {
   assert.match(uiScript, /item\.category !== similarCategory/);
 });
 
-test("perspective overlay leaves the center source action clickable", () => {
-  assert.match(uiStyles, /\.perspective-editor\s*\{[^}]*pointer-events:\s*none/s);
-  assert.match(uiStyles, /\.perspective-handle\s*\{[^}]*pointer-events:\s*auto/s);
-  assert.match(uiStyles, /\.screen-cta\s*\{[^}]*z-index:\s*5/s);
+test("one editor owns selection crop perspective and constant-size handles", () => {
+  assert.doesNotMatch(uiHtml, /id="perspectiveEditor"|id="designEditorHint"/);
+  assert.match(uiStyles, /--overlay-inverse-scale/);
+  assert.match(uiStyles, /\.crop-toolbar/);
+  assert.match(uiScript, /state\.mode === "perspective" \|\| event\.metaKey \|\| event\.ctrlKey/);
+  assert.match(uiScript, /function undoEditor/);
+  assert.match(uiScript, /function redoEditor/);
+  assert.match(rendererScript, /designQuad \|\| activeQuad/);
 });
 
 test("plugin and asset lab use one shared renderer and one catalog schema", () => {

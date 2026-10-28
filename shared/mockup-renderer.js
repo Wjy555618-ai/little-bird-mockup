@@ -99,7 +99,7 @@
     context.restore();
   }
 
-  function createScreenCanvas(image, targetAspect, fit, adjustments, cornerRadius = 0) {
+  function createScreenCanvas(image, targetAspect, fit, adjustments, cornerRadius = 0, transparent = false) {
     const width = 1200;
     const height = Math.max(120, Math.round(width / targetAspect));
     const canvas = document.createElement("canvas");
@@ -111,8 +111,10 @@
     context.beginPath();
     context.roundRect(0, 0, width, height, radius);
     context.clip();
-    context.fillStyle = "#0d0d0d";
-    context.fillRect(0, 0, width, height);
+    if (!transparent) {
+      context.fillStyle = "#0d0d0d";
+      context.fillRect(0, 0, width, height);
+    }
     const values = { ...DEFAULT_ADJUSTMENTS, ...(adjustments || {}) };
     const sourceWidth = image.naturalWidth || image.width;
     const sourceHeight = image.naturalHeight || image.height;
@@ -163,6 +165,14 @@
     context.restore();
   }
 
+  function clipQuad(context, quad) {
+    context.beginPath();
+    context.moveTo(quad[0][0], quad[0][1]);
+    for (let index = 1; index < quad.length; index += 1) context.lineTo(quad[index][0], quad[index][1]);
+    context.closePath();
+    context.clip();
+  }
+
   function restoreOcclusions(context, baseImage, asset) {
     for (const occlusion of asset.screen.occlusions || []) {
       context.save();
@@ -181,7 +191,7 @@
     }
   }
 
-  function renderComposite({ canvas, asset, baseImage, designImage, fit = "cover", adjustments, quad, layerImages = {}, quality = "final" }) {
+  function renderComposite({ canvas, asset, baseImage, designImage, fit = "cover", adjustments, quad, designQuad, layerImages = {}, quality = "final" }) {
     validateAsset(asset);
     const context = canvas.getContext("2d", { alpha: false });
     context.setTransform(1, 0, 0, 1, 0, 0);
@@ -193,9 +203,12 @@
     const activeQuad = expandQuad(quad || asset.screen.quad, asset.screen.bleed || 0);
     if (designImage) {
       const recommended = asset.screen.recommendedSize;
-      const screenCanvas = createScreenCanvas(designImage, recommended.width / recommended.height, fit, adjustments, asset.screen.cornerRadius || 0);
+      const screenCanvas = createScreenCanvas(designImage, recommended.width / recommended.height, fit, adjustments, asset.screen.cornerRadius || 0, true);
       fillQuad(context, activeQuad, asset.screen.underlay || "#080808");
-      drawImageToQuad(context, screenCanvas, activeQuad, quality);
+      context.save();
+      clipQuad(context, activeQuad);
+      drawImageToQuad(context, screenCanvas, designQuad || activeQuad, quality);
+      context.restore();
       restoreOcclusions(context, preparedBase, asset);
     }
     if (layerImages.reflection) {

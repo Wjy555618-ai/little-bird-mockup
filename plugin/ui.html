@@ -12,7 +12,7 @@
   --panel-3: #272727;
   --line: #303030;
   --line-soft: #292929;
-  --panel-pad: 14px;
+  --panel-pad: 16px;
   --text: #e2e1e6;
   --muted: #97969d;
   --muted-2: #6f6e74;
@@ -95,17 +95,18 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .recent-item.active { border-color: #dedde1; }
 .recent-item img { width: 100%; height: 100%; display: block; object-fit: cover; }
 
-.adjust-panel { width: 100%; height: 100%; min-height: 0; overflow: auto; padding: 17px 16px 20px; }
+.adjust-panel { width: 100%; height: 100%; min-height: 0; overflow: auto; padding: 18px var(--panel-pad) 22px; }
 .adjust-panel::-webkit-scrollbar { width: 6px; }
 .adjust-panel::-webkit-scrollbar-thumb { background: #36363a; border-radius: 99px; }
-.panel-heading { margin-bottom: 14px; display: grid; gap: 4px; }
+.panel-heading { margin-bottom: 16px; display: grid; gap: 5px; }
 .panel-heading strong { color: #e9e8ec; font-size: 14px; }
 .panel-heading span { overflow: hidden; color: #77767c; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
-.selection-card { min-height: 42px; padding: 9px 10px; display: flex; align-items: center; gap: 8px; border: 1px solid #303034; border-radius: 10px; background: #1b1b1b; color: #98979d; line-height: 1.35; }
+.selection-card { min-height: 48px; padding: 10px 11px; display: grid; grid-template-columns: 7px minmax(0, 1fr); align-items: center; gap: 9px; border: 1px solid #303034; border-radius: 11px; background: #1b1b1b; color: #98979d; line-height: 1.35; }
+.selection-card > span:last-child { min-width: 0; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .selection-card.ready { color: #d4d3d8; }
 .selection-dot { width: 7px; height: 7px; flex: 0 0 auto; border-radius: 50%; background: #5e5d62; }
 .selection-card.ready .selection-dot { background: #dedde1; }
-.source-actions { margin: 10px 0 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.source-actions { margin: 10px 0 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .panel-button, .reset-button { min-height: 34px; border: 1px solid #343438; border-radius: 9px; background: #202020; color: #bebdc3; cursor: pointer; white-space: nowrap; }
 .panel-button:hover, .reset-button:hover { border-color: #56555b; color: #f0eff2; }
 .panel-button:disabled { opacity: .38; cursor: not-allowed; }
@@ -113,16 +114,16 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .primary-panel-button:hover { border-color: #fff; background: #fff; color: #111; }
 .file-button { display: grid; place-items: center; }
 .source-actions .panel-button:last-child { grid-column: 1 / -1; }
-.source-guide { margin-bottom: 10px; padding: 11px 12px; display: grid; gap: 5px; border: 1px solid #303034; border-radius: 10px; background: #1b1b1b; }
+.source-guide { margin-bottom: 12px; padding: 12px; display: grid; gap: 6px; border: 1px solid #303034; border-radius: 11px; background: #1b1b1b; }
 .source-guide > div { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .source-guide > div span, .source-guide > span { color: #85848a; font-size: 10px; }
-.source-guide strong { color: #e0dfe3; font-size: 11px; font-weight: 600; white-space: nowrap; }
-.source-guide p { margin: 2px 0 0; color: #77767c; font-size: 9px; line-height: 1.45; }
+.source-guide strong { color: #e0dfe3; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.source-guide p { min-height: 14px; margin: 1px 0 0; color: #77767c; font-size: 9px; line-height: 1.45; }
 .source-guide.match { border-color: #414146; }
 .source-guide.mismatch p { color: #d7a66f; }
-.control-section { margin-top: 10px; padding: 12px; display: grid; gap: 12px; border: 1px solid #2f2f33; border-radius: 11px; background: #1b1b1b; }
+.control-section { margin-top: 10px; padding: 13px 12px; display: grid; gap: 13px; border: 1px solid #2f2f33; border-radius: 11px; background: #1b1b1b; }
 .select-control { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: #a5a4aa; }
-.select-control select { width: 120px; height: 30px; padding: 0 8px; border: 1px solid #38373c; border-radius: 8px; outline: 0; background: #202020; color: #dddce1; }
+.select-control select { width: 148px; max-width: calc(100% - 62px); height: 32px; padding: 0 9px; border: 1px solid #38373c; border-radius: 8px; outline: 0; background: #202020; color: #dddce1; text-overflow: ellipsis; }
 .range-control { display: grid; grid-template-columns: 42px minmax(0, 1fr) 36px; align-items: center; gap: 8px; color: #aaa9af; }
 .range-control output { color: #77767c; font-size: 10px; text-align: right; }
 .range-control input[type="range"] { width: 100%; height: 28px; margin: -6px 0; appearance: none; background: transparent; cursor: ew-resize; touch-action: none; }
@@ -166,22 +167,24 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .design-editor { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
 .design-editor[hidden] { display: none; }
 .design-editor svg { width: 100%; height: 100%; position: absolute; inset: 0; overflow: visible; pointer-events: none; }
-.design-outline { opacity: 0; fill: #ffffff05; stroke: #efeff2; stroke-width: 2; stroke-dasharray: 8 6; vector-effect: non-scaling-stroke; pointer-events: none; transition: opacity .1s ease; }
+.design-outline { opacity: 0; fill: #ffffff03; stroke: #efeff2; stroke-width: 2; stroke-dasharray: 8 6; vector-effect: non-scaling-stroke; pointer-events: none; transition: opacity .1s ease; }
+.crop-frame { opacity: 0; fill: none; stroke: #ffffffaa; stroke-width: 1; vector-effect: non-scaling-stroke; pointer-events: none; }
 .design-drag-target { fill: #ffffff01; stroke: none; pointer-events: all; cursor: move; touch-action: none; }
 .design-drag-target:focus-visible { outline: none; stroke: #fff; stroke-width: 3; stroke-dasharray: 5 5; vector-effect: non-scaling-stroke; }
-.design-scale-handle { width: 20px; height: 20px; padding: 0; position: absolute; z-index: 2; opacity: 0; transform: translate(-50%, -50%); border: 2px solid #161616; border-radius: 50%; background: #efeff2; box-shadow: 0 2px 8px #0009; cursor: nwse-resize; touch-action: none; pointer-events: none; transition: opacity .1s ease; }
+.design-scale-handle { width: 18px; height: 18px; padding: 0; position: absolute; z-index: 2; opacity: 0; transform: translate(-50%, -50%) scale(var(--overlay-inverse-scale, 1)); border: 2px solid #161616; border-radius: 50%; background: #efeff2; box-shadow: 0 2px 8px #0009; cursor: nwse-resize; touch-action: none; pointer-events: none; transition: opacity .1s ease; }
 .design-scale-handle::before { content: ""; position: absolute; inset: -8px; }
 .handle-n, .handle-s { cursor: ns-resize; }
 .handle-e, .handle-w { cursor: ew-resize; }
 .handle-ne, .handle-sw { cursor: nesw-resize; }
-.design-editor-hint { opacity: 0; position: absolute; z-index: 3; transform: translate(-50%, -100%); padding: 5px 7px; border-radius: 6px; background: #111d; color: #e6e5e9; font-size: 9px; white-space: nowrap; pointer-events: none; transition: opacity .1s ease; }
-.design-editor.is-selected .design-outline, .design-editor.is-selected .design-scale-handle, .design-editor.is-selected .design-editor-hint { opacity: 1; }
+.design-editor.is-selected .design-outline, .design-editor.is-selected .design-scale-handle { opacity: 1; }
 .design-editor.is-selected .design-scale-handle { pointer-events: auto; }
-.perspective-editor { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
-.perspective-editor[hidden] { display: none; }
-.perspective-editor svg { width: 100%; height: 100%; position: absolute; inset: 0; overflow: visible; pointer-events: none; }
-.perspective-editor polygon { fill: #ffffff0d; stroke: #f0eff3; stroke-width: 3; stroke-dasharray: 11 8; vector-effect: non-scaling-stroke; }
-.perspective-handle { width: 17px; height: 17px; position: absolute; z-index: 2; transform: translate(-50%, -50%); border: 2px solid #161616; border-radius: 50%; background: #efeff2; box-shadow: 0 2px 8px #0009; cursor: move; touch-action: none; pointer-events: auto; }
+.design-editor.is-cropping .crop-frame { opacity: 1; }
+.crop-toolbar { position: absolute; left: 50%; top: 12px; z-index: 8; transform: translateX(-50%); padding: 5px 5px 5px 10px; display: flex; align-items: center; gap: 5px; border: 1px solid #3a393e; border-radius: 10px; background: #171717ed; box-shadow: 0 8px 24px #0008; }
+.crop-toolbar[hidden] { display: none; }
+.crop-toolbar span { margin-right: 3px; color: #aaa9af; font-size: 10px; }
+.crop-toolbar button { height: 27px; padding: 0 9px; border: 0; border-radius: 7px; background: #292929; color: #c9c8cd; cursor: pointer; }
+.crop-toolbar button:hover { background: #343434; color: #fff; }
+.crop-toolbar .crop-done { background: #efeff1; color: #171717; }
 .screen-cta { position: absolute; left: 50%; top: 47%; z-index: 5; transform: translate(-50%, -50%); padding: 0; display: grid; place-items: center; color: #fff; }
 .screen-cta span { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 50%; background: #070707; box-shadow: 0 13px 25px #0005; font-size: 25px; font-weight: 300; }
 .screen-cta b { display: none; }
@@ -241,7 +244,7 @@ html.is-collapsed .collapsed-bar[aria-hidden="true"] { visibility: visible; }
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .asset-card:hover:not(.active) { z-index: 2; transform: rotate(var(--hover-tilt, 10deg)); border-color: transparent; box-shadow: 0 8px 22px #0008; }
+  .asset-card:hover:not(.active) { z-index: 2; transform: rotate(var(--hover-tilt, 4deg)); border-color: transparent; box-shadow: 0 8px 22px #0008; }
 }
 
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; } }
@@ -379,8 +382,8 @@ html.is-collapsed .collapsed-bar[aria-hidden="true"] { visibility: visible; }
               <section class="perspective-guide">
                 <span class="perspective-guide-icon" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
                 <div>
-                  <strong>拖动预览中的四个控制点</strong>
-                  <span>控制点只改变当前样机的屏幕区域，导出和粘贴会使用调整后的结果。</span>
+                  <strong>自由透视</strong>
+                  <span>拖动角点；任意页面按住 ⌘ / Ctrl 拖动角点也可自由变形。</span>
                 </div>
               </section>
               <div class="perspective-state-row">
@@ -414,6 +417,7 @@ html.is-collapsed .collapsed-bar[aria-hidden="true"] { visibility: visible; }
               <canvas id="previewCanvas" width="1448" height="1086"></canvas>
               <div class="design-editor" id="designEditor" hidden>
                 <svg viewBox="0 0 1448 1086" preserveAspectRatio="none">
+                  <polygon class="crop-frame" id="cropFrame" points="" />
                   <polygon class="design-outline" id="designPolygon" points="" />
                   <polygon class="design-drag-target" id="designDragTarget" points="" role="button" tabindex="0" aria-label="拖动画面位置" />
                 </svg>
@@ -425,20 +429,17 @@ html.is-collapsed .collapsed-bar[aria-hidden="true"] { visibility: visible; }
                 <button class="design-scale-handle handle-s" data-handle="s" aria-label="向下等比缩放"></button>
                 <button class="design-scale-handle handle-sw" data-handle="sw" aria-label="左下等比缩放"></button>
                 <button class="design-scale-handle handle-w" data-handle="w" aria-label="向左等比缩放"></button>
-                <span class="design-editor-hint" id="designEditorHint">拖动移动 · 八向等比缩放</span>
-              </div>
-              <div class="perspective-editor" id="perspectiveEditor" hidden>
-                <svg viewBox="0 0 1448 1086" preserveAspectRatio="none" aria-hidden="true"><polygon id="perspectivePolygon" points="" /></svg>
-                <button class="perspective-handle" data-corner="0" aria-label="左上角控制点"></button>
-                <button class="perspective-handle" data-corner="1" aria-label="右上角控制点"></button>
-                <button class="perspective-handle" data-corner="2" aria-label="右下角控制点"></button>
-                <button class="perspective-handle" data-corner="3" aria-label="左下角控制点"></button>
               </div>
               <button class="screen-cta" id="screenCta">
                 <span>＋</span>
                 <b>添加画面</b>
               </button>
               <div class="rendering-badge" id="renderingBadge" hidden>正在渲染</div>
+            </div>
+            <div class="crop-toolbar" id="cropToolbar" hidden>
+              <span>裁切画面</span>
+              <button id="cropCancelButton">取消</button>
+              <button class="crop-done" id="cropDoneButton">完成</button>
             </div>
             <div class="source-popover" id="sourcePopover" hidden role="dialog" aria-label="选择画面来源">
               <button id="quickReadSelectionButton">
@@ -633,7 +634,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
     context.restore();
   }
 
-  function createScreenCanvas(image, targetAspect, fit, adjustments, cornerRadius = 0) {
+  function createScreenCanvas(image, targetAspect, fit, adjustments, cornerRadius = 0, transparent = false) {
     const width = 1200;
     const height = Math.max(120, Math.round(width / targetAspect));
     const canvas = document.createElement("canvas");
@@ -645,8 +646,10 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
     context.beginPath();
     context.roundRect(0, 0, width, height, radius);
     context.clip();
-    context.fillStyle = "#0d0d0d";
-    context.fillRect(0, 0, width, height);
+    if (!transparent) {
+      context.fillStyle = "#0d0d0d";
+      context.fillRect(0, 0, width, height);
+    }
     const values = { ...DEFAULT_ADJUSTMENTS, ...(adjustments || {}) };
     const sourceWidth = image.naturalWidth || image.width;
     const sourceHeight = image.naturalHeight || image.height;
@@ -697,6 +700,14 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
     context.restore();
   }
 
+  function clipQuad(context, quad) {
+    context.beginPath();
+    context.moveTo(quad[0][0], quad[0][1]);
+    for (let index = 1; index < quad.length; index += 1) context.lineTo(quad[index][0], quad[index][1]);
+    context.closePath();
+    context.clip();
+  }
+
   function restoreOcclusions(context, baseImage, asset) {
     for (const occlusion of asset.screen.occlusions || []) {
       context.save();
@@ -715,7 +726,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
     }
   }
 
-  function renderComposite({ canvas, asset, baseImage, designImage, fit = "cover", adjustments, quad, layerImages = {}, quality = "final" }) {
+  function renderComposite({ canvas, asset, baseImage, designImage, fit = "cover", adjustments, quad, designQuad, layerImages = {}, quality = "final" }) {
     validateAsset(asset);
     const context = canvas.getContext("2d", { alpha: false });
     context.setTransform(1, 0, 0, 1, 0, 0);
@@ -727,9 +738,12 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
     const activeQuad = expandQuad(quad || asset.screen.quad, asset.screen.bleed || 0);
     if (designImage) {
       const recommended = asset.screen.recommendedSize;
-      const screenCanvas = createScreenCanvas(designImage, recommended.width / recommended.height, fit, adjustments, asset.screen.cornerRadius || 0);
+      const screenCanvas = createScreenCanvas(designImage, recommended.width / recommended.height, fit, adjustments, asset.screen.cornerRadius || 0, true);
       fillQuad(context, activeQuad, asset.screen.underlay || "#080808");
-      drawImageToQuad(context, screenCanvas, activeQuad, quality);
+      context.save();
+      clipQuad(context, activeQuad);
+      drawImageToQuad(context, screenCanvas, designQuad || activeQuad, quality);
+      context.restore();
       restoreOcclusions(context, preparedBase, asset);
     }
     if (layerImages.reflection) {
@@ -854,11 +868,12 @@ const elements = {
   quickSelectionLabel: document.querySelector("#quickSelectionLabel"),
   designEditor: document.querySelector("#designEditor"),
   designPolygon: document.querySelector("#designPolygon"),
+  cropFrame: document.querySelector("#cropFrame"),
   designDragTarget: document.querySelector("#designDragTarget"),
-  designEditorHint: document.querySelector("#designEditorHint"),
-  perspectiveEditor: document.querySelector("#perspectiveEditor"),
-  perspectivePolygon: document.querySelector("#perspectivePolygon"),
   perspectiveStatus: document.querySelector("#perspectiveStatus"),
+  cropToolbar: document.querySelector("#cropToolbar"),
+  cropCancelButton: document.querySelector("#cropCancelButton"),
+  cropDoneButton: document.querySelector("#cropDoneButton"),
   recentStrip: document.querySelector("#recentStrip"),
   recentItems: document.querySelector("#recentItems"),
   clearRecent: document.querySelector("#clearRecent"),
@@ -888,12 +903,91 @@ const state = {
   panX: 0,
   panY: 0,
   designSelected: false,
+  cropMode: false,
+  cropSnapshot: null,
+  cropHistoryDepth: 0,
   rendering: false,
   pluginCatalogCache: null,
   customQuad: null,
   designName: "",
-  adjustments: { ...DEFAULT_ADJUSTMENTS }
+  adjustments: { ...DEFAULT_ADJUSTMENTS },
+  history: [],
+  future: []
 };
+
+function cloneQuad(quad) {
+  return quad?.map((point) => [...point]) || null;
+}
+
+function editorSnapshot() {
+  return {
+    adjustments: { ...state.adjustments },
+    customQuad: cloneQuad(state.customQuad),
+    fit: elements.fitMode.value,
+    designImage: state.designImage,
+    designObjectUrl: state.designObjectUrl,
+    designName: state.designName,
+    designSource: state.designSource ? { ...state.designSource } : null
+  };
+}
+
+function snapshotSignature(snapshot) {
+  return JSON.stringify({
+    adjustments: snapshot.adjustments,
+    customQuad: snapshot.customQuad,
+    fit: snapshot.fit,
+    designName: snapshot.designName,
+    designSource: snapshot.designSource
+  });
+}
+
+function pushHistory() {
+  const snapshot = editorSnapshot();
+  const previous = state.history.at(-1);
+  if (!previous || previous.designImage !== snapshot.designImage || snapshotSignature(previous) !== snapshotSignature(snapshot)) {
+    state.history.push(snapshot);
+    if (state.history.length > 60) state.history.shift();
+  }
+  state.future = [];
+}
+
+function restoreEditorSnapshot(snapshot) {
+  if (!snapshot) return;
+  state.adjustments = { ...snapshot.adjustments };
+  state.customQuad = cloneQuad(snapshot.customQuad);
+  state.designImage = snapshot.designImage;
+  state.designObjectUrl = snapshot.designObjectUrl;
+  state.designName = snapshot.designName;
+  state.designSource = snapshot.designSource ? { ...snapshot.designSource } : null;
+  elements.fitMode.value = snapshot.fit;
+  state.cropMode = false;
+  state.cropSnapshot = null;
+  state.cropHistoryDepth = 0;
+  state.designSelected = false;
+  syncAdjustmentControls();
+  elements.designSourceLabel.textContent = state.designName || "尚未读取画面";
+  elements.clearDesignButton.disabled = !state.designImage;
+  updateSourceActions();
+  updateSourceGuide();
+  updateOutputAvailability();
+  renderFinalComposite();
+}
+
+function undoEditor() {
+  const snapshot = state.history.pop();
+  if (!snapshot) return;
+  state.future.push(editorSnapshot());
+  restoreEditorSnapshot(snapshot);
+  showToast("已撤回上一步");
+}
+
+function redoEditor() {
+  const snapshot = state.future.pop();
+  if (!snapshot) return;
+  state.history.push(editorSnapshot());
+  restoreEditorSnapshot(snapshot);
+  showToast("已重做");
+}
 
 elements.versionLabel.textContent = `v${PLUGIN_VERSION}`;
 
@@ -1111,7 +1205,7 @@ function filteredItems() {
 function hoverTiltFor(id) {
   let hash = 0;
   for (const character of id) hash = (hash * 31 + character.charCodeAt(0)) | 0;
-  return Math.abs(hash) % 2 === 0 ? -10 : 10;
+  return Math.abs(hash) % 2 === 0 ? -4 : 4;
 }
 
 function renderAssetGrid() {
@@ -1166,7 +1260,11 @@ async function selectAsset(id) {
   if (assetChanged) {
     state.customQuad = asset.screen.quad.map((point) => [...point]);
     state.adjustments = { ...DEFAULT_ADJUSTMENTS };
-    state.designSelected = state.mode === "adjust" && Boolean(state.designImage);
+    state.designSelected = false;
+    state.cropMode = false;
+    state.cropSnapshot = null;
+    state.history = [];
+    state.future = [];
   }
   closeSourcePopover();
   rememberRecent(id);
@@ -1243,19 +1341,23 @@ function activeQuad() {
   return state.customQuad || state.selectedAsset?.screen.quad || null;
 }
 
+function screenQuad() {
+  return state.selectedAsset?.screen.quad || null;
+}
+
 function updateSourceGuide() {
   const recommended = state.selectedAsset?.screen?.recommendedSize;
   elements.sourceGuide.classList.remove("match", "mismatch");
   if (!recommended) {
     elements.recommendedSize.textContent = "选择样机后显示";
-    elements.recommendedRatio.textContent = "用于避免比例错误";
-    elements.sourceMatch.textContent = "读取内容后会统一作为一个画面对象。";
+    elements.recommendedRatio.textContent = "先选择一个样机";
+    elements.sourceMatch.textContent = "";
     return;
   }
   elements.recommendedSize.textContent = `${recommended.width} × ${recommended.height} px`;
-  elements.recommendedRatio.textContent = `${recommended.label} · 默认完整显示且保持原比例`;
+  elements.recommendedRatio.textContent = `${recommended.label} · 保持原比例`;
   if (!state.designSource) {
-    elements.sourceMatch.textContent = "读取内容后，可直接在预览中拖动，拖动四角可等比缩放。";
+    elements.sourceMatch.textContent = "导入后默认显示完成效果";
     return;
   }
   const expectedAspect = recommended.width / recommended.height;
@@ -1264,8 +1366,8 @@ function updateSourceGuide() {
   elements.sourceGuide.classList.add(matches ? "match" : "mismatch");
   const sourceLabel = `${state.designSource.width} × ${state.designSource.height} px · ${state.designSource.type}`;
   elements.sourceMatch.textContent = matches
-    ? `当前 ${sourceLabel}，比例匹配。`
-    : `当前 ${sourceLabel}，比例不一致；已保持原比例完整显示，可拖动或等比缩放调整。`;
+    ? `${sourceLabel} · 比例匹配`
+    : `${sourceLabel} · 比例不同，已保持原比例`;
 }
 
 function designControlPoints() {
@@ -1313,25 +1415,25 @@ function designHandlePoints(points) {
 
 function updateDesignEditor() {
   const points = designControlPoints();
-  const visible = state.mode !== "perspective" && points.length === 4;
+  const visible = points.length === 4;
   elements.designEditor.hidden = !visible;
+  elements.cropToolbar.hidden = !state.cropMode;
   if (!visible) return;
   elements.designEditor.classList.toggle("is-selected", state.designSelected);
+  elements.designEditor.classList.toggle("is-cropping", state.cropMode);
+  elements.designEditor.classList.toggle("is-perspective", state.mode === "perspective");
   const pointString = points.map((point) => point.join(",")).join(" ");
   elements.designPolygon.setAttribute("points", pointString);
   elements.designDragTarget.setAttribute("points", pointString);
   const svg = elements.designPolygon.ownerSVGElement;
   svg.setAttribute("viewBox", `0 0 ${state.selectedAsset.canvas.width} ${state.selectedAsset.canvas.height}`);
+  elements.cropFrame.setAttribute("points", screenQuad().map((point) => point.join(",")).join(" "));
   const handlePoints = designHandlePoints(points);
   for (const handle of elements.designEditor.querySelectorAll(".design-scale-handle")) {
     const point = handlePoints[handle.dataset.handle];
     handle.style.left = `${point[0] / state.selectedAsset.canvas.width * 100}%`;
     handle.style.top = `${point[1] / state.selectedAsset.canvas.height * 100}%`;
   }
-  const center = points.reduce((sum, point) => [sum[0] + point[0] / 4, sum[1] + point[1] / 4], [0, 0]);
-  const top = Math.min(...points.map((point) => point[1]));
-  elements.designEditorHint.style.left = `${Math.max(8, Math.min(92, center[0] / state.selectedAsset.canvas.width * 100))}%`;
-  elements.designEditorHint.style.top = `${Math.max(8, Math.min(96, top / state.selectedAsset.canvas.height * 100))}%`;
 }
 
 function pointOnCanvas(event) {
@@ -1362,9 +1464,40 @@ function commitDirectAdjustment() {
   scheduleComposite("preview");
 }
 
+function enterCropMode() {
+  if (!state.designImage || state.cropMode) return;
+  state.cropSnapshot = editorSnapshot();
+  state.cropHistoryDepth = state.history.length;
+  state.cropMode = true;
+  state.designSelected = true;
+  updateDesignEditor();
+}
+
+function finishCropMode(commit = true) {
+  if (!state.cropMode) return;
+  const snapshot = state.cropSnapshot;
+  const historyDepth = state.cropHistoryDepth;
+  state.cropMode = false;
+  state.cropSnapshot = null;
+  state.cropHistoryDepth = 0;
+  if (!commit && snapshot) {
+    state.history.length = historyDepth;
+    state.future = [];
+    state.adjustments = { ...snapshot.adjustments };
+    state.customQuad = cloneQuad(snapshot.customQuad);
+    elements.fitMode.value = snapshot.fit;
+    syncAdjustmentControls();
+    renderFinalComposite();
+  } else {
+    updateDesignEditor();
+    renderFinalComposite();
+  }
+}
+
 function enableDesignEditing() {
   let interaction = null;
   const oppositeHandle = { nw: "se", n: "s", ne: "sw", e: "w", se: "nw", s: "n", sw: "ne", w: "e" };
+  const warpHandles = { nw: [0], n: [0, 1], ne: [1], e: [1, 2], se: [2], s: [3, 2], sw: [3], w: [0, 3] };
   const start = (event, type) => {
     if (!state.designImage || !state.selectedAsset) return;
     const points = designControlPoints();
@@ -1379,13 +1512,17 @@ function enableDesignEditing() {
     interaction = {
       type,
       handleName,
+      freeTransform: type === "scale" && (state.mode === "perspective" || event.metaKey || event.ctrlKey),
+      startQuad: cloneQuad(activeQuad()),
       startPointer: pointer,
       center,
       anchor,
       startScale: state.adjustments.scale,
       startOffsetX: state.adjustments.offsetX,
       startOffsetY: state.adjustments.offsetY,
-      startDistance: Math.max(1, Math.hypot(handlePoint[0] - anchor[0], handlePoint[1] - anchor[1]))
+      startDistance: Math.max(1, Math.hypot(handlePoint[0] - anchor[0], handlePoint[1] - anchor[1])),
+      changed: false,
+      historyPushed: false
     };
     event.currentTarget.setPointerCapture(event.pointerId);
     event.preventDefault();
@@ -1394,10 +1531,28 @@ function enableDesignEditing() {
   const move = (event) => {
     if (!interaction || !event.currentTarget.hasPointerCapture(event.pointerId)) return;
     const pointer = pointOnCanvas(event);
+    const dx = pointer[0] - interaction.startPointer[0];
+    const dy = pointer[1] - interaction.startPointer[1];
+    if (!interaction.changed && Math.hypot(dx, dy) < 2) return;
+    interaction.changed = true;
+    if (!interaction.historyPushed) {
+      pushHistory();
+      interaction.historyPushed = true;
+    }
     if (interaction.type === "move") {
-      const [du, dv] = deltaToScreenCoordinates(pointer[0] - interaction.startPointer[0], pointer[1] - interaction.startPointer[1]);
+      const [du, dv] = deltaToScreenCoordinates(dx, dy);
       state.adjustments.offsetX = Math.max(-1, Math.min(1, interaction.startOffsetX + du / 0.42));
       state.adjustments.offsetY = Math.max(-1, Math.min(1, interaction.startOffsetY + dv / 0.42));
+    } else if (interaction.freeTransform) {
+      const canvas = state.selectedAsset.canvas;
+      const nextQuad = cloneQuad(interaction.startQuad);
+      for (const index of warpHandles[interaction.handleName]) {
+        nextQuad[index] = [
+          Math.max(0, Math.min(canvas.width, interaction.startQuad[index][0] + dx)),
+          Math.max(0, Math.min(canvas.height, interaction.startQuad[index][1] + dy))
+        ];
+      }
+      state.customQuad = nextQuad;
     } else {
       const distance = Math.hypot(pointer[0] - interaction.anchor[0], pointer[1] - interaction.anchor[1]);
       const ratio = Math.max(0.2 / interaction.startScale, Math.min(4 / interaction.startScale, distance / interaction.startDistance));
@@ -1415,8 +1570,10 @@ function enableDesignEditing() {
   };
   const end = (event) => {
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    const changed = interaction?.changed;
     interaction = null;
-    renderFinalComposite();
+    if (changed) renderFinalComposite();
+    else updateDesignEditor();
     event.stopPropagation();
   };
   elements.designDragTarget.addEventListener("pointerdown", (event) => start(event, "move"));
@@ -1424,13 +1581,14 @@ function enableDesignEditing() {
   elements.designDragTarget.addEventListener("pointerup", end);
   elements.designDragTarget.addEventListener("pointercancel", end);
   elements.designDragTarget.addEventListener("dblclick", (event) => {
-    openSourcePopover();
+    enterCropMode();
     event.preventDefault();
     event.stopPropagation();
   });
   elements.designDragTarget.addEventListener("keydown", (event) => {
     const step = event.shiftKey ? 0.05 : 0.01;
     if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
+    pushHistory();
     if (event.key === "ArrowLeft") state.adjustments.offsetX -= step;
     if (event.key === "ArrowRight") state.adjustments.offsetX += step;
     if (event.key === "ArrowUp") state.adjustments.offsetY -= step;
@@ -1448,6 +1606,7 @@ function enableDesignEditing() {
     handle.addEventListener("pointercancel", end);
     handle.addEventListener("keydown", (event) => {
       if (!["ArrowUp", "ArrowRight", "ArrowDown", "ArrowLeft"].includes(event.key)) return;
+      pushHistory();
       const direction = ["ArrowUp", "ArrowRight"].includes(event.key) ? 1 : -1;
       state.adjustments.scale = Math.max(0.2, Math.min(4, state.adjustments.scale + direction * (event.shiftKey ? 0.1 : 0.02)));
       commitDirectAdjustment();
@@ -1455,6 +1614,8 @@ function enableDesignEditing() {
       event.preventDefault();
     });
   }
+  elements.cropCancelButton.addEventListener("click", () => finishCropMode(false));
+  elements.cropDoneButton.addEventListener("click", () => finishCropMode(true));
 }
 
 let scheduledRenderFrame = 0;
@@ -1469,7 +1630,8 @@ function renderComposite(quality = "final") {
     designImage: state.designImage,
     fit: elements.fitMode.value,
     adjustments: state.adjustments,
-    quad: activeQuad(),
+    quad: screenQuad(),
+    designQuad: activeQuad(),
     layerImages: state.layerImages,
     quality
   });
@@ -1504,14 +1666,6 @@ function renderFinalComposite() {
 function updatePerspectiveEditor() {
   const quad = activeQuad();
   if (!quad || !state.selectedAsset) return;
-  elements.perspectivePolygon.setAttribute("points", quad.map((point) => point.join(",")).join(" "));
-  const svg = elements.perspectivePolygon.ownerSVGElement;
-  svg.setAttribute("viewBox", `0 0 ${state.selectedAsset.canvas.width} ${state.selectedAsset.canvas.height}`);
-  for (const handle of elements.perspectiveEditor.querySelectorAll(".perspective-handle")) {
-    const point = quad[Number(handle.dataset.corner)];
-    handle.style.left = `${point[0] / state.selectedAsset.canvas.width * 100}%`;
-    handle.style.top = `${point[1] / state.selectedAsset.canvas.height * 100}%`;
-  }
   const original = state.selectedAsset.screen.quad;
   const unchanged = quad.every((point, index) => point.every((value, axis) => Math.abs(value - original[index][axis]) < 0.5));
   elements.perspectiveStatus.textContent = unchanged ? "默认透视" : "已调整";
@@ -1519,18 +1673,15 @@ function updatePerspectiveEditor() {
 
 function setMode(mode) {
   state.mode = mode;
-  if (mode === "adjust" && state.designImage) state.designSelected = true;
-  if (mode === "perspective") state.designSelected = false;
   closeSourcePopover();
   document.querySelectorAll(".mode-tab").forEach((tab) => tab.classList.toggle("active", tab.dataset.mode === mode));
   elements.catalogView.hidden = mode !== "catalog";
   elements.adjustPanel.hidden = mode === "catalog";
   elements.adjustControls.hidden = mode !== "adjust";
   elements.perspectiveControls.hidden = mode !== "perspective";
-  elements.designEditor.hidden = mode === "perspective" || !state.designImage;
-  elements.perspectiveEditor.hidden = mode !== "perspective";
+  elements.designEditor.hidden = !state.designImage;
   elements.adjustPanelTitle.textContent = mode === "perspective" ? "透视编辑" : "画面调整";
-  elements.stageTitle.textContent = mode === "perspective" ? "拖动四角控制点" : mode === "adjust" ? "拖动画面或八向缩放" : "预览";
+  elements.stageTitle.textContent = mode === "perspective" ? "自由透视" : mode === "adjust" ? "画面调整" : "预览";
   elements.designSourceLabel.textContent = state.designName || "尚未读取画面";
   updateDesignEditor();
   updatePerspectiveEditor();
@@ -1574,7 +1725,7 @@ function updateAdjustmentsFromControls() {
 }
 
 async function setDesignBytes(bytes, name, mimeType = "image/png", metadata = {}) {
-  if (state.designObjectUrl) URL.revokeObjectURL(state.designObjectUrl);
+  pushHistory();
   state.designObjectUrl = URL.createObjectURL(new Blob([bytes], { type: mimeType }));
   state.designImage = await loadImage(state.designObjectUrl);
   state.designName = name;
@@ -1583,7 +1734,9 @@ async function setDesignBytes(bytes, name, mimeType = "image/png", metadata = {}
     height: Math.round(metadata.height || state.designImage.naturalHeight || state.designImage.height),
     type: metadata.type || "图片"
   };
-  state.designSelected = true;
+  state.designSelected = false;
+  state.cropMode = false;
+  state.cropSnapshot = null;
   state.adjustments = { ...DEFAULT_ADJUSTMENTS };
   elements.fitMode.value = state.selectedAsset?.screen.defaultFit || "contain";
   syncAdjustmentControls();
@@ -1597,12 +1750,14 @@ async function setDesignBytes(bytes, name, mimeType = "image/png", metadata = {}
 }
 
 function clearDesign() {
-  if (state.designObjectUrl) URL.revokeObjectURL(state.designObjectUrl);
+  if (state.designImage) pushHistory();
   state.designObjectUrl = null;
   state.designImage = null;
   state.designName = "";
   state.designSource = null;
   state.designSelected = false;
+  state.cropMode = false;
+  state.cropSnapshot = null;
   elements.designSourceLabel.textContent = "尚未读取画面";
   elements.clearDesignButton.disabled = true;
   elements.imageInput.value = "";
@@ -1710,6 +1865,7 @@ async function importDesignFile(file) {
 }
 
 function resetAdjustments() {
+  pushHistory();
   state.adjustments = { ...DEFAULT_ADJUSTMENTS };
   elements.fitMode.value = state.selectedAsset?.screen.defaultFit || "contain";
   syncAdjustmentControls();
@@ -1719,6 +1875,7 @@ function resetAdjustments() {
 
 function resetPerspective() {
   if (!state.selectedAsset) return;
+  pushHistory();
   state.customQuad = state.selectedAsset.screen.quad.map((point) => [...point]);
   renderFinalComposite();
   showToast("样机透视已恢复默认");
@@ -1726,37 +1883,17 @@ function resetPerspective() {
 
 function resetCurrentMockup() {
   if (!state.selectedAsset) return;
+  pushHistory();
   state.adjustments = { ...DEFAULT_ADJUSTMENTS };
   state.customQuad = state.selectedAsset.screen.quad.map((point) => [...point]);
   elements.fitMode.value = state.selectedAsset.screen.defaultFit || "contain";
-  state.designSelected = Boolean(state.designImage);
+  state.designSelected = false;
+  state.cropMode = false;
+  state.cropSnapshot = null;
   syncAdjustmentControls();
   fitStage();
   renderFinalComposite();
-  showToast("已恢复当前样机默认效果");
-}
-
-function enablePerspectiveEditing() {
-  for (const handle of elements.perspectiveEditor.querySelectorAll(".perspective-handle")) {
-    handle.addEventListener("pointerdown", (event) => {
-      handle.setPointerCapture(event.pointerId);
-      event.preventDefault();
-    });
-    handle.addEventListener("pointermove", (event) => {
-      if (!handle.hasPointerCapture(event.pointerId) || !state.selectedAsset) return;
-      const rect = elements.previewCanvas.getBoundingClientRect();
-      const x = Math.max(0, Math.min(state.selectedAsset.canvas.width, (event.clientX - rect.left) / rect.width * state.selectedAsset.canvas.width));
-      const y = Math.max(0, Math.min(state.selectedAsset.canvas.height, (event.clientY - rect.top) / rect.height * state.selectedAsset.canvas.height));
-      state.customQuad[Number(handle.dataset.corner)] = [x, y];
-      updatePerspectiveEditor();
-      scheduleComposite("preview");
-    });
-    handle.addEventListener("pointerup", (event) => {
-      if (handle.hasPointerCapture(event.pointerId)) handle.releasePointerCapture(event.pointerId);
-      renderFinalComposite();
-    });
-    handle.addEventListener("pointercancel", renderFinalComposite);
-  }
+  showToast("已恢复默认画面");
 }
 
 function requestSelection() {
@@ -1820,8 +1957,22 @@ async function pasteRender() {
 }
 
 function applyStageView() {
+  clampStagePan();
   elements.canvasWrap.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.zoom})`;
+  elements.canvasWrap.style.setProperty("--overlay-inverse-scale", String(1 / state.zoom));
   elements.zoomReset.textContent = state.zoom === 1 && state.panX === 0 && state.panY === 0 ? "适应" : `${Math.round(state.zoom * 100)}%`;
+}
+
+function clampStagePan() {
+  const stageRect = elements.stage.getBoundingClientRect();
+  const width = elements.canvasWrap.offsetWidth * state.zoom;
+  const height = elements.canvasWrap.offsetHeight * state.zoom;
+  if (!stageRect.width || !stageRect.height || !width || !height) return;
+  const minimumVisible = 0.11;
+  const maxX = Math.max(0, stageRect.width / 2 + width / 2 - width * minimumVisible);
+  const maxY = Math.max(0, stageRect.height / 2 + height / 2 - height * minimumVisible);
+  state.panX = Math.max(-maxX, Math.min(maxX, state.panX));
+  state.panY = Math.max(-maxY, Math.min(maxY, state.panY));
 }
 
 function setStageZoom(nextZoom, clientX, clientY) {
@@ -1853,14 +2004,26 @@ function enableStageNavigation() {
   let spacePressed = false;
 
   window.addEventListener("keydown", (event) => {
+    const editable = /INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName || "");
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "z" && !editable) {
+      if (event.shiftKey) redoEditor();
+      else undoEditor();
+      event.preventDefault();
+      return;
+    }
     if (event.code === "Space" && !/INPUT|SELECT|TEXTAREA|BUTTON/.test(document.activeElement?.tagName || "")) {
       spacePressed = true;
       event.preventDefault();
     }
     if (event.key === "Escape") {
       closeSourcePopover();
-      state.designSelected = false;
+      if (state.cropMode) finishCropMode(false);
+      else state.designSelected = false;
       updateDesignEditor();
+    }
+    if (event.key === "Enter" && state.cropMode && !editable) {
+      finishCropMode(true);
+      event.preventDefault();
     }
   });
   window.addEventListener("keyup", (event) => {
@@ -1880,10 +2043,11 @@ function enableStageNavigation() {
   }, { passive: false });
 
   elements.stage.addEventListener("pointerdown", (event) => {
-    const overInteractive = event.target.closest("button, .design-drag-target, .design-scale-handle, .perspective-handle, .source-popover");
+    const overInteractive = event.target.closest("button, .design-drag-target, .design-scale-handle, .source-popover, .crop-toolbar");
     const canPan = event.button === 1 || spacePressed || (!overInteractive && event.button === 0);
     if (!canPan) return;
     if (!overInteractive && state.designSelected) {
+      if (state.cropMode) finishCropMode(true);
       state.designSelected = false;
       updateDesignEditor();
     }
@@ -1907,6 +2071,7 @@ function enableStageNavigation() {
   };
   elements.stage.addEventListener("pointerup", finishPan);
   elements.stage.addEventListener("pointercancel", finishPan);
+  window.addEventListener("resize", applyStageView);
 }
 
 function setWindowState(windowState) {
@@ -1974,6 +2139,10 @@ elements.clearSearch.addEventListener("click", () => {
   renderAssetGrid();
 });
 elements.categorySelect.addEventListener("change", renderAssetGrid);
+elements.fitMode.addEventListener("pointerdown", pushHistory);
+elements.fitMode.addEventListener("keydown", (event) => {
+  if (["ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) pushHistory();
+});
 elements.fitMode.addEventListener("change", () => {
   updateDesignEditor();
   renderFinalComposite();
@@ -1991,6 +2160,10 @@ for (const control of [
   elements.designContrast,
   elements.designSaturation
 ]) {
+  control.addEventListener("pointerdown", pushHistory);
+  control.addEventListener("keydown", (event) => {
+    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown"].includes(event.key)) pushHistory();
+  });
   control.addEventListener("input", updateAdjustmentsFromControls);
   control.addEventListener("change", renderFinalComposite);
 }
@@ -2025,7 +2198,6 @@ elements.expandButton.addEventListener("click", () => setWindowState("expanded")
 syncAdjustmentControls();
 updateSourceActions();
 enableDesignEditing();
-enablePerspectiveEditing();
 enableStageNavigation();
 enableWindowResize();
 

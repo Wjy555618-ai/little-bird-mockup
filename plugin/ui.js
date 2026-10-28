@@ -106,11 +106,12 @@ const elements = {
   quickSelectionLabel: document.querySelector("#quickSelectionLabel"),
   designEditor: document.querySelector("#designEditor"),
   designPolygon: document.querySelector("#designPolygon"),
+  cropFrame: document.querySelector("#cropFrame"),
   designDragTarget: document.querySelector("#designDragTarget"),
-  designEditorHint: document.querySelector("#designEditorHint"),
-  perspectiveEditor: document.querySelector("#perspectiveEditor"),
-  perspectivePolygon: document.querySelector("#perspectivePolygon"),
   perspectiveStatus: document.querySelector("#perspectiveStatus"),
+  cropToolbar: document.querySelector("#cropToolbar"),
+  cropCancelButton: document.querySelector("#cropCancelButton"),
+  cropDoneButton: document.querySelector("#cropDoneButton"),
   recentStrip: document.querySelector("#recentStrip"),
   recentItems: document.querySelector("#recentItems"),
   clearRecent: document.querySelector("#clearRecent"),
@@ -140,12 +141,91 @@ const state = {
   panX: 0,
   panY: 0,
   designSelected: false,
+  cropMode: false,
+  cropSnapshot: null,
+  cropHistoryDepth: 0,
   rendering: false,
   pluginCatalogCache: null,
   customQuad: null,
   designName: "",
-  adjustments: { ...DEFAULT_ADJUSTMENTS }
+  adjustments: { ...DEFAULT_ADJUSTMENTS },
+  history: [],
+  future: []
 };
+
+function cloneQuad(quad) {
+  return quad?.map((point) => [...point]) || null;
+}
+
+function editorSnapshot() {
+  return {
+    adjustments: { ...state.adjustments },
+    customQuad: cloneQuad(state.customQuad),
+    fit: elements.fitMode.value,
+    designImage: state.designImage,
+    designObjectUrl: state.designObjectUrl,
+    designName: state.designName,
+    designSource: state.designSource ? { ...state.designSource } : null
+  };
+}
+
+function snapshotSignature(snapshot) {
+  return JSON.stringify({
+    adjustments: snapshot.adjustments,
+    customQuad: snapshot.customQuad,
+    fit: snapshot.fit,
+    designName: snapshot.designName,
+    designSource: snapshot.designSource
+  });
+}
+
+function pushHistory() {
+  const snapshot = editorSnapshot();
+  const previous = state.history.at(-1);
+  if (!previous || previous.designImage !== snapshot.designImage || snapshotSignature(previous) !== snapshotSignature(snapshot)) {
+    state.history.push(snapshot);
+    if (state.history.length > 60) state.history.shift();
+  }
+  state.future = [];
+}
+
+function restoreEditorSnapshot(snapshot) {
+  if (!snapshot) return;
+  state.adjustments = { ...snapshot.adjustments };
+  state.customQuad = cloneQuad(snapshot.customQuad);
+  state.designImage = snapshot.designImage;
+  state.designObjectUrl = snapshot.designObjectUrl;
+  state.designName = snapshot.designName;
+  state.designSource = snapshot.designSource ? { ...snapshot.designSource } : null;
+  elements.fitMode.value = snapshot.fit;
+  state.cropMode = false;
+  state.cropSnapshot = null;
+  state.cropHistoryDepth = 0;
+  state.designSelected = false;
+  syncAdjustmentControls();
+  elements.designSourceLabel.textContent = state.designName || "尚未读取画面";
+  elements.clearDesignButton.disabled = !state.designImage;
+  updateSourceActions();
+  updateSourceGuide();
+  updateOutputAvailability();
+  renderFinalComposite();
+}
+
+function undoEditor() {
+  const snapshot = state.history.pop();
+  if (!snapshot) return;
+  state.future.push(editorSnapshot());
+  restoreEditorSnapshot(snapshot);
+  showToast("已撤回上一步");
+}
+
+function redoEditor() {
+  const snapshot = state.future.pop();
+  if (!snapshot) return;
+  state.history.push(editorSnapshot());
+  restoreEditorSnapshot(snapshot);
+  showToast("已重做");
+}
 
 elements.versionLabel.textContent = `v${PLUGIN_VERSION}`;
 
@@ -363,7 +443,7 @@ function filteredItems() {
 function hoverTiltFor(id) {
   let hash = 0;
   for (const character of id) hash = (hash * 31 + character.charCodeAt(0)) | 0;
-  return Math.abs(hash) % 2 === 0 ? -10 : 10;
+  return Math.abs(hash) % 2 === 0 ? -4 : 4;
 }
 
 function renderAssetGrid() {
@@ -418,7 +498,11 @@ async function selectAsset(id) {
   if (assetChanged) {
     state.customQuad = asset.screen.quad.map((point) => [...point]);
     state.adjustments = { ...DEFAULT_ADJUSTMENTS };
-    state.designSelected = state.mode === "adjust" && Boolean(state.designImage);
+    state.designSelected = false;
+    state.cropMode = false;
+    state.cropSnapshot = null;
+    state.history = [];
+    state.future = [];
   }
   closeSourcePopover();
   rememberRecent(id);
@@ -495,19 +579,23 @@ function activeQuad() {
   return state.customQuad || state.selectedAsset?.screen.quad || null;
 }
 
+function screenQuad() {
+  return state.selectedAsset?.screen.quad || null;
+}
+
 function updateSourceGuide() {
   const recommended = state.selectedAsset?.screen?.recommendedSize;
   elements.sourceGuide.classList.remove("match", "mismatch");
   if (!recommended) {
     elements.recommendedSize.textContent = "选择样机后显示";
-    elements.recommendedRatio.textContent = "用于避免比例错误";
-    elements.sourceMatch.textContent = "读取内容后会统一作为一个画面对象。";
+    elements.recommendedRatio.textContent = "先选择一个样机";
+    elements.sourceMatch.textContent = "";
     return;
   }
   elements.recommendedSize.textContent = `${recommended.width} × ${recommended.height} px`;
-  elements.recommendedRatio.textContent = `${recommended.label} · 默认完整显示且保持原比例`;
+  elements.recommendedRatio.textContent = `${recommended.label} · 保持原比例`;
   if (!state.designSource) {
-    elements.sourceMatch.textContent = "读取内容后，可直接在预览中拖动，拖动四角可等比缩放。";
+    elements.sourceMatch.textContent = "导入后默认显示完成效果";
     return;
   }
   const expectedAspect = recommended.width / recommended.height;
@@ -516,8 +604,8 @@ function updateSourceGuide() {
   elements.sourceGuide.classList.add(matches ? "match" : "mismatch");
   const sourceLabel = `${state.designSource.width} × ${state.designSource.height} px · ${state.designSource.type}`;
   elements.sourceMatch.textContent = matches
-    ? `当前 ${sourceLabel}，比例匹配。`
-    : `当前 ${sourceLabel}，比例不一致；已保持原比例完整显示，可拖动或等比缩放调整。`;
+    ? `${sourceLabel} · 比例匹配`
+    : `${sourceLabel} · 比例不同，已保持原比例`;
 }
 
 function designControlPoints() {
@@ -565,25 +653,25 @@ function designHandlePoints(points) {
 
 function updateDesignEditor() {
   const points = designControlPoints();
-  const visible = state.mode !== "perspective" && points.length === 4;
+  const visible = points.length === 4;
   elements.designEditor.hidden = !visible;
+  elements.cropToolbar.hidden = !state.cropMode;
   if (!visible) return;
   elements.designEditor.classList.toggle("is-selected", state.designSelected);
+  elements.designEditor.classList.toggle("is-cropping", state.cropMode);
+  elements.designEditor.classList.toggle("is-perspective", state.mode === "perspective");
   const pointString = points.map((point) => point.join(",")).join(" ");
   elements.designPolygon.setAttribute("points", pointString);
   elements.designDragTarget.setAttribute("points", pointString);
   const svg = elements.designPolygon.ownerSVGElement;
   svg.setAttribute("viewBox", `0 0 ${state.selectedAsset.canvas.width} ${state.selectedAsset.canvas.height}`);
+  elements.cropFrame.setAttribute("points", screenQuad().map((point) => point.join(",")).join(" "));
   const handlePoints = designHandlePoints(points);
   for (const handle of elements.designEditor.querySelectorAll(".design-scale-handle")) {
     const point = handlePoints[handle.dataset.handle];
     handle.style.left = `${point[0] / state.selectedAsset.canvas.width * 100}%`;
     handle.style.top = `${point[1] / state.selectedAsset.canvas.height * 100}%`;
   }
-  const center = points.reduce((sum, point) => [sum[0] + point[0] / 4, sum[1] + point[1] / 4], [0, 0]);
-  const top = Math.min(...points.map((point) => point[1]));
-  elements.designEditorHint.style.left = `${Math.max(8, Math.min(92, center[0] / state.selectedAsset.canvas.width * 100))}%`;
-  elements.designEditorHint.style.top = `${Math.max(8, Math.min(96, top / state.selectedAsset.canvas.height * 100))}%`;
 }
 
 function pointOnCanvas(event) {
@@ -614,9 +702,40 @@ function commitDirectAdjustment() {
   scheduleComposite("preview");
 }
 
+function enterCropMode() {
+  if (!state.designImage || state.cropMode) return;
+  state.cropSnapshot = editorSnapshot();
+  state.cropHistoryDepth = state.history.length;
+  state.cropMode = true;
+  state.designSelected = true;
+  updateDesignEditor();
+}
+
+function finishCropMode(commit = true) {
+  if (!state.cropMode) return;
+  const snapshot = state.cropSnapshot;
+  const historyDepth = state.cropHistoryDepth;
+  state.cropMode = false;
+  state.cropSnapshot = null;
+  state.cropHistoryDepth = 0;
+  if (!commit && snapshot) {
+    state.history.length = historyDepth;
+    state.future = [];
+    state.adjustments = { ...snapshot.adjustments };
+    state.customQuad = cloneQuad(snapshot.customQuad);
+    elements.fitMode.value = snapshot.fit;
+    syncAdjustmentControls();
+    renderFinalComposite();
+  } else {
+    updateDesignEditor();
+    renderFinalComposite();
+  }
+}
+
 function enableDesignEditing() {
   let interaction = null;
   const oppositeHandle = { nw: "se", n: "s", ne: "sw", e: "w", se: "nw", s: "n", sw: "ne", w: "e" };
+  const warpHandles = { nw: [0], n: [0, 1], ne: [1], e: [1, 2], se: [2], s: [3, 2], sw: [3], w: [0, 3] };
   const start = (event, type) => {
     if (!state.designImage || !state.selectedAsset) return;
     const points = designControlPoints();
@@ -631,13 +750,17 @@ function enableDesignEditing() {
     interaction = {
       type,
       handleName,
+      freeTransform: type === "scale" && (state.mode === "perspective" || event.metaKey || event.ctrlKey),
+      startQuad: cloneQuad(activeQuad()),
       startPointer: pointer,
       center,
       anchor,
       startScale: state.adjustments.scale,
       startOffsetX: state.adjustments.offsetX,
       startOffsetY: state.adjustments.offsetY,
-      startDistance: Math.max(1, Math.hypot(handlePoint[0] - anchor[0], handlePoint[1] - anchor[1]))
+      startDistance: Math.max(1, Math.hypot(handlePoint[0] - anchor[0], handlePoint[1] - anchor[1])),
+      changed: false,
+      historyPushed: false
     };
     event.currentTarget.setPointerCapture(event.pointerId);
     event.preventDefault();
@@ -646,10 +769,28 @@ function enableDesignEditing() {
   const move = (event) => {
     if (!interaction || !event.currentTarget.hasPointerCapture(event.pointerId)) return;
     const pointer = pointOnCanvas(event);
+    const dx = pointer[0] - interaction.startPointer[0];
+    const dy = pointer[1] - interaction.startPointer[1];
+    if (!interaction.changed && Math.hypot(dx, dy) < 2) return;
+    interaction.changed = true;
+    if (!interaction.historyPushed) {
+      pushHistory();
+      interaction.historyPushed = true;
+    }
     if (interaction.type === "move") {
-      const [du, dv] = deltaToScreenCoordinates(pointer[0] - interaction.startPointer[0], pointer[1] - interaction.startPointer[1]);
+      const [du, dv] = deltaToScreenCoordinates(dx, dy);
       state.adjustments.offsetX = Math.max(-1, Math.min(1, interaction.startOffsetX + du / 0.42));
       state.adjustments.offsetY = Math.max(-1, Math.min(1, interaction.startOffsetY + dv / 0.42));
+    } else if (interaction.freeTransform) {
+      const canvas = state.selectedAsset.canvas;
+      const nextQuad = cloneQuad(interaction.startQuad);
+      for (const index of warpHandles[interaction.handleName]) {
+        nextQuad[index] = [
+          Math.max(0, Math.min(canvas.width, interaction.startQuad[index][0] + dx)),
+          Math.max(0, Math.min(canvas.height, interaction.startQuad[index][1] + dy))
+        ];
+      }
+      state.customQuad = nextQuad;
     } else {
       const distance = Math.hypot(pointer[0] - interaction.anchor[0], pointer[1] - interaction.anchor[1]);
       const ratio = Math.max(0.2 / interaction.startScale, Math.min(4 / interaction.startScale, distance / interaction.startDistance));
@@ -667,8 +808,10 @@ function enableDesignEditing() {
   };
   const end = (event) => {
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    const changed = interaction?.changed;
     interaction = null;
-    renderFinalComposite();
+    if (changed) renderFinalComposite();
+    else updateDesignEditor();
     event.stopPropagation();
   };
   elements.designDragTarget.addEventListener("pointerdown", (event) => start(event, "move"));
@@ -676,13 +819,14 @@ function enableDesignEditing() {
   elements.designDragTarget.addEventListener("pointerup", end);
   elements.designDragTarget.addEventListener("pointercancel", end);
   elements.designDragTarget.addEventListener("dblclick", (event) => {
-    openSourcePopover();
+    enterCropMode();
     event.preventDefault();
     event.stopPropagation();
   });
   elements.designDragTarget.addEventListener("keydown", (event) => {
     const step = event.shiftKey ? 0.05 : 0.01;
     if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
+    pushHistory();
     if (event.key === "ArrowLeft") state.adjustments.offsetX -= step;
     if (event.key === "ArrowRight") state.adjustments.offsetX += step;
     if (event.key === "ArrowUp") state.adjustments.offsetY -= step;
@@ -700,6 +844,7 @@ function enableDesignEditing() {
     handle.addEventListener("pointercancel", end);
     handle.addEventListener("keydown", (event) => {
       if (!["ArrowUp", "ArrowRight", "ArrowDown", "ArrowLeft"].includes(event.key)) return;
+      pushHistory();
       const direction = ["ArrowUp", "ArrowRight"].includes(event.key) ? 1 : -1;
       state.adjustments.scale = Math.max(0.2, Math.min(4, state.adjustments.scale + direction * (event.shiftKey ? 0.1 : 0.02)));
       commitDirectAdjustment();
@@ -707,6 +852,8 @@ function enableDesignEditing() {
       event.preventDefault();
     });
   }
+  elements.cropCancelButton.addEventListener("click", () => finishCropMode(false));
+  elements.cropDoneButton.addEventListener("click", () => finishCropMode(true));
 }
 
 let scheduledRenderFrame = 0;
@@ -721,7 +868,8 @@ function renderComposite(quality = "final") {
     designImage: state.designImage,
     fit: elements.fitMode.value,
     adjustments: state.adjustments,
-    quad: activeQuad(),
+    quad: screenQuad(),
+    designQuad: activeQuad(),
     layerImages: state.layerImages,
     quality
   });
@@ -756,14 +904,6 @@ function renderFinalComposite() {
 function updatePerspectiveEditor() {
   const quad = activeQuad();
   if (!quad || !state.selectedAsset) return;
-  elements.perspectivePolygon.setAttribute("points", quad.map((point) => point.join(",")).join(" "));
-  const svg = elements.perspectivePolygon.ownerSVGElement;
-  svg.setAttribute("viewBox", `0 0 ${state.selectedAsset.canvas.width} ${state.selectedAsset.canvas.height}`);
-  for (const handle of elements.perspectiveEditor.querySelectorAll(".perspective-handle")) {
-    const point = quad[Number(handle.dataset.corner)];
-    handle.style.left = `${point[0] / state.selectedAsset.canvas.width * 100}%`;
-    handle.style.top = `${point[1] / state.selectedAsset.canvas.height * 100}%`;
-  }
   const original = state.selectedAsset.screen.quad;
   const unchanged = quad.every((point, index) => point.every((value, axis) => Math.abs(value - original[index][axis]) < 0.5));
   elements.perspectiveStatus.textContent = unchanged ? "默认透视" : "已调整";
@@ -771,18 +911,15 @@ function updatePerspectiveEditor() {
 
 function setMode(mode) {
   state.mode = mode;
-  if (mode === "adjust" && state.designImage) state.designSelected = true;
-  if (mode === "perspective") state.designSelected = false;
   closeSourcePopover();
   document.querySelectorAll(".mode-tab").forEach((tab) => tab.classList.toggle("active", tab.dataset.mode === mode));
   elements.catalogView.hidden = mode !== "catalog";
   elements.adjustPanel.hidden = mode === "catalog";
   elements.adjustControls.hidden = mode !== "adjust";
   elements.perspectiveControls.hidden = mode !== "perspective";
-  elements.designEditor.hidden = mode === "perspective" || !state.designImage;
-  elements.perspectiveEditor.hidden = mode !== "perspective";
+  elements.designEditor.hidden = !state.designImage;
   elements.adjustPanelTitle.textContent = mode === "perspective" ? "透视编辑" : "画面调整";
-  elements.stageTitle.textContent = mode === "perspective" ? "拖动四角控制点" : mode === "adjust" ? "拖动画面或八向缩放" : "预览";
+  elements.stageTitle.textContent = mode === "perspective" ? "自由透视" : mode === "adjust" ? "画面调整" : "预览";
   elements.designSourceLabel.textContent = state.designName || "尚未读取画面";
   updateDesignEditor();
   updatePerspectiveEditor();
@@ -826,7 +963,7 @@ function updateAdjustmentsFromControls() {
 }
 
 async function setDesignBytes(bytes, name, mimeType = "image/png", metadata = {}) {
-  if (state.designObjectUrl) URL.revokeObjectURL(state.designObjectUrl);
+  pushHistory();
   state.designObjectUrl = URL.createObjectURL(new Blob([bytes], { type: mimeType }));
   state.designImage = await loadImage(state.designObjectUrl);
   state.designName = name;
@@ -835,7 +972,9 @@ async function setDesignBytes(bytes, name, mimeType = "image/png", metadata = {}
     height: Math.round(metadata.height || state.designImage.naturalHeight || state.designImage.height),
     type: metadata.type || "图片"
   };
-  state.designSelected = true;
+  state.designSelected = false;
+  state.cropMode = false;
+  state.cropSnapshot = null;
   state.adjustments = { ...DEFAULT_ADJUSTMENTS };
   elements.fitMode.value = state.selectedAsset?.screen.defaultFit || "contain";
   syncAdjustmentControls();
@@ -849,12 +988,14 @@ async function setDesignBytes(bytes, name, mimeType = "image/png", metadata = {}
 }
 
 function clearDesign() {
-  if (state.designObjectUrl) URL.revokeObjectURL(state.designObjectUrl);
+  if (state.designImage) pushHistory();
   state.designObjectUrl = null;
   state.designImage = null;
   state.designName = "";
   state.designSource = null;
   state.designSelected = false;
+  state.cropMode = false;
+  state.cropSnapshot = null;
   elements.designSourceLabel.textContent = "尚未读取画面";
   elements.clearDesignButton.disabled = true;
   elements.imageInput.value = "";
@@ -962,6 +1103,7 @@ async function importDesignFile(file) {
 }
 
 function resetAdjustments() {
+  pushHistory();
   state.adjustments = { ...DEFAULT_ADJUSTMENTS };
   elements.fitMode.value = state.selectedAsset?.screen.defaultFit || "contain";
   syncAdjustmentControls();
@@ -971,6 +1113,7 @@ function resetAdjustments() {
 
 function resetPerspective() {
   if (!state.selectedAsset) return;
+  pushHistory();
   state.customQuad = state.selectedAsset.screen.quad.map((point) => [...point]);
   renderFinalComposite();
   showToast("样机透视已恢复默认");
@@ -978,37 +1121,17 @@ function resetPerspective() {
 
 function resetCurrentMockup() {
   if (!state.selectedAsset) return;
+  pushHistory();
   state.adjustments = { ...DEFAULT_ADJUSTMENTS };
   state.customQuad = state.selectedAsset.screen.quad.map((point) => [...point]);
   elements.fitMode.value = state.selectedAsset.screen.defaultFit || "contain";
-  state.designSelected = Boolean(state.designImage);
+  state.designSelected = false;
+  state.cropMode = false;
+  state.cropSnapshot = null;
   syncAdjustmentControls();
   fitStage();
   renderFinalComposite();
-  showToast("已恢复当前样机默认效果");
-}
-
-function enablePerspectiveEditing() {
-  for (const handle of elements.perspectiveEditor.querySelectorAll(".perspective-handle")) {
-    handle.addEventListener("pointerdown", (event) => {
-      handle.setPointerCapture(event.pointerId);
-      event.preventDefault();
-    });
-    handle.addEventListener("pointermove", (event) => {
-      if (!handle.hasPointerCapture(event.pointerId) || !state.selectedAsset) return;
-      const rect = elements.previewCanvas.getBoundingClientRect();
-      const x = Math.max(0, Math.min(state.selectedAsset.canvas.width, (event.clientX - rect.left) / rect.width * state.selectedAsset.canvas.width));
-      const y = Math.max(0, Math.min(state.selectedAsset.canvas.height, (event.clientY - rect.top) / rect.height * state.selectedAsset.canvas.height));
-      state.customQuad[Number(handle.dataset.corner)] = [x, y];
-      updatePerspectiveEditor();
-      scheduleComposite("preview");
-    });
-    handle.addEventListener("pointerup", (event) => {
-      if (handle.hasPointerCapture(event.pointerId)) handle.releasePointerCapture(event.pointerId);
-      renderFinalComposite();
-    });
-    handle.addEventListener("pointercancel", renderFinalComposite);
-  }
+  showToast("已恢复默认画面");
 }
 
 function requestSelection() {
@@ -1072,8 +1195,22 @@ async function pasteRender() {
 }
 
 function applyStageView() {
+  clampStagePan();
   elements.canvasWrap.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.zoom})`;
+  elements.canvasWrap.style.setProperty("--overlay-inverse-scale", String(1 / state.zoom));
   elements.zoomReset.textContent = state.zoom === 1 && state.panX === 0 && state.panY === 0 ? "适应" : `${Math.round(state.zoom * 100)}%`;
+}
+
+function clampStagePan() {
+  const stageRect = elements.stage.getBoundingClientRect();
+  const width = elements.canvasWrap.offsetWidth * state.zoom;
+  const height = elements.canvasWrap.offsetHeight * state.zoom;
+  if (!stageRect.width || !stageRect.height || !width || !height) return;
+  const minimumVisible = 0.11;
+  const maxX = Math.max(0, stageRect.width / 2 + width / 2 - width * minimumVisible);
+  const maxY = Math.max(0, stageRect.height / 2 + height / 2 - height * minimumVisible);
+  state.panX = Math.max(-maxX, Math.min(maxX, state.panX));
+  state.panY = Math.max(-maxY, Math.min(maxY, state.panY));
 }
 
 function setStageZoom(nextZoom, clientX, clientY) {
@@ -1105,14 +1242,26 @@ function enableStageNavigation() {
   let spacePressed = false;
 
   window.addEventListener("keydown", (event) => {
+    const editable = /INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName || "");
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "z" && !editable) {
+      if (event.shiftKey) redoEditor();
+      else undoEditor();
+      event.preventDefault();
+      return;
+    }
     if (event.code === "Space" && !/INPUT|SELECT|TEXTAREA|BUTTON/.test(document.activeElement?.tagName || "")) {
       spacePressed = true;
       event.preventDefault();
     }
     if (event.key === "Escape") {
       closeSourcePopover();
-      state.designSelected = false;
+      if (state.cropMode) finishCropMode(false);
+      else state.designSelected = false;
       updateDesignEditor();
+    }
+    if (event.key === "Enter" && state.cropMode && !editable) {
+      finishCropMode(true);
+      event.preventDefault();
     }
   });
   window.addEventListener("keyup", (event) => {
@@ -1132,10 +1281,11 @@ function enableStageNavigation() {
   }, { passive: false });
 
   elements.stage.addEventListener("pointerdown", (event) => {
-    const overInteractive = event.target.closest("button, .design-drag-target, .design-scale-handle, .perspective-handle, .source-popover");
+    const overInteractive = event.target.closest("button, .design-drag-target, .design-scale-handle, .source-popover, .crop-toolbar");
     const canPan = event.button === 1 || spacePressed || (!overInteractive && event.button === 0);
     if (!canPan) return;
     if (!overInteractive && state.designSelected) {
+      if (state.cropMode) finishCropMode(true);
       state.designSelected = false;
       updateDesignEditor();
     }
@@ -1159,6 +1309,7 @@ function enableStageNavigation() {
   };
   elements.stage.addEventListener("pointerup", finishPan);
   elements.stage.addEventListener("pointercancel", finishPan);
+  window.addEventListener("resize", applyStageView);
 }
 
 function setWindowState(windowState) {
@@ -1226,6 +1377,10 @@ elements.clearSearch.addEventListener("click", () => {
   renderAssetGrid();
 });
 elements.categorySelect.addEventListener("change", renderAssetGrid);
+elements.fitMode.addEventListener("pointerdown", pushHistory);
+elements.fitMode.addEventListener("keydown", (event) => {
+  if (["ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) pushHistory();
+});
 elements.fitMode.addEventListener("change", () => {
   updateDesignEditor();
   renderFinalComposite();
@@ -1243,6 +1398,10 @@ for (const control of [
   elements.designContrast,
   elements.designSaturation
 ]) {
+  control.addEventListener("pointerdown", pushHistory);
+  control.addEventListener("keydown", (event) => {
+    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown"].includes(event.key)) pushHistory();
+  });
   control.addEventListener("input", updateAdjustmentsFromControls);
   control.addEventListener("change", renderFinalComposite);
 }
@@ -1277,7 +1436,6 @@ elements.expandButton.addEventListener("click", () => setWindowState("expanded")
 syncAdjustmentControls();
 updateSourceActions();
 enableDesignEditing();
-enablePerspectiveEditing();
 enableStageNavigation();
 enableWindowResize();
 

@@ -138,8 +138,8 @@
               <section class="perspective-guide">
                 <span class="perspective-guide-icon" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
                 <div>
-                  <strong>拖动预览中的四个控制点</strong>
-                  <span>控制点只改变当前样机的屏幕区域，导出和粘贴会使用调整后的结果。</span>
+                  <strong>自由透视</strong>
+                  <span>拖动角点；任意页面按住 ⌘ / Ctrl 拖动角点也可自由变形。</span>
                 </div>
               </section>
               <div class="perspective-state-row">
@@ -173,6 +173,7 @@
               <canvas id="previewCanvas" width="1448" height="1086"></canvas>
               <div class="design-editor" id="designEditor" hidden>
                 <svg viewBox="0 0 1448 1086" preserveAspectRatio="none">
+                  <polygon class="crop-frame" id="cropFrame" points="" />
                   <polygon class="design-outline" id="designPolygon" points="" />
                   <polygon class="design-drag-target" id="designDragTarget" points="" role="button" tabindex="0" aria-label="拖动画面位置" />
                 </svg>
@@ -184,20 +185,17 @@
                 <button class="design-scale-handle handle-s" data-handle="s" aria-label="向下等比缩放"></button>
                 <button class="design-scale-handle handle-sw" data-handle="sw" aria-label="左下等比缩放"></button>
                 <button class="design-scale-handle handle-w" data-handle="w" aria-label="向左等比缩放"></button>
-                <span class="design-editor-hint" id="designEditorHint">拖动移动 · 八向等比缩放</span>
-              </div>
-              <div class="perspective-editor" id="perspectiveEditor" hidden>
-                <svg viewBox="0 0 1448 1086" preserveAspectRatio="none" aria-hidden="true"><polygon id="perspectivePolygon" points="" /></svg>
-                <button class="perspective-handle" data-corner="0" aria-label="左上角控制点"></button>
-                <button class="perspective-handle" data-corner="1" aria-label="右上角控制点"></button>
-                <button class="perspective-handle" data-corner="2" aria-label="右下角控制点"></button>
-                <button class="perspective-handle" data-corner="3" aria-label="左下角控制点"></button>
               </div>
               <button class="screen-cta" id="screenCta">
                 <span>＋</span>
                 <b>添加画面</b>
               </button>
               <div class="rendering-badge" id="renderingBadge" hidden>正在渲染</div>
+            </div>
+            <div class="crop-toolbar" id="cropToolbar" hidden>
+              <span>裁切画面</span>
+              <button id="cropCancelButton">取消</button>
+              <button class="crop-done" id="cropDoneButton">完成</button>
             </div>
             <div class="source-popover" id="sourcePopover" hidden role="dialog" aria-label="选择画面来源">
               <button id="quickReadSelectionButton">
