@@ -105,10 +105,14 @@ test("continuous editing uses responsive preview rendering and a final-quality c
   assert.match(uiScript, /renderFinalComposite\(\);\s*const blob = await canvasBlob\(\)/);
 });
 
-test("content keeps its own aspect ratio and uses the mockup canonical screen size", () => {
+test("content uses a fixed crop window, keeps its ratio and always fills the mockup screen", () => {
   assert.match(rendererScript, /asset\.screen\.recommendedSize/);
   assert.doesNotMatch(uiHtml, /<option value="stretch">/);
-  assert.match(uiHtml, /完整显示（不变形）/);
+  assert.match(uiHtml, /自动填满 · 不变形/);
+  assert.match(uiHtml, /id="fitMode" type="hidden" value="cover"/);
+  assert.match(rendererScript, /function cropGeometry/);
+  assert.match(rendererScript, /function constrainCoverAdjustments/);
+  assert.match(uiScript, /crop: state\.crop/);
   assert.match(uiHtml, /id="recommendedSize"/);
 });
 
@@ -147,7 +151,9 @@ test("the preview supports Figma-like pointer and trackpad navigation", () => {
 
 test("catalog spacing stays contained and hover never impersonates selection", () => {
   assert.match(uiStyles, /\.catalog-panel\s*\{[^}]*overflow:\s*hidden/s);
+  assert.match(uiStyles, /\.asset-grid\s*\{[^}]*padding:\s*8px 14px 16px/s);
   assert.match(uiStyles, /\.recent-strip > div\s*\{[^}]*grid-template-columns:\s*repeat\(3/s);
+  assert.match(uiStyles, /\.recent-item\s*\{[^}]*width:\s*62px[^}]*height:\s*62px/s);
   assert.match(uiStyles, /\.asset-card:hover:not\(\.active\)[^{]*\{[^}]*rotate\(var\(--hover-tilt/s);
   assert.match(uiScript, /function hoverTiltFor/);
   assert.match(uiScript, /\? -4 : 4/);
@@ -171,6 +177,10 @@ test("one editor owns selection crop perspective and constant-size handles", () 
   assert.doesNotMatch(uiHtml, /id="perspectiveEditor"|id="designEditorHint"/);
   assert.match(uiStyles, /--overlay-inverse-scale/);
   assert.match(uiStyles, /\.crop-toolbar/);
+  assert.match(uiHtml, /id="cropShade"/);
+  assert.match(uiScript, /startCrop/);
+  assert.match(uiScript, /state\.crop\.zoom/);
+  assert.match(uiStyles, /\.design-editor\.is-cropping \.crop-shade/);
   assert.match(uiScript, /state\.mode === "perspective" \|\| event\.metaKey \|\| event\.ctrlKey/);
   assert.match(uiScript, /function undoEditor/);
   assert.match(uiScript, /function redoEditor/);

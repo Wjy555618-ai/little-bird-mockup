@@ -74,7 +74,7 @@
         },
         "cornerRadius": 0,
         "bleed": 3,
-        "defaultFit": "contain"
+        "defaultFit": "cover"
       },
       "layers": {
         "base": "assets/studio-display-front-r1.png"
@@ -149,7 +149,7 @@
         },
         "cornerRadius": 0.06,
         "bleed": 4,
-        "defaultFit": "contain"
+        "defaultFit": "cover"
       },
       "layers": {
         "base": "assets/rock-phone-front-r1.png"
@@ -224,7 +224,7 @@
         },
         "cornerRadius": 0.055,
         "bleed": 4,
-        "defaultFit": "contain",
+        "defaultFit": "cover",
         "occlusions": [
           {
             "type": "circle",
@@ -308,7 +308,7 @@
         },
         "cornerRadius": 0.008,
         "bleed": 4,
-        "defaultFit": "contain"
+        "defaultFit": "cover"
       },
       "layers": {
         "base": "assets/graphite-laptop-angle-r1.png"

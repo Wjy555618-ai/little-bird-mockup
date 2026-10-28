@@ -83,7 +83,6 @@ const elements = {
   designSaturationValue: document.querySelector("#designSaturationValue"),
   resetAdjustmentsButton: document.querySelector("#resetAdjustmentsButton"),
   resetPerspectiveButton: document.querySelector("#resetPerspectiveButton"),
-  backgroundToggle: document.querySelector("#backgroundToggle"),
   stage: document.querySelector("#stage"),
   canvasWrap: document.querySelector("#canvasWrap"),
   previewCanvas: document.querySelector("#previewCanvas"),
@@ -106,6 +105,7 @@ const elements = {
   quickSelectionLabel: document.querySelector("#quickSelectionLabel"),
   designEditor: document.querySelector("#designEditor"),
   designPolygon: document.querySelector("#designPolygon"),
+  cropShade: document.querySelector("#cropShade"),
   cropFrame: document.querySelector("#cropFrame"),
   designDragTarget: document.querySelector("#designDragTarget"),
   perspectiveStatus: document.querySelector("#perspectiveStatus"),
@@ -123,6 +123,7 @@ const elements = {
 };
 
 const DEFAULT_ADJUSTMENTS = renderer.DEFAULT_ADJUSTMENTS;
+const DEFAULT_CROP = renderer.DEFAULT_CROP;
 
 const state = {
   manifest: null,
@@ -149,6 +150,7 @@ const state = {
   customQuad: null,
   designName: "",
   adjustments: { ...DEFAULT_ADJUSTMENTS },
+  crop: { ...DEFAULT_CROP },
   history: [],
   future: []
 };
@@ -160,6 +162,7 @@ function cloneQuad(quad) {
 function editorSnapshot() {
   return {
     adjustments: { ...state.adjustments },
+    crop: { ...state.crop },
     customQuad: cloneQuad(state.customQuad),
     fit: elements.fitMode.value,
     designImage: state.designImage,
@@ -172,6 +175,7 @@ function editorSnapshot() {
 function snapshotSignature(snapshot) {
   return JSON.stringify({
     adjustments: snapshot.adjustments,
+    crop: snapshot.crop,
     customQuad: snapshot.customQuad,
     fit: snapshot.fit,
     designName: snapshot.designName,
@@ -192,12 +196,13 @@ function pushHistory() {
 function restoreEditorSnapshot(snapshot) {
   if (!snapshot) return;
   state.adjustments = { ...snapshot.adjustments };
+  state.crop = { ...DEFAULT_CROP, ...(snapshot.crop || {}) };
   state.customQuad = cloneQuad(snapshot.customQuad);
   state.designImage = snapshot.designImage;
   state.designObjectUrl = snapshot.designObjectUrl;
   state.designName = snapshot.designName;
   state.designSource = snapshot.designSource ? { ...snapshot.designSource } : null;
-  elements.fitMode.value = snapshot.fit;
+  elements.fitMode.value = "cover";
   state.cropMode = false;
   state.cropSnapshot = null;
   state.cropHistoryDepth = 0;
@@ -441,9 +446,13 @@ function filteredItems() {
 }
 
 function hoverTiltFor(id) {
-  let hash = 0;
-  for (const character of id) hash = (hash * 31 + character.charCodeAt(0)) | 0;
-  return Math.abs(hash) % 2 === 0 ? -4 : 4;
+  let hash = 2166136261;
+  for (const character of id) {
+    hash ^= character.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  hash ^= hash >>> 15;
+  return (hash >>> 0) % 2 === 0 ? -4 : 4;
 }
 
 function renderAssetGrid() {
@@ -456,11 +465,17 @@ function renderAssetGrid() {
     elements.catalogEmpty.querySelector("span").textContent = elements.searchInput.value ? "清空搜索或更换关键词" : "更换分类后再试";
   }
 
+  let previousTilt = 0;
+  let repeatedTilt = 0;
   for (const item of items) {
+    let tilt = hoverTiltFor(item.id);
+    if (tilt === previousTilt && repeatedTilt >= 2) tilt *= -1;
+    repeatedTilt = tilt === previousTilt ? repeatedTilt + 1 : 1;
+    previousTilt = tilt;
     const button = document.createElement("button");
     button.className = `asset-card${state.selectedAsset?.id === item.id ? " active" : ""}`;
     button.dataset.assetId = item.id;
-    button.style.setProperty("--hover-tilt", `${hoverTiltFor(item.id)}deg`);
+    button.style.setProperty("--hover-tilt", `${tilt}deg`);
 
     const image = document.createElement("img");
     image.alt = item.name;
@@ -498,6 +513,7 @@ async function selectAsset(id) {
   if (assetChanged) {
     state.customQuad = asset.screen.quad.map((point) => [...point]);
     state.adjustments = { ...DEFAULT_ADJUSTMENTS };
+    state.crop = { ...DEFAULT_CROP };
     state.designSelected = false;
     state.cropMode = false;
     state.cropSnapshot = null;
@@ -506,7 +522,7 @@ async function selectAsset(id) {
   }
   closeSourcePopover();
   rememberRecent(id);
-  elements.fitMode.value = asset.screen.defaultFit || "contain";
+  elements.fitMode.value = "cover";
   syncAdjustmentControls();
   updateSourceGuide();
   elements.assetName.textContent = asset.name;
@@ -605,30 +621,45 @@ function updateSourceGuide() {
   const sourceLabel = `${state.designSource.width} × ${state.designSource.height} px · ${state.designSource.type}`;
   elements.sourceMatch.textContent = matches
     ? `${sourceLabel} · 比例匹配`
-    : `${sourceLabel} · 比例不同，已保持原比例`;
+    : `${sourceLabel} · 比例不同，已自动裁切填满`;
 }
 
-function designControlPoints() {
-  if (!state.selectedAsset || !state.designImage) return [];
+function normalizedEditorGeometry() {
+  if (!state.selectedAsset || !state.designImage) return null;
   const recommended = state.selectedAsset.screen.recommendedSize;
   const screenWidth = 1200;
   const screenHeight = screenWidth / (recommended.width / recommended.height);
-  const sourceWidth = state.designImage.naturalWidth || state.designImage.width;
-  const sourceHeight = state.designImage.naturalHeight || state.designImage.height;
-  const fitScale = elements.fitMode.value === "cover"
-    ? Math.max(screenWidth / sourceWidth, screenHeight / sourceHeight)
-    : Math.min(screenWidth / sourceWidth, screenHeight / sourceHeight);
-  const halfWidth = sourceWidth * fitScale * state.adjustments.scale / 2;
-  const halfHeight = sourceHeight * fitScale * state.adjustments.scale / 2;
-  const centerX = screenWidth / 2 + state.adjustments.offsetX * screenWidth * 0.42;
-  const centerY = screenHeight / 2 + state.adjustments.offsetY * screenHeight * 0.42;
-  const angle = state.adjustments.rotation * Math.PI / 180;
+  const cropGeometry = renderer.cropGeometry(state.designImage, recommended.width / recommended.height, state.crop);
+  state.crop = { ...cropGeometry.crop };
+  state.adjustments = renderer.constrainCoverAdjustments(state.adjustments, screenWidth, screenHeight);
+  return { screenWidth, screenHeight, cropGeometry, adjustments: state.adjustments };
+}
+
+function designControlPoints() {
+  if (state.cropMode) return cloneQuad(activeQuad()) || [];
+  const geometry = normalizedEditorGeometry();
+  if (!geometry) return [];
+  const { screenWidth, screenHeight, adjustments } = geometry;
+  const sourceWidth = screenWidth;
+  const sourceHeight = screenHeight;
+  const sourceCenterX = 0;
+  const sourceCenterY = 0;
+  const centerX = screenWidth / 2 + adjustments.offsetX * screenWidth * 0.42;
+  const centerY = screenHeight / 2 + adjustments.offsetY * screenHeight * 0.42;
+  const angle = adjustments.rotation * Math.PI / 180;
   const cosine = Math.cos(angle);
   const sine = Math.sin(angle);
-  const corners = [[-halfWidth, -halfHeight], [halfWidth, -halfHeight], [halfWidth, halfHeight], [-halfWidth, halfHeight]];
+  const halfWidth = sourceWidth / 2;
+  const halfHeight = sourceHeight / 2;
+  const corners = [
+    [sourceCenterX - halfWidth, sourceCenterY - halfHeight],
+    [sourceCenterX + halfWidth, sourceCenterY - halfHeight],
+    [sourceCenterX + halfWidth, sourceCenterY + halfHeight],
+    [sourceCenterX - halfWidth, sourceCenterY + halfHeight]
+  ];
   return corners.map(([x, y]) => {
-    const u = (centerX + x * cosine - y * sine) / screenWidth;
-    const v = (centerY + x * sine + y * cosine) / screenHeight;
+    const u = (centerX + (x * cosine - y * sine) * adjustments.scale) / screenWidth;
+    const v = (centerY + (x * sine + y * cosine) * adjustments.scale) / screenHeight;
     return renderer.bilinearPoint(activeQuad(), u, v);
   });
 }
@@ -665,7 +696,13 @@ function updateDesignEditor() {
   elements.designDragTarget.setAttribute("points", pointString);
   const svg = elements.designPolygon.ownerSVGElement;
   svg.setAttribute("viewBox", `0 0 ${state.selectedAsset.canvas.width} ${state.selectedAsset.canvas.height}`);
-  elements.cropFrame.setAttribute("points", screenQuad().map((point) => point.join(",")).join(" "));
+  const cropPoints = activeQuad();
+  const cropPointString = cropPoints.map((point) => point.join(",")).join(" ");
+  elements.cropFrame.setAttribute("points", cropPointString);
+  elements.cropShade.setAttribute(
+    "d",
+    `M0 0H${state.selectedAsset.canvas.width}V${state.selectedAsset.canvas.height}H0Z M${cropPoints.map((point) => point.join(" ")).join("L")}Z`
+  );
   const handlePoints = designHandlePoints(points);
   for (const handle of elements.designEditor.querySelectorAll(".design-scale-handle")) {
     const point = handlePoints[handle.dataset.handle];
@@ -697,6 +734,7 @@ function deltaToScreenCoordinates(dx, dy) {
 }
 
 function commitDirectAdjustment() {
+  normalizedEditorGeometry();
   syncAdjustmentControls();
   updateDesignEditor();
   scheduleComposite("preview");
@@ -722,8 +760,9 @@ function finishCropMode(commit = true) {
     state.history.length = historyDepth;
     state.future = [];
     state.adjustments = { ...snapshot.adjustments };
+    state.crop = { ...DEFAULT_CROP, ...(snapshot.crop || {}) };
     state.customQuad = cloneQuad(snapshot.customQuad);
-    elements.fitMode.value = snapshot.fit;
+    elements.fitMode.value = "cover";
     syncAdjustmentControls();
     renderFinalComposite();
   } else {
@@ -750,8 +789,9 @@ function enableDesignEditing() {
     interaction = {
       type,
       handleName,
-      freeTransform: type === "scale" && (state.mode === "perspective" || event.metaKey || event.ctrlKey),
+      freeTransform: !state.cropMode && type === "scale" && (state.mode === "perspective" || event.metaKey || event.ctrlKey),
       startQuad: cloneQuad(activeQuad()),
+      startCrop: { ...state.crop },
       startPointer: pointer,
       center,
       anchor,
@@ -779,8 +819,13 @@ function enableDesignEditing() {
     }
     if (interaction.type === "move") {
       const [du, dv] = deltaToScreenCoordinates(dx, dy);
-      state.adjustments.offsetX = Math.max(-1, Math.min(1, interaction.startOffsetX + du / 0.42));
-      state.adjustments.offsetY = Math.max(-1, Math.min(1, interaction.startOffsetY + dv / 0.42));
+      if (state.cropMode) {
+        state.crop.offsetX = Math.max(-1, Math.min(1, interaction.startCrop.offsetX + du / 0.42));
+        state.crop.offsetY = Math.max(-1, Math.min(1, interaction.startCrop.offsetY + dv / 0.42));
+      } else {
+        state.adjustments.offsetX = Math.max(-1, Math.min(1, interaction.startOffsetX + du / 0.42));
+        state.adjustments.offsetY = Math.max(-1, Math.min(1, interaction.startOffsetY + dv / 0.42));
+      }
     } else if (interaction.freeTransform) {
       const canvas = state.selectedAsset.canvas;
       const nextQuad = cloneQuad(interaction.startQuad);
@@ -791,6 +836,10 @@ function enableDesignEditing() {
         ];
       }
       state.customQuad = nextQuad;
+    } else if (state.cropMode) {
+      const distance = Math.hypot(pointer[0] - interaction.anchor[0], pointer[1] - interaction.anchor[1]);
+      const ratio = Math.max(1 / interaction.startCrop.zoom, Math.min(8 / interaction.startCrop.zoom, distance / interaction.startDistance));
+      state.crop.zoom = interaction.startCrop.zoom * ratio;
     } else {
       const distance = Math.hypot(pointer[0] - interaction.anchor[0], pointer[1] - interaction.anchor[1]);
       const ratio = Math.max(0.2 / interaction.startScale, Math.min(4 / interaction.startScale, distance / interaction.startDistance));
@@ -827,12 +876,15 @@ function enableDesignEditing() {
     const step = event.shiftKey ? 0.05 : 0.01;
     if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
     pushHistory();
-    if (event.key === "ArrowLeft") state.adjustments.offsetX -= step;
-    if (event.key === "ArrowRight") state.adjustments.offsetX += step;
-    if (event.key === "ArrowUp") state.adjustments.offsetY -= step;
-    if (event.key === "ArrowDown") state.adjustments.offsetY += step;
-    state.adjustments.offsetX = Math.max(-1, Math.min(1, state.adjustments.offsetX));
-    state.adjustments.offsetY = Math.max(-1, Math.min(1, state.adjustments.offsetY));
+    const dx = event.key === "ArrowLeft" ? -step : event.key === "ArrowRight" ? step : 0;
+    const dy = event.key === "ArrowUp" ? -step : event.key === "ArrowDown" ? step : 0;
+    if (state.cropMode) {
+      state.crop.offsetX = Math.max(-1, Math.min(1, state.crop.offsetX + dx));
+      state.crop.offsetY = Math.max(-1, Math.min(1, state.crop.offsetY + dy));
+    } else {
+      state.adjustments.offsetX = Math.max(-1, Math.min(1, state.adjustments.offsetX + dx));
+      state.adjustments.offsetY = Math.max(-1, Math.min(1, state.adjustments.offsetY + dy));
+    }
     commitDirectAdjustment();
     renderFinalComposite();
     event.preventDefault();
@@ -846,7 +898,8 @@ function enableDesignEditing() {
       if (!["ArrowUp", "ArrowRight", "ArrowDown", "ArrowLeft"].includes(event.key)) return;
       pushHistory();
       const direction = ["ArrowUp", "ArrowRight"].includes(event.key) ? 1 : -1;
-      state.adjustments.scale = Math.max(0.2, Math.min(4, state.adjustments.scale + direction * (event.shiftKey ? 0.1 : 0.02)));
+      if (state.cropMode) state.crop.zoom = Math.max(1, Math.min(8, state.crop.zoom + direction * (event.shiftKey ? 0.2 : 0.05)));
+      else state.adjustments.scale = Math.max(1, Math.min(4, state.adjustments.scale + direction * (event.shiftKey ? 0.1 : 0.02)));
       commitDirectAdjustment();
       renderFinalComposite();
       event.preventDefault();
@@ -861,13 +914,15 @@ let scheduledRenderQuality = "preview";
 
 function renderComposite(quality = "final") {
   if (!state.selectedAsset || !state.baseImage) return;
+  if (state.designImage) normalizedEditorGeometry();
   renderer.renderComposite({
     canvas: elements.previewCanvas,
     asset: state.selectedAsset,
     baseImage: state.baseImage,
     designImage: state.designImage,
-    fit: elements.fitMode.value,
+    fit: "cover",
     adjustments: state.adjustments,
+    crop: state.crop,
     quad: screenQuad(),
     designQuad: activeQuad(),
     layerImages: state.layerImages,
@@ -957,7 +1012,8 @@ function updateAdjustmentsFromControls() {
     contrast: Number(elements.designContrast.value) / 100,
     saturation: Number(elements.designSaturation.value) / 100
   };
-  updateAdjustmentOutputs();
+  normalizedEditorGeometry();
+  syncAdjustmentControls();
   updateDesignEditor();
   scheduleComposite("preview");
 }
@@ -976,7 +1032,8 @@ async function setDesignBytes(bytes, name, mimeType = "image/png", metadata = {}
   state.cropMode = false;
   state.cropSnapshot = null;
   state.adjustments = { ...DEFAULT_ADJUSTMENTS };
-  elements.fitMode.value = state.selectedAsset?.screen.defaultFit || "contain";
+  state.crop = { ...DEFAULT_CROP };
+  elements.fitMode.value = "cover";
   syncAdjustmentControls();
   elements.designSourceLabel.textContent = name;
   elements.clearDesignButton.disabled = false;
@@ -1105,7 +1162,8 @@ async function importDesignFile(file) {
 function resetAdjustments() {
   pushHistory();
   state.adjustments = { ...DEFAULT_ADJUSTMENTS };
-  elements.fitMode.value = state.selectedAsset?.screen.defaultFit || "contain";
+  state.crop = { ...DEFAULT_CROP };
+  elements.fitMode.value = "cover";
   syncAdjustmentControls();
   renderFinalComposite();
   showToast("画面调整已恢复默认");
@@ -1123,8 +1181,9 @@ function resetCurrentMockup() {
   if (!state.selectedAsset) return;
   pushHistory();
   state.adjustments = { ...DEFAULT_ADJUSTMENTS };
+  state.crop = { ...DEFAULT_CROP };
   state.customQuad = state.selectedAsset.screen.quad.map((point) => [...point]);
-  elements.fitMode.value = state.selectedAsset.screen.defaultFit || "contain";
+  elements.fitMode.value = "cover";
   state.designSelected = false;
   state.cropMode = false;
   state.cropSnapshot = null;
@@ -1194,6 +1253,19 @@ async function pasteRender() {
   }
 }
 
+function sizeCanvasWrap() {
+  const stageRect = elements.stage.getBoundingClientRect();
+  const canvasWidth = elements.previewCanvas.width || 1;
+  const canvasHeight = elements.previewCanvas.height || 1;
+  const aspect = canvasWidth / canvasHeight;
+  const availableWidth = Math.max(1, stageRect.width - 32);
+  const availableHeight = Math.max(1, stageRect.height - 32);
+  const width = Math.max(1, Math.min(availableWidth, availableHeight * aspect));
+  const height = Math.max(1, width / aspect);
+  elements.canvasWrap.style.width = `${width}px`;
+  elements.canvasWrap.style.height = `${height}px`;
+}
+
 function applyStageView() {
   clampStagePan();
   elements.canvasWrap.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.zoom})`;
@@ -1231,6 +1303,7 @@ function updateZoom(delta) {
 }
 
 function fitStage() {
+  sizeCanvasWrap();
   state.zoom = 1;
   state.panX = 0;
   state.panY = 0;
@@ -1309,7 +1382,10 @@ function enableStageNavigation() {
   };
   elements.stage.addEventListener("pointerup", finishPan);
   elements.stage.addEventListener("pointercancel", finishPan);
-  window.addEventListener("resize", applyStageView);
+  window.addEventListener("resize", () => {
+    sizeCanvasWrap();
+    applyStageView();
+  });
 }
 
 function setWindowState(windowState) {
@@ -1377,14 +1453,6 @@ elements.clearSearch.addEventListener("click", () => {
   renderAssetGrid();
 });
 elements.categorySelect.addEventListener("change", renderAssetGrid);
-elements.fitMode.addEventListener("pointerdown", pushHistory);
-elements.fitMode.addEventListener("keydown", (event) => {
-  if (["ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) pushHistory();
-});
-elements.fitMode.addEventListener("change", () => {
-  updateDesignEditor();
-  renderFinalComposite();
-});
 elements.readSelectionButton.addEventListener("click", requestSelection);
 elements.importFileButton.addEventListener("click", () => elements.imageInput.click());
 elements.imageInput.addEventListener("change", () => importDesignFile(elements.imageInput.files?.[0]));
@@ -1423,7 +1491,6 @@ document.addEventListener("pointerdown", (event) => {
 });
 elements.downloadButton.addEventListener("click", downloadRender);
 elements.pasteButton.addEventListener("click", pasteRender);
-elements.backgroundToggle.addEventListener("click", () => elements.stage.classList.toggle("light"));
 elements.zoomIn.addEventListener("click", () => updateZoom(0.1));
 elements.zoomOut.addEventListener("click", () => updateZoom(-0.1));
 elements.zoomReset.addEventListener("click", fitStage);

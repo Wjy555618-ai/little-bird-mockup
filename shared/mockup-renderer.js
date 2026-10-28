@@ -3,6 +3,7 @@
 
   const VERSION = "2.1.0";
   const DEFAULT_ADJUSTMENTS = Object.freeze({ scale: 1, offsetX: 0, offsetY: 0, rotation: 0, brightness: 1, contrast: 1, saturation: 1 });
+  const DEFAULT_CROP = Object.freeze({ zoom: 1, offsetX: 0, offsetY: 0 });
   const baseCanvasCache = new WeakMap();
 
   function validateAsset(asset) {
@@ -99,9 +100,80 @@
     context.restore();
   }
 
-  function createScreenCanvas(image, targetAspect, fit, adjustments, cornerRadius = 0, transparent = false) {
+  function cropGeometry(image, targetAspect, crop) {
     const width = 1200;
     const height = Math.max(120, Math.round(width / targetAspect));
+    const sourceWidth = image.naturalWidth || image.width;
+    const sourceHeight = image.naturalHeight || image.height;
+    const baseScale = Math.max(width / sourceWidth, height / sourceHeight);
+    const values = { ...DEFAULT_CROP, ...(crop || {}) };
+    const zoom = Math.max(1, Math.min(8, Number(values.zoom) || 1));
+    const drawWidth = sourceWidth * baseScale * zoom;
+    const drawHeight = sourceHeight * baseScale * zoom;
+    const maxOffsetX = Math.max(0, (drawWidth - width) / 2);
+    const maxOffsetY = Math.max(0, (drawHeight - height) / 2);
+    const desiredX = Math.max(-1, Math.min(1, Number(values.offsetX) || 0)) * width * 0.42;
+    const desiredY = Math.max(-1, Math.min(1, Number(values.offsetY) || 0)) * height * 0.42;
+    const offsetPixelsX = Math.max(-maxOffsetX, Math.min(maxOffsetX, desiredX));
+    const offsetPixelsY = Math.max(-maxOffsetY, Math.min(maxOffsetY, desiredY));
+    return {
+      width,
+      height,
+      drawWidth,
+      drawHeight,
+      offsetPixelsX,
+      offsetPixelsY,
+      crop: {
+        zoom,
+        offsetX: width ? offsetPixelsX / (width * 0.42) : 0,
+        offsetY: height ? offsetPixelsY / (height * 0.42) : 0
+      }
+    };
+  }
+
+  function constrainCoverAdjustments(adjustments, width, height) {
+    const values = { ...DEFAULT_ADJUSTMENTS, ...(adjustments || {}) };
+    const angle = (Number(values.rotation) || 0) * Math.PI / 180;
+    const cosine = Math.cos(angle);
+    const sine = Math.sin(angle);
+    const requiredHalfWidth = (Math.abs(cosine) * width + Math.abs(sine) * height) / 2;
+    const requiredHalfHeight = (Math.abs(sine) * width + Math.abs(cosine) * height) / 2;
+    const minimumScale = Math.max(1, requiredHalfWidth * 2 / width, requiredHalfHeight * 2 / height);
+    const scale = Math.max(minimumScale, Math.min(4, Number(values.scale) || 1));
+    const desiredWorldX = Math.max(-1, Math.min(1, Number(values.offsetX) || 0)) * width * 0.42;
+    const desiredWorldY = Math.max(-1, Math.min(1, Number(values.offsetY) || 0)) * height * 0.42;
+    const desiredLocalX = desiredWorldX * cosine + desiredWorldY * sine;
+    const desiredLocalY = -desiredWorldX * sine + desiredWorldY * cosine;
+    const maxLocalX = Math.max(0, width * scale / 2 - requiredHalfWidth);
+    const maxLocalY = Math.max(0, height * scale / 2 - requiredHalfHeight);
+    const localX = Math.max(-maxLocalX, Math.min(maxLocalX, desiredLocalX));
+    const localY = Math.max(-maxLocalY, Math.min(maxLocalY, desiredLocalY));
+    const worldX = localX * cosine - localY * sine;
+    const worldY = localX * sine + localY * cosine;
+    return {
+      ...values,
+      scale,
+      offsetX: width ? worldX / (width * 0.42) : 0,
+      offsetY: height ? worldY / (height * 0.42) : 0
+    };
+  }
+
+  function createScreenCanvas(image, targetAspect, fit, adjustments, cornerRadius = 0, transparent = false, crop) {
+    const width = 1200;
+    const height = Math.max(120, Math.round(width / targetAspect));
+    const cropCanvas = document.createElement("canvas");
+    cropCanvas.width = width;
+    cropCanvas.height = height;
+    const cropContext = cropCanvas.getContext("2d");
+    const geometry = cropGeometry(image, targetAspect, crop);
+    cropContext.drawImage(
+      image,
+      width / 2 + geometry.offsetPixelsX - geometry.drawWidth / 2,
+      height / 2 + geometry.offsetPixelsY - geometry.drawHeight / 2,
+      geometry.drawWidth,
+      geometry.drawHeight
+    );
+
     const canvas = document.createElement("canvas");
     canvas.width = width;
     canvas.height = height;
@@ -115,17 +187,12 @@
       context.fillStyle = "#0d0d0d";
       context.fillRect(0, 0, width, height);
     }
-    const values = { ...DEFAULT_ADJUSTMENTS, ...(adjustments || {}) };
-    const sourceWidth = image.naturalWidth || image.width;
-    const sourceHeight = image.naturalHeight || image.height;
-    const scaleForFit = fit === "cover" ? Math.max(width / sourceWidth, height / sourceHeight) : Math.min(width / sourceWidth, height / sourceHeight);
-    const drawWidth = sourceWidth * scaleForFit;
-    const drawHeight = sourceHeight * scaleForFit;
+    const values = constrainCoverAdjustments(adjustments, width, height);
     context.translate(width / 2 + values.offsetX * width * 0.42, height / 2 + values.offsetY * height * 0.42);
     context.rotate(values.rotation * Math.PI / 180);
     context.scale(values.scale, values.scale);
     context.filter = `brightness(${values.brightness}) contrast(${values.contrast}) saturate(${values.saturation})`;
-    context.drawImage(image, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+    context.drawImage(cropCanvas, -width / 2, -height / 2, width, height);
     context.restore();
     return canvas;
   }
@@ -191,7 +258,7 @@
     }
   }
 
-  function renderComposite({ canvas, asset, baseImage, designImage, fit = "cover", adjustments, quad, designQuad, layerImages = {}, quality = "final" }) {
+  function renderComposite({ canvas, asset, baseImage, designImage, fit = "cover", adjustments, crop, quad, designQuad, layerImages = {}, quality = "final" }) {
     validateAsset(asset);
     const context = canvas.getContext("2d", { alpha: false });
     context.setTransform(1, 0, 0, 1, 0, 0);
@@ -203,7 +270,7 @@
     const activeQuad = expandQuad(quad || asset.screen.quad, asset.screen.bleed || 0);
     if (designImage) {
       const recommended = asset.screen.recommendedSize;
-      const screenCanvas = createScreenCanvas(designImage, recommended.width / recommended.height, fit, adjustments, asset.screen.cornerRadius || 0, true);
+      const screenCanvas = createScreenCanvas(designImage, recommended.width / recommended.height, fit, adjustments, asset.screen.cornerRadius || 0, true, crop);
       fillQuad(context, activeQuad, asset.screen.underlay || "#080808");
       context.save();
       clipQuad(context, activeQuad);
@@ -222,5 +289,5 @@
     return canvas;
   }
 
-  global.MockupRenderer = Object.freeze({ VERSION, DEFAULT_ADJUSTMENTS, validateAsset, quadSize, bilinearPoint, expandQuad, createScreenCanvas, drawImageToQuad, renderComposite });
+  global.MockupRenderer = Object.freeze({ VERSION, DEFAULT_ADJUSTMENTS, DEFAULT_CROP, validateAsset, quadSize, bilinearPoint, expandQuad, cropGeometry, constrainCoverAdjustments, createScreenCanvas, drawImageToQuad, renderComposite });
 })(window);
