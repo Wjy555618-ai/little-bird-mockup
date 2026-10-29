@@ -319,12 +319,56 @@ function setCatalogState(mode, label) {
   elements.catalogState.setAttribute("aria-label", label);
 }
 
+const reducedMotionQuery = window.matchMedia?.("(prefers-reduced-motion: reduce)") || { matches: false };
+const visibilityTimers = new WeakMap();
+const visibilityRevisions = new WeakMap();
+const enterTimers = new WeakMap();
+
+function setAnimatedVisibility(element, visible) {
+  const revision = (visibilityRevisions.get(element) || 0) + 1;
+  visibilityRevisions.set(element, revision);
+  clearTimeout(visibilityTimers.get(element));
+  visibilityTimers.delete(element);
+  if (visible) {
+    if (!element.hidden && element.classList.contains("is-visible")) return;
+    element.hidden = false;
+    element.setAttribute("aria-hidden", "false");
+    requestAnimationFrame(() => {
+      if (visibilityRevisions.get(element) === revision && !element.hidden) {
+        element.classList.add("is-visible");
+      }
+    });
+    return;
+  }
+  if (element.hidden && !element.classList.contains("is-visible")) return;
+  element.classList.remove("is-visible");
+  element.setAttribute("aria-hidden", "true");
+  const timer = setTimeout(() => {
+    if (visibilityRevisions.get(element) === revision) element.hidden = true;
+    visibilityTimers.delete(element);
+  }, reducedMotionQuery.matches ? 0 : 240);
+  visibilityTimers.set(element, timer);
+}
+
+function replayEnter(element) {
+  clearTimeout(enterTimers.get(element));
+  element.classList.remove("is-entering");
+  if (reducedMotionQuery.matches) return;
+  void element.offsetWidth;
+  element.classList.add("is-entering");
+  const timer = setTimeout(() => {
+    element.classList.remove("is-entering");
+    enterTimers.delete(element);
+  }, 260);
+  enterTimers.set(element, timer);
+}
+
 let toastTimer;
 function showToast(message, duration = 2600) {
   clearTimeout(toastTimer);
   elements.toast.textContent = message;
-  elements.toast.hidden = false;
-  toastTimer = setTimeout(() => { elements.toast.hidden = true; }, duration);
+  setAnimatedVisibility(elements.toast, true);
+  toastTimer = setTimeout(() => setAnimatedVisibility(elements.toast, false), duration);
 }
 
 function withTimeout(promise, milliseconds) {
@@ -398,7 +442,7 @@ function hydrateCatalog() {
     option.textContent = category.label;
     elements.categorySelect.appendChild(option);
   }
-  renderAssetGrid();
+  renderAssetGrid({ animate: true });
   if (!state.selectedAsset && state.manifest.items[0]) selectAsset(state.manifest.items[0].id);
 }
 
@@ -422,10 +466,11 @@ function renderRecentStrip() {
     .filter(Boolean)
     .slice(0, 10);
   elements.recentItems.replaceChildren();
-  elements.recentStrip.hidden = items.length === 0;
+  setAnimatedVisibility(elements.recentStrip, items.length > 0);
   for (const item of items) {
     const button = document.createElement("button");
     button.className = `recent-item${state.selectedAsset?.id === item.id ? " active" : ""}`;
+    button.dataset.assetId = item.id;
     button.title = item.name;
     const image = document.createElement("img");
     image.src = resolveAssetUrl(item.thumbnail);
@@ -484,27 +529,33 @@ function filteredItems() {
   });
 }
 
-function randomHoverTilt() {
-  return Math.random() < 0.5 ? -4 : 4;
+function syncAssetSelection() {
+  for (const button of elements.assetGrid.querySelectorAll(".asset-card")) {
+    button.classList.toggle("active", button.dataset.assetId === state.selectedAsset?.id);
+  }
+  for (const button of elements.recentItems.querySelectorAll(".recent-item")) {
+    button.classList.toggle("active", button.dataset.assetId === state.selectedAsset?.id);
+  }
 }
 
-function renderAssetGrid() {
+function renderAssetGrid({ animate = false } = {}) {
   const items = filteredItems();
   elements.assetGrid.replaceChildren();
   elements.catalogCount.textContent = `${items.length} 个样机`;
-  elements.catalogEmpty.hidden = items.length !== 0;
+  setAnimatedVisibility(elements.catalogEmpty, items.length === 0);
   if (!items.length) {
     elements.catalogEmpty.querySelector("strong").textContent = state.segment === "similar" ? "该分类暂无相似样机" : "没有找到样机";
     elements.catalogEmpty.querySelector("span").textContent = elements.searchInput.value ? "清空搜索或更换关键词" : "更换分类后再试";
   }
 
-  for (const item of items) {
+  for (const [index, item] of items.entries()) {
     const button = document.createElement("button");
     button.className = `asset-card${state.selectedAsset?.id === item.id ? " active" : ""}`;
     button.dataset.assetId = item.id;
-    button.addEventListener("pointerenter", () => {
-      button.style.setProperty("--hover-tilt", `${randomHoverTilt()}deg`);
-    });
+    if (animate) {
+      button.classList.add("is-entering");
+      button.style.setProperty("--card-order", String(Math.min(index, 5)));
+    }
 
     const image = document.createElement("img");
     image.alt = item.name;
@@ -534,9 +585,12 @@ function loadImage(url) {
   });
 }
 
+let assetRequestSequence = 0;
+
 async function selectAsset(id) {
   const asset = state.manifest?.items.find((item) => item.id === id);
   if (!asset) return;
+  const requestSequence = ++assetRequestSequence;
   const assetChanged = state.selectedAsset?.id !== id;
   state.selectedAsset = asset;
   if (assetChanged) {
@@ -562,15 +616,23 @@ async function selectAsset(id) {
   elements.downloadButton.disabled = true;
   elements.pasteButton.disabled = true;
   state.rendering = true;
-  elements.renderingBadge.hidden = false;
-  renderAssetGrid();
+  setAnimatedVisibility(elements.renderingBadge, true);
+  elements.canvasWrap.classList.add("is-content-switching");
+  if (state.segment === "similar" && elements.categorySelect.value === "all") {
+    renderAssetGrid({ animate: true });
+  } else {
+    syncAssetSelection();
+    renderRecentStrip();
+  }
 
   try {
-    state.baseImage = await loadImage(resolveAssetUrl(asset.layers.base));
+    const baseImage = await loadImage(resolveAssetUrl(asset.layers.base));
     const optionalLayers = await Promise.all(["reflection", "foreground"].map(async (name) => {
       if (!asset.layers[name]) return [name, null];
       return [name, await loadImage(resolveAssetUrl(asset.layers[name]))];
     }));
+    if (requestSequence !== assetRequestSequence) return;
+    state.baseImage = baseImage;
     state.layerImages = Object.fromEntries(optionalLayers.filter(([, image]) => image));
     elements.previewCanvas.width = asset.canvas.width;
     elements.previewCanvas.height = asset.canvas.height;
@@ -579,11 +641,14 @@ async function selectAsset(id) {
     updateDesignEditor();
     await renderComposite();
   } catch (error) {
-    showToast(error instanceof Error ? error.message : "样机加载失败");
+    if (requestSequence === assetRequestSequence) showToast(error instanceof Error ? error.message : "样机加载失败");
   } finally {
-    state.rendering = false;
-    elements.renderingBadge.hidden = true;
-    updateOutputAvailability();
+    if (requestSequence === assetRequestSequence) {
+      state.rendering = false;
+      setAnimatedVisibility(elements.renderingBadge, false);
+      requestAnimationFrame(() => elements.canvasWrap.classList.remove("is-content-switching"));
+      updateOutputAvailability();
+    }
   }
 }
 
@@ -607,7 +672,7 @@ function updateSourceActions() {
 
 function openSourcePopover() {
   updateSourceActions();
-  elements.sourcePopover.hidden = false;
+  setAnimatedVisibility(elements.sourcePopover, true);
   requestAnimationFrame(() => {
     const target = elements.quickReadSelectionButton.disabled ? elements.quickImportFileButton : elements.quickReadSelectionButton;
     target.focus();
@@ -615,11 +680,11 @@ function openSourcePopover() {
 }
 
 function closeSourcePopover() {
-  elements.sourcePopover.hidden = true;
+  setAnimatedVisibility(elements.sourcePopover, false);
 }
 
 function toggleSourcePopover() {
-  if (elements.sourcePopover.hidden) openSourcePopover();
+  if (!elements.sourcePopover.classList.contains("is-visible")) openSourcePopover();
   else closeSourcePopover();
 }
 
@@ -767,7 +832,7 @@ function updateDesignEditor() {
   const points = designControlPoints();
   const visible = points.length === 4;
   elements.designEditor.hidden = !visible;
-  elements.cropToolbar.hidden = !state.cropMode;
+  setAnimatedVisibility(elements.cropToolbar, state.cropMode);
   if (!visible) return;
   elements.designEditor.classList.toggle("is-selected", state.designSelected);
   elements.designEditor.classList.toggle("is-cropping", state.cropMode);
@@ -868,6 +933,7 @@ function enableDesignEditing() {
   const start = (event, type) => {
     if (!state.designImage || !state.selectedAsset) return;
     if (event.button !== 0 || stageSpacePressed) return;
+    stopStageViewAnimation();
     ensureContentGeometry();
     const handleName = event.currentTarget.dataset.handle;
     const wasSelected = state.designSelected || state.cropMode;
@@ -1126,16 +1192,20 @@ function updatePerspectiveEditor() {
 }
 
 function setMode(mode) {
+  if (state.mode === mode) return;
   state.mode = mode;
   closeSourcePopover();
   document.querySelectorAll(".mode-tab").forEach((tab) => tab.classList.toggle("active", tab.dataset.mode === mode));
-  elements.catalogView.hidden = mode !== "catalog";
-  elements.adjustPanel.hidden = mode === "catalog";
+  setAnimatedVisibility(elements.catalogView, mode === "catalog");
+  setAnimatedVisibility(elements.adjustPanel, mode !== "catalog");
   elements.adjustControls.hidden = mode !== "adjust";
   elements.perspectiveControls.hidden = mode !== "perspective";
+  if (mode === "adjust") replayEnter(elements.adjustControls);
+  if (mode === "perspective") replayEnter(elements.perspectiveControls);
   elements.designEditor.hidden = !state.designImage;
   elements.adjustPanelTitle.textContent = mode === "perspective" ? "透视编辑" : "画面调整";
   elements.stageTitle.textContent = mode === "perspective" ? "自由透视" : mode === "adjust" ? "画面调整" : "预览";
+  replayEnter(elements.stageTitle);
   elements.designSourceLabel.textContent = state.designName || "尚未读取画面";
   updateDesignEditor();
   updatePerspectiveEditor();
@@ -1372,7 +1442,7 @@ function resetCurrentMockup() {
   state.cropMode = false;
   state.cropSnapshot = null;
   syncAdjustmentControls();
-  fitStage();
+  fitStage(true);
   renderFinalComposite();
   showToast("已恢复默认画面");
 }
@@ -1482,16 +1552,41 @@ function setStageZoom(nextZoom, clientX, clientY) {
   applyStageView();
 }
 
-function updateZoom(delta) {
-  setStageZoom(state.zoom + delta);
+let stageViewTimer = 0;
+
+function stopStageViewAnimation() {
+  clearTimeout(stageViewTimer);
+  stageViewTimer = 0;
+  elements.canvasWrap.classList.remove("is-view-animating");
 }
 
-function fitStage() {
-  sizeCanvasWrap();
-  state.zoom = 1;
-  state.panX = 0;
-  state.panY = 0;
-  applyStageView();
+function animateStageView(change) {
+  stopStageViewAnimation();
+  if (reducedMotionQuery.matches) {
+    change();
+    return;
+  }
+  elements.canvasWrap.classList.add("is-view-animating");
+  change();
+  stageViewTimer = setTimeout(stopStageViewAnimation, 260);
+}
+
+function updateZoom(delta, animated = false) {
+  const change = () => setStageZoom(state.zoom + delta);
+  if (animated) animateStageView(change);
+  else change();
+}
+
+function fitStage(animated = false) {
+  const change = () => {
+    sizeCanvasWrap();
+    state.zoom = 1;
+    state.panX = 0;
+    state.panY = 0;
+    applyStageView();
+  };
+  if (animated) animateStageView(change);
+  else change();
 }
 
 function enableStageNavigation() {
@@ -1526,6 +1621,7 @@ function enableStageNavigation() {
 
   elements.stage.addEventListener("wheel", (event) => {
     event.preventDefault();
+    stopStageViewAnimation();
     if (event.ctrlKey || event.metaKey) {
       const factor = Math.exp(-event.deltaY * 0.01);
       setStageZoom(state.zoom * factor, event.clientX, event.clientY);
@@ -1540,6 +1636,7 @@ function enableStageNavigation() {
     const overInteractive = event.target.closest("button, .design-drag-target, .design-scale-handle, .source-popover, .crop-toolbar");
     const canPan = event.button === 1 || stageSpacePressed || (!overInteractive && event.button === 0);
     if (!canPan) return;
+    stopStageViewAnimation();
     if (!overInteractive && state.designSelected) {
       if (state.cropMode) finishCropMode(true);
       state.designSelected = false;
@@ -1621,9 +1718,10 @@ for (const tab of document.querySelectorAll(".mode-tab")) {
 
 for (const segment of document.querySelectorAll(".segment")) {
   segment.addEventListener("click", () => {
+    if (state.segment === segment.dataset.filter) return;
     state.segment = segment.dataset.filter;
     document.querySelectorAll(".segment").forEach((item) => item.classList.toggle("active", item === segment));
-    renderAssetGrid();
+    renderAssetGrid({ animate: true });
   });
 }
 
@@ -1636,9 +1734,9 @@ elements.clearSearch.addEventListener("click", () => {
   elements.searchInput.value = "";
   elements.clearSearch.hidden = true;
   elements.searchInput.focus();
-  renderAssetGrid();
+  renderAssetGrid({ animate: true });
 });
-elements.categorySelect.addEventListener("change", renderAssetGrid);
+elements.categorySelect.addEventListener("change", () => renderAssetGrid({ animate: true }));
 elements.readSelectionButton.addEventListener("click", requestSelection);
 elements.importFileButton.addEventListener("click", () => elements.imageInput.click());
 elements.imageInput.addEventListener("change", () => importDesignFile(elements.imageInput.files?.[0]));
@@ -1677,9 +1775,9 @@ document.addEventListener("pointerdown", (event) => {
 });
 elements.downloadButton.addEventListener("click", downloadRender);
 elements.pasteButton.addEventListener("click", pasteRender);
-elements.zoomIn.addEventListener("click", () => updateZoom(0.1));
-elements.zoomOut.addEventListener("click", () => updateZoom(-0.1));
-elements.zoomReset.addEventListener("click", fitStage);
+elements.zoomIn.addEventListener("click", () => updateZoom(0.1, true));
+elements.zoomOut.addEventListener("click", () => updateZoom(-0.1, true));
+elements.zoomReset.addEventListener("click", () => fitStage(true));
 elements.clearRecent.addEventListener("click", () => {
   safeStorage.removeItem(RECENT_KEY);
   renderRecentStrip();

@@ -285,7 +285,7 @@ test("inactive design gestures arbitrate click selection from stage panning", ()
   assert.match(uiScript, /event\.button === 1 \|\| stageSpacePressed/);
 });
 
-test("catalog spacing stays contained and hover never impersonates selection", () => {
+test("catalog spacing stays contained and hover remains stable", () => {
   assert.match(uiStyles, /\.catalog-panel\s*\{[^}]*overflow:\s*hidden/s);
   assert.match(uiStyles, /--panel-pad:\s*16px/);
   assert.match(uiStyles, /\.asset-grid\s*\{[^}]*padding:\s*12px var\(--panel-pad\) 16px/s);
@@ -293,12 +293,28 @@ test("catalog spacing stays contained and hover never impersonates selection", (
   assert.match(uiStyles, /--recent-thumb-size:\s*44px/);
   assert.match(uiStyles, /\.recent-item\s*\{[^}]*width:\s*var\(--recent-thumb-size\)[^}]*height:\s*var\(--recent-thumb-size\)/s);
   assert.match(uiStyles, /\.recent-item\s*\{[^}]*margin:\s*0[^}]*padding:\s*0/s);
-  assert.match(uiStyles, /\.asset-card:hover:not\(\.active\)[^{]*\{[^}]*rotate\(var\(--hover-tilt/s);
-  assert.match(uiScript, /function randomHoverTilt/);
-  assert.match(uiScript, /button\.addEventListener\("pointerenter"/);
-  assert.match(uiScript, /\? -4 : 4/);
+  assert.match(uiStyles, /\.asset-card:hover:not\(\.active\)\s*\{[^}]*border-color:[^}]*box-shadow:/s);
+  assert.doesNotMatch(uiStyles, /--hover-tilt|\.asset-card:hover[^}]*rotate\(/s);
+  assert.doesNotMatch(uiScript, /randomHoverTilt|--hover-tilt/);
   assert.match(uiScript, /\.slice\(0, 10\)/);
   assert.match(uiScript, /function enableRecentScrolling/);
+});
+
+test("the motion system is restrained, state-driven and reduced-motion safe", () => {
+  assert.match(uiStyles, /--motion-fast:\s*120ms/);
+  assert.match(uiStyles, /--motion-base:\s*180ms/);
+  assert.match(uiStyles, /--motion-panel:\s*220ms/);
+  assert.match(uiStyles, /--ease-out:\s*cubic-bezier\(\.22, 1, \.36, 1\)/);
+  assert.match(uiStyles, /\.asset-card\.is-entering\s*\{[^}]*card-enter/s);
+  assert.match(uiStyles, /\.canvas-wrap\.is-view-animating\s*\{[^}]*transition:\s*transform/s);
+  assert.match(uiStyles, /prefers-reduced-motion:\s*reduce[\s\S]*animation:\s*none !important/s);
+  assert.match(uiScript, /function setAnimatedVisibility/);
+  assert.match(uiScript, /visibilityRevisions\.get\(element\) === revision/);
+  assert.match(uiScript, /setAnimatedVisibility\(elements\.catalogView, mode === "catalog"\)/);
+  assert.match(uiScript, /renderAssetGrid\(\{ animate: true \}\)/);
+  assert.match(uiScript, /elements\.canvasWrap\.classList\.add\("is-content-switching"\)/);
+  assert.match(uiScript, /function animateStageView/);
+  assert.match(uiScript, /stopStageViewAnimation\(\);[\s\S]*elements\.stage\.addEventListener\("wheel"/s);
 });
 
 test("Figma and local sources flatten to one static design object", () => {
