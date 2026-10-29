@@ -147,34 +147,51 @@
     const normalizedFrame = normalizeFrame(frame, frame.width, frame.height);
     const normalizedImage = normalizeFrame(imageFrame, normalizedFrame.width, normalizedFrame.height);
 
-    // imageFrame is the actual source-image rectangle. Preserve its source
-    // aspect, enlarge it only when needed, then keep it covering the visible
-    // content frame so the editor can never expose an unrelated underlay.
-    let width = Math.max(normalizedImage.width, normalizedImage.height * sourceAspect);
-    let height = width / sourceAspect;
-    if (height < normalizedImage.height) {
-      height = normalizedImage.height;
-      width = height * sourceAspect;
+    // The mockup aperture is fixed. Only the source rectangle is transformed.
+    // Work in source-local axes so a rotated or deliberately edge-stretched
+    // source still covers every corner of the aperture without exposing the
+    // base mockup underneath.
+    const frameAngle = normalizedFrame.rotation * Math.PI / 180;
+    const relativeAngle = (normalizedImage.rotation - normalizedFrame.rotation) * Math.PI / 180;
+    const cosine = Math.cos(relativeAngle);
+    const sine = Math.sin(relativeAngle);
+    const requiredWidth = Math.abs(cosine) * normalizedFrame.width + Math.abs(sine) * normalizedFrame.height;
+    const requiredHeight = Math.abs(sine) * normalizedFrame.width + Math.abs(cosine) * normalizedFrame.height;
+    const preservesSourceAspect = Math.abs(normalizedImage.width / normalizedImage.height / sourceAspect - 1) < 0.001;
+    let width;
+    let height;
+    if (preservesSourceAspect) {
+      const scale = Math.max(
+        normalizedImage.width / sourceWidth,
+        normalizedImage.height / sourceHeight,
+        requiredWidth / sourceWidth,
+        requiredHeight / sourceHeight
+      );
+      width = sourceWidth * scale;
+      height = sourceHeight * scale;
+    } else {
+      width = Math.max(normalizedImage.width, requiredWidth);
+      height = Math.max(normalizedImage.height, requiredHeight);
     }
-    const coverScale = Math.max(1, normalizedFrame.width / width, normalizedFrame.height / height);
-    width *= coverScale;
-    height *= coverScale;
 
-    const angle = normalizedFrame.rotation * Math.PI / 180;
     const dx = normalizedImage.cx - normalizedFrame.cx;
     const dy = normalizedImage.cy - normalizedFrame.cy;
-    const localX = dx * Math.cos(angle) + dy * Math.sin(angle);
-    const localY = -dx * Math.sin(angle) + dy * Math.cos(angle);
-    const maxX = Math.max(0, (width - normalizedFrame.width) / 2);
-    const maxY = Math.max(0, (height - normalizedFrame.height) / 2);
-    const clampedX = Math.max(-maxX, Math.min(maxX, localX));
-    const clampedY = Math.max(-maxY, Math.min(maxY, localY));
+    const frameLocalX = dx * Math.cos(frameAngle) + dy * Math.sin(frameAngle);
+    const frameLocalY = -dx * Math.sin(frameAngle) + dy * Math.cos(frameAngle);
+    const imageLocalX = frameLocalX * cosine + frameLocalY * sine;
+    const imageLocalY = -frameLocalX * sine + frameLocalY * cosine;
+    const maxX = Math.max(0, (width - requiredWidth) / 2);
+    const maxY = Math.max(0, (height - requiredHeight) / 2);
+    const clampedImageX = Math.max(-maxX, Math.min(maxX, imageLocalX));
+    const clampedImageY = Math.max(-maxY, Math.min(maxY, imageLocalY));
+    const clampedFrameX = clampedImageX * cosine - clampedImageY * sine;
+    const clampedFrameY = clampedImageX * sine + clampedImageY * cosine;
     return {
-      cx: normalizedFrame.cx + clampedX * Math.cos(angle) - clampedY * Math.sin(angle),
-      cy: normalizedFrame.cy + clampedX * Math.sin(angle) + clampedY * Math.cos(angle),
+      cx: normalizedFrame.cx + clampedFrameX * Math.cos(frameAngle) - clampedFrameY * Math.sin(frameAngle),
+      cy: normalizedFrame.cy + clampedFrameX * Math.sin(frameAngle) + clampedFrameY * Math.cos(frameAngle),
       width,
       height,
-      rotation: normalizedFrame.rotation
+      rotation: normalizedImage.rotation
     };
   }
 
@@ -363,9 +380,9 @@
     const scaleY = canvas.height / frame.height;
     const radius = Math.max(0, Math.min(frame.width, frame.height) * Math.min(0.49, cornerRadius));
 
-    // Work only in frame-local coordinates. The resulting bitmap is mapped
-    // directly to the exact same four points used by the editor handles.
-    // This removes the former second transform through the full screen plane.
+    // Work only in frame-local coordinates. Both this bitmap and the editor
+    // boundary are projected through frameQuadOnSurface, so render, hit target
+    // and handles share one canonical geometry path.
     context.scale(scaleX, scaleY);
     context.save();
     context.beginPath();

@@ -48,14 +48,17 @@ test("shared geometry converts between screen plane and perspective canvas witho
   assert.equal(Math.round(coverFrame.height), 2133);
   const constrainedFrame = renderer.constrainImageFrameToCover(
     { width: 900, height: 1600 },
-    { cx: 9999, cy: -9999, width: 300, height: 400, rotation: 12 },
+    { cx: 9999, cy: -9999, width: 1200, height: 2133.333, rotation: 12 },
     { cx: 600, cy: 300, width: 1200, height: 600, rotation: 0 }
   );
-  assert.equal(Math.round(constrainedFrame.width), 1200);
-  assert.equal(Math.round(constrainedFrame.height), 2133);
-  assert.equal(constrainedFrame.rotation, 0);
-  assert.equal(Math.round(constrainedFrame.cx), 600);
-  assert.ok(constrainedFrame.cy <= 1067 && constrainedFrame.cy >= -467);
+  assert.ok(constrainedFrame.width >= 1297);
+  assert.ok(constrainedFrame.height >= 2306);
+  assert.equal(constrainedFrame.rotation, 12);
+  const fixedAperture = { cx: 600, cy: 337.5, width: 1200, height: 675, rotation: 0 };
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(renderer.frameQuadOnSurface(fixedAperture, 16 / 9, [[260, 185], [1190, 185], [1190, 702], [260, 702]]))),
+    [[260, 185], [1190, 185], [1190, 702], [260, 702]]
+  );
 });
 
 test("plugin uses a fixed production domain and a development-only local catalog", () => {
@@ -143,7 +146,7 @@ test("continuous editing uses responsive preview rendering and a final-quality c
   assert.match(uiScript, /renderFinalComposite\(\);\s*const blob = await canvasBlob\(\)/);
 });
 
-test("content, crop frame and source image have independent geometry", () => {
+test("the asset aperture is fixed while the source image owns all direct transforms", () => {
   assert.match(rendererScript, /asset\.screen\.recommendedSize/);
   assert.doesNotMatch(uiHtml, /<option value="stretch">/);
   assert.match(uiHtml, /自动填满 · 不变形/);
@@ -158,6 +161,11 @@ test("content, crop frame and source image have independent geometry", () => {
   assert.doesNotMatch(rendererScript, /createScreenCanvas\([^\n]+content\);/);
   assert.match(uiScript, /contentFrame:/);
   assert.match(uiScript, /imageFrame:/);
+  assert.match(uiScript, /function fixedApertureFrame/);
+  assert.match(uiScript, /state\.contentFrame = fixedApertureFrame\(\)/);
+  assert.match(uiScript, /return renderer\.frameQuadOnSurface\(frame, targetAspect, activeQuad\(\)\)/);
+  assert.match(uiScript, /return frameCanvasPoints\(state\.contentFrame\)/);
+  assert.doesNotMatch(uiScript, /frameCanvasPoints\(state\.imageFrame\)/);
   assert.match(uiScript, /content: state\.designImage \? \{ frame: state\.contentFrame, imageFrame: state\.imageFrame \}/);
   assert.doesNotMatch(uiScript, /constrainCoverAdjustments|cropGeometry/);
   assert.match(uiHtml, /id="recommendedSize"/);
@@ -168,8 +176,8 @@ test("the design supports direct move, four-corner proportional resize and four-
   assert.match(uiScript, /designDragTarget\.addEventListener\("pointerdown"/);
   assert.match(uiScript, /\.design-scale-handle/);
   assert.match(uiScript, /pointOnScreenPlane/);
-  assert.match(uiScript, /function resizeFrame/);
-  assert.match(uiScript, /const opposite = \{ nw: "se", n: "s", ne: "sw", e: "w", se: "nw", s: "n", sw: "ne", w: "e" \}/);
+  assert.match(uiScript, /function resizeImageFromApertureHandle/);
+  assert.match(uiScript, /startImageFrame, apertureFrame, handleName, startPointer, pointer/);
   assert.match(uiScript, /const isCorner = handleName\.length === 2/);
   assert.match(uiScript, /window\.addEventListener\("pointermove", move/);
   assert.match(uiStyles, /\.design-drag-target\s*\{[^}]*cursor:\s*move/s);
@@ -235,8 +243,8 @@ test("one editor owns selection crop perspective and constant-size handles", () 
   assert.match(uiHtml, /id="cropShade"/);
   assert.match(uiScript, /enterCropMode/);
   assert.match(uiScript, /state\.cropSnapshot = editorSnapshot\(\)/);
-  assert.match(uiScript, /state\.contentFrame = \{ \.\.\.interaction\.startFrame, cx:/);
-  assert.match(uiScript, /state\.imageFrame = \{ \.\.\.interaction\.startImageFrame, cx:/);
+  assert.doesNotMatch(uiScript, /state\.contentFrame = \{ \.\.\.interaction\.startFrame, cx:/);
+  assert.match(uiScript, /state\.imageFrame = renderer\.constrainImageFrameToCover/);
   assert.match(uiStyles, /\.design-editor\.is-cropping \.crop-shade/);
   assert.match(uiScript, /state\.mode === "perspective" \|\| event\.metaKey \|\| event\.ctrlKey/);
   assert.match(uiScript, /function undoEditor/);

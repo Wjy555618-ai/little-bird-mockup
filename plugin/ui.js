@@ -671,9 +671,13 @@ function screenPlane() {
   return renderer.screenPlane(recommended ? recommended.width / recommended.height : 1);
 }
 
-function resetContentGeometry() {
+function fixedApertureFrame() {
   const plane = screenPlane();
-  const frame = { cx: plane.width / 2, cy: plane.height / 2, width: plane.width, height: plane.height, rotation: 0 };
+  return { cx: plane.width / 2, cy: plane.height / 2, width: plane.width, height: plane.height, rotation: 0 };
+}
+
+function resetContentGeometry() {
+  const frame = fixedApertureFrame();
   state.contentFrame = { ...frame };
   state.imageFrame = state.designImage ? renderer.imageFrameForCover(state.designImage, frame) : { ...frame };
 }
@@ -681,7 +685,10 @@ function resetContentGeometry() {
 function ensureContentGeometry() {
   if (!state.selectedAsset || !state.designImage) return null;
   const plane = screenPlane();
-  state.contentFrame = renderer.normalizeFrame(state.contentFrame, plane.width, plane.height);
+  // The asset owns the aperture. It must never move or resize with the source;
+  // otherwise the rendered pixels and the visible device screen inevitably
+  // separate after a drag, resize or crop operation.
+  state.contentFrame = fixedApertureFrame();
   state.imageFrame = renderer.constrainImageFrameToCover(
     state.designImage,
     renderer.normalizeFrame(state.imageFrame, plane.width, plane.height),
@@ -697,12 +704,19 @@ function planePointToCanvas(point) {
 
 function frameCanvasPoints(frame = state.contentFrame) {
   if (!frame) return [];
-  return renderer.frameCorners(frame).map(planePointToCanvas);
+  const recommended = state.selectedAsset?.screen?.recommendedSize;
+  const targetAspect = recommended ? recommended.width / recommended.height : 1;
+  // This is the same projection used by renderComposite. The editor must not
+  // derive a second rectangle from the hidden, oversized source bitmap.
+  return renderer.frameQuadOnSurface(frame, targetAspect, activeQuad());
 }
 
 function designControlPoints() {
   if (!ensureContentGeometry()) return [];
-  return frameCanvasPoints();
+  if (state.mode === "perspective" && !state.cropMode) return cloneQuad(activeQuad());
+  // The visible aperture is the editing boundary. imageFrame can extend past
+  // it for cover/crop, but those hidden pixels must never move the handles.
+  return frameCanvasPoints(state.contentFrame);
 }
 
 function midpoint(first, second) {
@@ -768,10 +782,9 @@ function updateDesignEditor() {
   svg.setAttribute("viewBox", `0 0 ${state.selectedAsset.canvas.width} ${state.selectedAsset.canvas.height}`);
   const cornerRadius = state.selectedAsset.screen.cornerRadius || 0;
   elements.cropFrame.setAttribute("d", roundedFramePath(state.contentFrame, cornerRadius));
-  const outerFrame = { ...screenPlane(), cx: screenPlane().width / 2, cy: screenPlane().height / 2, rotation: 0 };
   elements.cropShade.setAttribute(
     "d",
-    `${roundedFramePath(outerFrame, cornerRadius)} ${roundedFramePath(state.contentFrame, cornerRadius)}`
+    `M0 0H${state.selectedAsset.canvas.width}V${state.selectedAsset.canvas.height}H0Z ${roundedFramePath(state.contentFrame, cornerRadius)}`
   );
   const handlePoints = designHandlePoints(points);
   for (const handle of elements.designEditor.querySelectorAll(".design-scale-handle")) {
@@ -844,74 +857,35 @@ function localPoint(point, frame) {
   return [dx * cosine - dy * sine, dx * sine + dy * cosine];
 }
 
-function worldPoint(point, frame) {
-  const angle = frame.rotation * Math.PI / 180;
-  const cosine = Math.cos(angle);
-  const sine = Math.sin(angle);
-  return [frame.cx + point[0] * cosine - point[1] * sine, frame.cy + point[0] * sine + point[1] * cosine];
-}
-
-function resizeFrame(startFrame, handleName, pointer, proportional) {
-  const minimum = Math.max(20, Math.min(screenPlane().width, screenPlane().height) * 0.05);
-  const localPointer = localPoint(pointer, startFrame);
-  const handles = {
-    nw: [-startFrame.width / 2, -startFrame.height / 2], n: [0, -startFrame.height / 2], ne: [startFrame.width / 2, -startFrame.height / 2],
-    e: [startFrame.width / 2, 0], se: [startFrame.width / 2, startFrame.height / 2], s: [0, startFrame.height / 2],
-    sw: [-startFrame.width / 2, startFrame.height / 2], w: [-startFrame.width / 2, 0]
-  };
-  const opposite = { nw: "se", n: "s", ne: "sw", e: "w", se: "nw", s: "n", sw: "ne", w: "e" };
-  const startHandle = handles[handleName];
-  const anchor = handles[opposite[handleName]];
-  let nextHandle = [...localPointer];
+function resizeImageFromApertureHandle(startImageFrame, apertureFrame, handleName, startPointer, pointer) {
+  const startLocal = localPoint(startPointer, apertureFrame);
+  const nextLocal = localPoint(pointer, apertureFrame);
+  const directionX = handleName.includes("w") ? -1 : handleName.includes("e") ? 1 : 0;
+  const directionY = handleName.includes("n") ? -1 : handleName.includes("s") ? 1 : 0;
+  const deltaX = (nextLocal[0] - startLocal[0]) * directionX;
+  const deltaY = (nextLocal[1] - startLocal[1]) * directionY;
+  const ratioX = Math.max(0.05, Math.min(8, 1 + deltaX / Math.max(1, apertureFrame.width)));
+  const ratioY = Math.max(0.05, Math.min(8, 1 + deltaY / Math.max(1, apertureFrame.height)));
   const isCorner = handleName.length === 2;
-  if (isCorner && proportional) {
-    const vector = [startHandle[0] - anchor[0], startHandle[1] - anchor[1]];
-    const desired = [localPointer[0] - anchor[0], localPointer[1] - anchor[1]];
-    const minimumRatio = Math.max(minimum / startFrame.width, minimum / startFrame.height);
-    const ratio = Math.max(minimumRatio, Math.min(6, (desired[0] * vector[0] + desired[1] * vector[1]) / (vector[0] ** 2 + vector[1] ** 2)));
-    nextHandle = [anchor[0] + vector[0] * ratio, anchor[1] + vector[1] * ratio];
-  } else {
-    if (!handleName.includes("e") && !handleName.includes("w")) nextHandle[0] = startHandle[0];
-    if (!handleName.includes("n") && !handleName.includes("s")) nextHandle[1] = startHandle[1];
-    if (handleName.includes("e")) nextHandle[0] = Math.max(anchor[0] + minimum, nextHandle[0]);
-    if (handleName.includes("w")) nextHandle[0] = Math.min(anchor[0] - minimum, nextHandle[0]);
-    if (handleName.includes("s")) nextHandle[1] = Math.max(anchor[1] + minimum, nextHandle[1]);
-    if (handleName.includes("n")) nextHandle[1] = Math.min(anchor[1] - minimum, nextHandle[1]);
-  }
-  const width = handleName.includes("e") || handleName.includes("w") ? Math.abs(nextHandle[0] - anchor[0]) : startFrame.width;
-  const height = handleName.includes("n") || handleName.includes("s") ? Math.abs(nextHandle[1] - anchor[1]) : startFrame.height;
-  const centerLocal = [
-    handleName.includes("e") || handleName.includes("w") ? (nextHandle[0] + anchor[0]) / 2 : 0,
-    handleName.includes("n") || handleName.includes("s") ? (nextHandle[1] + anchor[1]) / 2 : 0
-  ];
-  const center = worldPoint(centerLocal, startFrame);
-  return { cx: center[0], cy: center[1], width, height, rotation: startFrame.rotation };
-}
-
-function transformImageFrame(startImageFrame, startFrame, nextFrame) {
-  const localCenter = localPoint([startImageFrame.cx, startImageFrame.cy], startFrame);
-  const scaleX = nextFrame.width / startFrame.width;
-  const scaleY = nextFrame.height / startFrame.height;
-  const nextCenter = worldPoint([localCenter[0] * scaleX, localCenter[1] * scaleY], nextFrame);
+  const cornerRatio = Math.max(ratioX, ratioY);
   return {
-    cx: nextCenter[0],
-    cy: nextCenter[1],
-    width: Math.max(12, startImageFrame.width * scaleX),
-    height: Math.max(12, startImageFrame.height * scaleY),
-    rotation: nextFrame.rotation + (startImageFrame.rotation - startFrame.rotation)
+    ...startImageFrame,
+    width: Math.max(20, startImageFrame.width * (isCorner ? cornerRatio : directionX ? ratioX : 1)),
+    height: Math.max(20, startImageFrame.height * (isCorner ? cornerRatio : directionY ? ratioY : 1))
   };
 }
 
 function syncAdjustmentsFromFrame() {
   const geometry = ensureContentGeometry();
   if (!geometry) return;
-  const { plane, frame } = geometry;
+  const { plane, frame, imageFrame } = geometry;
+  const defaultImageFrame = renderer.imageFrameForCover(state.designImage, frame);
   state.adjustments = {
     ...state.adjustments,
-    scale: Math.sqrt(frame.width / plane.width * frame.height / plane.height),
-    offsetX: (frame.cx - plane.width / 2) / (plane.width * 0.42),
-    offsetY: (frame.cy - plane.height / 2) / (plane.height * 0.42),
-    rotation: frame.rotation
+    scale: Math.sqrt(imageFrame.width / defaultImageFrame.width * imageFrame.height / defaultImageFrame.height),
+    offsetX: (imageFrame.cx - plane.width / 2) / (plane.width * 0.42),
+    offsetY: (imageFrame.cy - plane.height / 2) / (plane.height * 0.42),
+    rotation: imageFrame.rotation
   };
 }
 
@@ -931,7 +905,7 @@ function enableDesignEditing() {
       handleName,
       freeTransform: !state.cropMode && type === "scale" && (state.mode === "perspective" || event.metaKey || event.ctrlKey),
       startQuad: cloneQuad(activeQuad()),
-      startFrame: { ...state.contentFrame },
+      apertureFrame: { ...state.contentFrame },
       startImageFrame: { ...state.imageFrame },
       startPointerPlane: pointOnScreenPlane(event),
       startPointerCanvas: pointOnCanvas(event),
@@ -955,16 +929,11 @@ function enableDesignEditing() {
       interaction.historyPushed = true;
     }
     if (interaction.type === "move") {
-      if (state.cropMode) {
-        state.imageFrame = renderer.constrainImageFrameToCover(
-          state.designImage,
-          { ...interaction.startImageFrame, cx: interaction.startImageFrame.cx + dx, cy: interaction.startImageFrame.cy + dy },
-          interaction.startFrame
-        );
-      } else {
-        state.contentFrame = { ...interaction.startFrame, cx: interaction.startFrame.cx + dx, cy: interaction.startFrame.cy + dy };
-        state.imageFrame = { ...interaction.startImageFrame, cx: interaction.startImageFrame.cx + dx, cy: interaction.startImageFrame.cy + dy };
-      }
+      state.imageFrame = renderer.constrainImageFrameToCover(
+        state.designImage,
+        { ...interaction.startImageFrame, cx: interaction.startImageFrame.cx + dx, cy: interaction.startImageFrame.cy + dy },
+        interaction.apertureFrame
+      );
     } else if (interaction.freeTransform) {
       const canvas = state.selectedAsset.canvas;
       const nextQuad = cloneQuad(interaction.startQuad);
@@ -978,10 +947,14 @@ function enableDesignEditing() {
       }
       state.customQuad = nextQuad;
     } else {
-      const nextFrame = resizeFrame(interaction.startFrame, interaction.handleName, pointerPlane, !state.cropMode);
-      state.contentFrame = nextFrame;
-      if (!state.cropMode) state.imageFrame = transformImageFrame(interaction.startImageFrame, interaction.startFrame, nextFrame);
-      else state.imageFrame = renderer.constrainImageFrameToCover(state.designImage, interaction.startImageFrame, nextFrame);
+      const nextImageFrame = resizeImageFromApertureHandle(
+        interaction.startImageFrame,
+        interaction.apertureFrame,
+        interaction.handleName,
+        interaction.startPointerPlane,
+        pointerPlane
+      );
+      state.imageFrame = renderer.constrainImageFrameToCover(state.designImage, nextImageFrame, interaction.apertureFrame);
     }
     syncAdjustmentsFromFrame();
     commitDirectAdjustment();
@@ -1011,16 +984,11 @@ function enableDesignEditing() {
     pushHistory();
     const dx = event.key === "ArrowLeft" ? -step : event.key === "ArrowRight" ? step : 0;
     const dy = event.key === "ArrowUp" ? -step : event.key === "ArrowDown" ? step : 0;
-    if (state.cropMode) {
-      state.imageFrame = renderer.constrainImageFrameToCover(
-        state.designImage,
-        { ...state.imageFrame, cx: state.imageFrame.cx + dx, cy: state.imageFrame.cy + dy },
-        state.contentFrame
-      );
-    } else {
-      state.contentFrame = { ...state.contentFrame, cx: state.contentFrame.cx + dx, cy: state.contentFrame.cy + dy };
-      state.imageFrame = { ...state.imageFrame, cx: state.imageFrame.cx + dx, cy: state.imageFrame.cy + dy };
-    }
+    state.imageFrame = renderer.constrainImageFrameToCover(
+      state.designImage,
+      { ...state.imageFrame, cx: state.imageFrame.cx + dx, cy: state.imageFrame.cy + dy },
+      state.contentFrame
+    );
     syncAdjustmentsFromFrame();
     commitDirectAdjustment();
     renderFinalComposite();
@@ -1033,10 +1001,12 @@ function enableDesignEditing() {
       pushHistory();
       const direction = ["ArrowUp", "ArrowRight"].includes(event.key) ? 1 : -1;
       const factor = 1 + direction * (event.shiftKey ? 0.1 : 0.02);
-      const startFrame = { ...state.contentFrame };
-      const nextFrame = { ...startFrame, width: Math.max(20, startFrame.width * factor), height: Math.max(20, startFrame.height * factor) };
-      state.contentFrame = nextFrame;
-      if (!state.cropMode) state.imageFrame = transformImageFrame(state.imageFrame, startFrame, nextFrame);
+      const nextFrame = {
+        ...state.imageFrame,
+        width: Math.max(20, state.imageFrame.width * factor),
+        height: Math.max(20, state.imageFrame.height * factor)
+      };
+      state.imageFrame = renderer.constrainImageFrameToCover(state.designImage, nextFrame, state.contentFrame);
       syncAdjustmentsFromFrame();
       commitDirectAdjustment();
       renderFinalComposite();
@@ -1153,18 +1123,17 @@ function updateAdjustmentsFromControls() {
   };
   if (state.designImage && ensureContentGeometry()) {
     const plane = screenPlane();
-    const startFrame = { ...state.contentFrame };
-    const currentScale = Math.max(0.01, Math.sqrt(startFrame.width / plane.width * startFrame.height / plane.height));
+    const startFrame = { ...state.imageFrame };
+    const currentScale = Math.max(0.01, state.adjustments.scale || 1);
     const ratio = nextAdjustments.scale / currentScale;
-    const nextFrame = {
+    const nextImageFrame = {
       cx: plane.width / 2 + nextAdjustments.offsetX * plane.width * 0.42,
       cy: plane.height / 2 + nextAdjustments.offsetY * plane.height * 0.42,
       width: Math.max(20, startFrame.width * ratio),
       height: Math.max(20, startFrame.height * ratio),
       rotation: nextAdjustments.rotation
     };
-    state.imageFrame = transformImageFrame(state.imageFrame, startFrame, nextFrame);
-    state.contentFrame = nextFrame;
+    state.imageFrame = renderer.constrainImageFrameToCover(state.designImage, nextImageFrame, state.contentFrame);
   }
   state.adjustments = nextAdjustments;
   syncAdjustmentControls();
