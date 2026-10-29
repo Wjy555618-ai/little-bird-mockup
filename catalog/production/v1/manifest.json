@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "catalogVersion": "2026.10.28.4",
-  "publishedAt": "2026-10-27T21:10:46.723Z",
+  "catalogVersion": "2026.10.29.1",
+  "publishedAt": "2026-10-29T10:32:28.352Z",
   "environment": "production",
   "rendererVersion": "2.1.0",
   "minimumPluginVersion": "0.1.0",
@@ -86,7 +86,7 @@
       },
       "integrity": {
         "baseSha256": "9af4efe18bbbc3a899d57902e71960a4d9f135389da99833a7b0e922764b0eeb",
-        "thumbnailSha256": "775a39947edf06c33367b07e3665f2aff1fd6044f42fd297fac574d2cd0f6417"
+        "thumbnailSha256": "4349fd6aac8e081e50884b7b7f3aafdeeb4c35f8e9e666a37a70b81ce169e1ab"
       },
       "qa": {
         "approvedAt": "2026-10-27T21:10:20.475Z",
@@ -154,14 +154,14 @@
       "layers": {
         "base": "assets/rock-phone-front-r1.png"
       },
-      "thumbnail": "assets/rock-phone-front-r1.png",
+      "thumbnail": "thumbnails/rock-phone-front-r1.png",
       "provenance": {
         "kind": "generated-in-house",
         "usage": "temporary-test"
       },
       "integrity": {
         "baseSha256": "d530217efe71e4169a52e3b2db70237a74b6bcd9ded7d3f730217397177d5993",
-        "thumbnailSha256": "d530217efe71e4169a52e3b2db70237a74b6bcd9ded7d3f730217397177d5993"
+        "thumbnailSha256": "160f0f005c46675d16ef39b89c6505c4734802bbb2bb83736bdbb1592430432b"
       },
       "qa": {
         "approvedAt": "2026-10-27T21:10:20.944Z",
@@ -238,14 +238,14 @@
       "layers": {
         "base": "assets/rail-phone-angle-r1.png"
       },
-      "thumbnail": "assets/rail-phone-angle-r1.png",
+      "thumbnail": "thumbnails/rail-phone-angle-r1.png",
       "provenance": {
         "kind": "generated-in-house",
         "usage": "temporary-test"
       },
       "integrity": {
         "baseSha256": "e09768963cb11b8f7769eae3241deca2add5df0cd23a59ee948aeffda68695c4",
-        "thumbnailSha256": "e09768963cb11b8f7769eae3241deca2add5df0cd23a59ee948aeffda68695c4"
+        "thumbnailSha256": "80d78702ed324f2e8743b8b37fe02131f1fb2feb036aa8cb458967911c6985b1"
       },
       "qa": {
         "approvedAt": "2026-10-27T21:10:21.423Z",
@@ -313,14 +313,14 @@
       "layers": {
         "base": "assets/graphite-laptop-angle-r1.png"
       },
-      "thumbnail": "assets/graphite-laptop-angle-r1.png",
+      "thumbnail": "thumbnails/graphite-laptop-angle-r1.png",
       "provenance": {
         "kind": "generated-in-house",
         "usage": "temporary-test"
       },
       "integrity": {
         "baseSha256": "893687802f9c1b42522cffeb2e1a361ae6dd4962da31114d2f6221c63220c66c",
-        "thumbnailSha256": "893687802f9c1b42522cffeb2e1a361ae6dd4962da31114d2f6221c63220c66c"
+        "thumbnailSha256": "74fc5b819183630970c8e53c6f9e12305e9312875e09fee1e88bd6e46ed4e624"
       },
       "qa": {
         "approvedAt": "2026-10-27T21:10:21.896Z",

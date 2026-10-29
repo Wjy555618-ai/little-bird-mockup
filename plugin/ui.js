@@ -641,6 +641,15 @@ function screenQuad() {
   return state.selectedAsset?.screen.quad || null;
 }
 
+function positionScreenCta() {
+  const quad = screenQuad();
+  const canvas = state.selectedAsset?.canvas;
+  if (!quad || !canvas) return;
+  const center = renderer.bilinearPoint(quad, 0.5, 0.5);
+  elements.screenCta.style.left = `${center[0] / canvas.width * 100}%`;
+  elements.screenCta.style.top = `${center[1] / canvas.height * 100}%`;
+}
+
 function updateSourceGuide() {
   const recommended = state.selectedAsset?.screen?.recommendedSize;
   elements.sourceGuide.classList.remove("match", "mismatch");
@@ -1036,11 +1045,12 @@ let scheduledRenderQuality = "preview";
 function renderComposite(quality = "final") {
   if (!state.selectedAsset || !state.baseImage) return;
   if (state.designImage) ensureContentGeometry();
+  const renderDesign = state.designImage || renderer.createDefaultDesign(state.selectedAsset);
   renderer.renderComposite({
     canvas: elements.previewCanvas,
     asset: state.selectedAsset,
     baseImage: state.baseImage,
-    designImage: state.designImage,
+    designImage: renderDesign,
     fit: "cover",
     adjustments: state.adjustments,
     crop: state.crop,
@@ -1054,6 +1064,7 @@ function renderComposite(quality = "final") {
     elements.screenCta.classList.add("has-image");
   } else {
     elements.screenCta.classList.remove("has-image");
+    positionScreenCta();
   }
   updateSourceActions();
   updateDesignEditor();

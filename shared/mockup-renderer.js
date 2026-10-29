@@ -6,6 +6,36 @@
   const DEFAULT_CROP = Object.freeze({ zoom: 1, offsetX: 0, offsetY: 0 });
   const baseCanvasCache = new WeakMap();
 
+  function createDefaultDesign(asset) {
+    validateAsset(asset);
+    const canvas = document.createElement("canvas");
+    canvas.width = asset.screen.recommendedSize.width;
+    canvas.height = asset.screen.recommendedSize.height;
+    const context = canvas.getContext("2d");
+    const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, "#111827");
+    gradient.addColorStop(0.48, "#38446f");
+    gradient.addColorStop(1, "#8393c7");
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    const size = Math.max(22, Math.round(Math.min(canvas.width, canvas.height) / 12));
+    context.strokeStyle = "rgba(255,255,255,.16)";
+    context.lineWidth = Math.max(2, size * 0.06);
+    for (let x = -canvas.height; x < canvas.width + canvas.height; x += size) {
+      context.beginPath();
+      context.moveTo(x, 0);
+      context.lineTo(x - canvas.height, canvas.height);
+      context.stroke();
+    }
+
+    context.fillStyle = "rgba(255,255,255,.92)";
+    context.fillRect(canvas.width * 0.09, canvas.height * 0.1, canvas.width * 0.3, Math.max(8, canvas.height * 0.018));
+    context.fillStyle = "rgba(255,255,255,.35)";
+    context.fillRect(canvas.width * 0.09, canvas.height * 0.145, canvas.width * 0.18, Math.max(5, canvas.height * 0.01));
+    return canvas;
+  }
+
   function validateAsset(asset) {
     if (!asset || !asset.id || !asset.name) throw new Error("样机缺少 id 或名称");
     if (!["static-screen-v1", "static-screen-v2"].includes(asset.renderer)) throw new Error(`${asset.id} 渲染器不受支持`);
@@ -661,5 +691,5 @@
     return canvas;
   }
 
-  global.MockupRenderer = Object.freeze({ VERSION, DEFAULT_ADJUSTMENTS, DEFAULT_CROP, validateAsset, quadSize, bilinearPoint, inverseBilinearPoint, screenPlane, normalizeFrame, frameCorners, frameQuadOnSurface, surfaceQuadForFrameQuad, imageFrameForCover, constrainImageFrameToCover, constrainFrameVisibility, resizeFrameFromHandle, transformFrameBetweenFrames, expandQuad, cropGeometry, constrainCoverAdjustments, createScreenCanvas, createContentCanvas, drawImageToQuad, renderComposite });
+  global.MockupRenderer = Object.freeze({ VERSION, DEFAULT_ADJUSTMENTS, DEFAULT_CROP, createDefaultDesign, validateAsset, quadSize, bilinearPoint, inverseBilinearPoint, screenPlane, normalizeFrame, frameCorners, frameQuadOnSurface, surfaceQuadForFrameQuad, imageFrameForCover, constrainImageFrameToCover, constrainFrameVisibility, resizeFrameFromHandle, transformFrameBetweenFrames, expandQuad, cropGeometry, constrainCoverAdjustments, createScreenCanvas, createContentCanvas, drawImageToQuad, renderComposite });
 })(window);

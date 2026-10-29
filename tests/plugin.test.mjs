@@ -141,6 +141,14 @@ test("visual system uses neutral Mockup-style controls without the old neon acce
   assert.match(uiHtml, /class="primary-group"/);
 });
 
+test("catalog thumbnails and empty preview share one complete default mockup render", () => {
+  assert.match(rendererScript, /function createDefaultDesign\(asset\)/);
+  assert.match(uiScript, /state\.designImage \|\| renderer\.createDefaultDesign\(state\.selectedAsset\)/);
+  assert.match(uiScript, /const center = renderer\.bilinearPoint\(quad, 0\.5, 0\.5\)/);
+  assert.match(uiStyles, /\.screen-cta span\s*\{[^}]*border:\s*1px solid #ffffff99[^}]*backdrop-filter:\s*blur\(18px\)/s);
+  assert.match(uiHtml, /id="screenCta" aria-label="添加画面"/);
+});
+
 test("the real vertical slice exports selection and writes rendered bytes back", () => {
   assert.match(code, /exportAsync/);
   assert.match(code, /figma\.createImage\(message\.bytes\)/);
@@ -261,9 +269,11 @@ test("the preview supports Figma-like pointer and trackpad navigation", () => {
 
 test("catalog spacing stays contained and hover never impersonates selection", () => {
   assert.match(uiStyles, /\.catalog-panel\s*\{[^}]*overflow:\s*hidden/s);
-  assert.match(uiStyles, /\.asset-grid\s*\{[^}]*padding:\s*14px 14px 18px/s);
+  assert.match(uiStyles, /--panel-pad:\s*16px/);
+  assert.match(uiStyles, /\.asset-grid\s*\{[^}]*padding:\s*12px var\(--panel-pad\) 16px/s);
   assert.match(uiStyles, /\.recent-strip > div\s*\{[^}]*overflow-x:\s*auto[^}]*display:\s*flex[^}]*justify-content:\s*flex-start/s);
-  assert.match(uiStyles, /\.recent-item\s*\{[^}]*width:\s*62px[^}]*height:\s*62px/s);
+  assert.match(uiStyles, /--recent-thumb-size:\s*52px/);
+  assert.match(uiStyles, /\.recent-item\s*\{[^}]*width:\s*var\(--recent-thumb-size\)[^}]*height:\s*var\(--recent-thumb-size\)/s);
   assert.match(uiStyles, /\.recent-item\s*\{[^}]*margin:\s*0[^}]*padding:\s*0/s);
   assert.match(uiStyles, /\.asset-card:hover:not\(\.active\)[^{]*\{[^}]*rotate\(var\(--hover-tilt/s);
   assert.match(uiScript, /function hoverTiltFor/);
