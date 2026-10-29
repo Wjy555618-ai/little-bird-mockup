@@ -14,7 +14,7 @@
   --line-soft: #292929;
   --panel-pad: 16px;
   --catalog-card-gap: 10px;
-  --recent-thumb-size: 52px;
+  --recent-thumb-size: 44px;
   --text: #e2e1e6;
   --muted: #97969d;
   --muted-2: #6f6e74;
@@ -72,7 +72,7 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .category-select { min-width: 0; flex: 1; height: 36px; padding: 0 10px; display: flex; align-items: center; gap: 8px; border: 1px solid #323236; border-radius: 10px; background: #1a1a1a; color: #a5a4aa; }
 .category-select svg { width: 16px; height: 16px; }
 .category-select select, .fit-select select { min-width: 0; flex: 1; border: 0; outline: 0; color: #d5d4d9; background: transparent; }
-.catalog-summary { height: 28px; padding: 0 var(--panel-pad); display: flex; align-items: center; justify-content: space-between; color: #69686e; font-size: 10px; }
+.catalog-summary { height: 28px; padding: 0 var(--panel-pad); display: flex; align-items: center; justify-content: space-between; color: #77767c; font-size: 12px; }
 
 .asset-grid { min-width: 0; min-height: 0; overflow-x: hidden; overflow-y: auto; padding: 12px var(--panel-pad) 16px; display: grid; align-content: start; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--catalog-card-gap); scroll-padding: 12px; isolation: isolate; }
 .asset-grid::-webkit-scrollbar { width: 6px; }
@@ -82,13 +82,13 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .asset-card img { width: 100%; aspect-ratio: 4 / 3; display: block; object-fit: cover; background: #2d2d2d; }
 .asset-card footer { position: absolute; inset: auto 0 0; padding: 18px 8px 7px; display: grid; justify-items: start; gap: 2px; background: linear-gradient(transparent, #101010d9); opacity: 0; text-align: left; transition: opacity .15s ease; }
 .asset-card:hover footer, .asset-card:focus-visible footer { opacity: 1; }
-.asset-card strong { overflow: hidden; color: #f0eff2; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.asset-card strong { overflow: hidden; color: #f0eff2; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .asset-card span { display: none; }
 .catalog-empty { position: absolute; inset: 230px 20px auto; display: grid; place-items: center; gap: 6px; color: #737278; text-align: center; }
 .catalog-empty[hidden] { display: none; }
 .catalog-empty strong { color: #aaa9af; }
 
-.recent-strip { width: 100%; height: 92px; overflow: hidden; padding: 8px var(--panel-pad) 10px; display: grid; grid-template-rows: 18px var(--recent-thumb-size); gap: 4px; border-top: 1px solid var(--line-soft); background: #171717; }
+.recent-strip { width: 100%; height: 92px; overflow: hidden; padding: 10px var(--panel-pad) 12px; display: grid; grid-template-rows: 18px var(--recent-thumb-size); gap: 8px; border-top: 1px solid var(--line-soft); background: #171717; }
 .recent-strip[hidden] { display: none; }
 .recent-strip header { min-width: 0; height: 18px; margin: 0; padding: 0; display: flex; align-items: center; justify-content: space-between; color: #86858b; text-align: left; }
 .recent-strip header button { line-height: 1; }
@@ -104,7 +104,7 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .adjust-panel::-webkit-scrollbar-thumb { background: #36363a; border-radius: 99px; }
 .panel-heading { margin-bottom: 16px; display: grid; gap: 5px; }
 .panel-heading strong { color: #e9e8ec; font-size: 14px; }
-.panel-heading span { overflow: hidden; color: #77767c; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.panel-heading span { overflow: hidden; color: #77767c; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .selection-card { min-height: 48px; padding: 10px 11px; display: grid; grid-template-columns: 7px minmax(0, 1fr); align-items: center; gap: 9px; border: 1px solid #303034; border-radius: 11px; background: #1b1b1b; color: #98979d; line-height: 1.35; }
 .selection-card > span:last-child { min-width: 0; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .selection-card.ready { color: #d4d3d8; }
@@ -120,18 +120,18 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .source-actions .panel-button:last-child { grid-column: 1 / -1; }
 .source-guide { margin-bottom: 12px; padding: 12px; display: grid; gap: 6px; border: 1px solid #303034; border-radius: 11px; background: #1b1b1b; }
 .source-guide > div { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.source-guide > div span, .source-guide > span { color: #85848a; font-size: 10px; }
+.source-guide > div span, .source-guide > span { color: #85848a; font-size: 12px; }
 .source-guide strong { color: #e0dfe3; font-size: 12px; font-weight: 600; white-space: nowrap; }
-.source-guide p { min-height: 14px; margin: 1px 0 0; color: #77767c; font-size: 9px; line-height: 1.45; }
+.source-guide p { min-height: 14px; margin: 1px 0 0; color: #77767c; font-size: 12px; line-height: 1.45; }
 .source-guide.match { border-color: #414146; }
 .source-guide.mismatch p { color: #d7a66f; }
 .control-section { margin-top: 10px; padding: 13px 12px; display: grid; gap: 13px; border: 1px solid #2f2f33; border-radius: 11px; background: #1b1b1b; }
 .fill-rule { min-height: 28px; padding-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; border-bottom: 1px solid #2b2b2f; color: #85848a; }
-.fill-rule strong { color: #ceccd2; font-size: 10px; font-weight: 500; }
+.fill-rule strong { color: #ceccd2; font-size: 12px; font-weight: 500; }
 .select-control { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: #a5a4aa; }
 .select-control select { width: 148px; max-width: calc(100% - 62px); height: 32px; padding: 0 9px; border: 1px solid #38373c; border-radius: 8px; outline: 0; background: #202020; color: #dddce1; text-overflow: ellipsis; }
 .range-control { display: grid; grid-template-columns: 42px minmax(0, 1fr) 36px; align-items: center; gap: 8px; color: #aaa9af; }
-.range-control output { color: #77767c; font-size: 10px; text-align: right; }
+.range-control output { color: #77767c; font-size: 12px; text-align: right; }
 .range-control input[type="range"] { width: 100%; height: 28px; margin: -6px 0; appearance: none; background: transparent; cursor: ew-resize; touch-action: none; }
 .range-control input[type="range"]::-webkit-slider-runnable-track { height: 4px; border-radius: 99px; background: #414045; }
 .range-control input[type="range"]::-webkit-slider-thumb { width: 16px; height: 16px; margin-top: -6px; appearance: none; border: 1px solid #111; border-radius: 50%; background: #e4e3e7; box-shadow: 0 1px 4px #0008; }
@@ -140,8 +140,8 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .perspective-controls { margin-top: 10px; }
 .perspective-guide { padding: 13px 12px; display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 11px; border: 1px solid #2f2f33; border-radius: 11px; background: #1b1b1b; }
 .perspective-guide > div { min-width: 0; display: grid; gap: 5px; }
-.perspective-guide strong { color: #d8d7dc; font-size: 11px; }
-.perspective-guide span { color: #85848a; font-size: 10px; line-height: 1.5; }
+.perspective-guide strong { color: #d8d7dc; font-size: 12px; }
+.perspective-guide span { color: #85848a; font-size: 12px; line-height: 1.5; }
 .perspective-guide-icon { width: 30px; height: 30px; position: relative; border: 1px dashed #8d8c92; }
 .perspective-guide-icon i { width: 6px; height: 6px; position: absolute; border: 1px solid #181818; border-radius: 50%; background: #e8e7eb; }
 .perspective-guide-icon i:nth-child(1) { left: -3px; top: -3px; }
@@ -149,18 +149,18 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .perspective-guide-icon i:nth-child(3) { right: -3px; bottom: -3px; }
 .perspective-guide-icon i:nth-child(4) { left: -3px; bottom: -3px; }
 .perspective-state-row { min-height: 38px; margin-top: 10px; padding: 0 11px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #2f2f33; border-radius: 10px; color: #85848a; }
-.perspective-state-row output { color: #d4d3d8; font-size: 10px; }
+.perspective-state-row output { color: #d4d3d8; font-size: 12px; }
 
 .stage-panel { min-width: 0; min-height: 0; display: grid; grid-template-rows: 48px minmax(0, 1fr) 66px; background: #202020; }
 .stage-toolbar { min-width: 0; padding: 0 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; position: relative; border-bottom: 1px solid #2d2d2d; background: #1c1c1c; }
 .stage-context { min-width: 0; gap: 6px; }
 .stage-tools-right { gap: 7px; }
-.stage-title { color: #77767c; font-size: 11px; }
-.context-button { height: 28px; padding: 0 9px; border: 1px solid #303034; border-radius: 8px; background: #232323; color: #b9b8be; cursor: pointer; font-size: 10px; }
+.stage-title { color: #77767c; font-size: 12px; }
+.context-button { height: 28px; padding: 0 9px; border: 1px solid #303034; border-radius: 8px; background: #232323; color: #b9b8be; cursor: pointer; font-size: 12px; }
 .context-button:hover { border-color: #505055; color: #f2f1f4; }
 .zoom-controls { gap: 3px; }
 .zoom-controls .tool-button { width: 30px; height: 30px; background: #242424; }
-.zoom-label { min-width: 40px; height: 30px; padding: 0; border: 0; background: transparent; color: #85848a; cursor: pointer; text-align: center; font-size: 10px; }
+.zoom-label { min-width: 40px; height: 30px; padding: 0; border: 0; background: transparent; color: #85848a; cursor: pointer; text-align: center; font-size: 12px; }
 .zoom-label:hover { color: #efeff2; }
 .color-button { border: 1px solid #343438; }
 .color-button i { width: 17px; height: 17px; display: block; border: 1px solid #57565c; border-radius: 50%; background: linear-gradient(90deg, #d2d2d2 50%, #151515 50%); }
@@ -189,34 +189,36 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .design-editor.is-cropping .design-outline { stroke-dasharray: 5 5; }
 .crop-toolbar { position: absolute; left: 50%; top: 12px; z-index: 8; transform: translateX(-50%); padding: 5px 5px 5px 10px; display: flex; align-items: center; gap: 5px; border: 1px solid #3a393e; border-radius: 10px; background: #171717ed; box-shadow: 0 8px 24px #0008; }
 .crop-toolbar[hidden] { display: none; }
-.crop-toolbar span { margin-right: 3px; color: #aaa9af; font-size: 9px; white-space: nowrap; }
+.crop-toolbar span { margin-right: 3px; color: #aaa9af; font-size: 12px; white-space: nowrap; }
 .crop-toolbar button { height: 27px; padding: 0 9px; border: 0; border-radius: 7px; background: #292929; color: #c9c8cd; cursor: pointer; }
 .crop-toolbar button:hover { background: #343434; color: #fff; }
 .crop-toolbar .crop-done { background: #efeff1; color: #171717; }
 .screen-cta { position: absolute; left: 50%; top: 50%; z-index: 5; transform: translate(-50%, -50%); padding: 0; display: grid; place-items: center; color: #fff; }
-.screen-cta span { width: 48px; height: 48px; display: grid; place-items: center; border: 1px solid #ffffff99; border-radius: 50%; background: linear-gradient(145deg, #ffffff36, #0b0b0b99 46%, #050505bd); box-shadow: inset 0 1px 0 #ffffff8f, inset 0 -1px 0 #0009, 0 12px 28px #0007, 0 0 0 1px #ffffff18; -webkit-backdrop-filter: blur(18px) saturate(150%); backdrop-filter: blur(18px) saturate(150%); font-size: 25px; font-weight: 300; line-height: 1; text-shadow: 0 1px 2px #000a; transition: border-color .16s ease, background .16s ease, transform .16s ease; }
-.screen-cta:hover span { border-color: #ffffffd9; background: linear-gradient(145deg, #ffffff4d, #111111a8 46%, #050505d1); transform: scale(1.04); }
+.screen-cta span { width: 40px; height: 40px; overflow: hidden; position: relative; display: grid; place-items: center; isolation: isolate; border: 0; border-radius: 50%; background: #07080aa3; box-shadow: inset 0 -1px 0 #000b, 0 9px 22px #0009; -webkit-backdrop-filter: blur(17px) saturate(128%) contrast(108%); backdrop-filter: blur(17px) saturate(128%) contrast(108%); font-size: 23px; font-weight: 300; line-height: 1; text-shadow: 0 1px 2px #000a; transition: background-color .16s ease, box-shadow .16s ease, transform .16s ease; }
+.screen-cta span::before { content: ""; width: 10px; height: 3px; position: absolute; left: 8px; top: 5px; z-index: -1; border-radius: 99px; background: #ffffffa8; box-shadow: 0 0 4px #ffffff66; transform: rotate(-22deg); pointer-events: none; }
+.screen-cta span::after { content: ""; width: 5px; height: 2px; position: absolute; right: 7px; bottom: 6px; z-index: -1; border-radius: 99px; background: #ffffff35; box-shadow: 0 0 4px #ffffff24; transform: rotate(-22deg); pointer-events: none; }
+.screen-cta:hover span { background-color: #090a0db8; box-shadow: inset 0 -1px 0 #000c, 0 11px 26px #000a; transform: scale(1.04); }
 .screen-cta:focus-visible { outline: none; }
 .screen-cta:focus-visible span { outline: 2px solid #fff; outline-offset: 3px; }
 .screen-cta b { display: none; }
 .screen-cta.has-image { display: none; }
-.source-popover { width: 230px; padding: 7px; position: absolute; left: 50%; top: 50%; z-index: 9; transform: translate(-50%, -50%); display: grid; gap: 5px; border: 1px solid #3a393e; border-radius: 12px; background: #181818f7; box-shadow: 0 18px 48px #000b; }
+.source-popover { width: 230px; padding: 7px; position: absolute; left: 50%; top: 50%; z-index: 9; transform: translate(-50%, -50%); display: grid; gap: 5px; border: 0; border-radius: 12px; background: #111114b8; box-shadow: inset 0 1px 0 #ffffff52, inset 1px 0 0 #ffffff20, inset 0 -1px 0 #0009, 0 18px 48px #000b; -webkit-backdrop-filter: blur(24px) saturate(128%) brightness(.8); backdrop-filter: blur(24px) saturate(128%) brightness(.8); }
 .source-popover[hidden] { display: none; }
 .source-popover > button { min-width: 0; padding: 9px 10px; display: grid; grid-template-columns: 28px minmax(0, 1fr); align-items: center; gap: 8px; border: 0; border-radius: 9px; background: transparent; color: #d5d4d9; cursor: pointer; text-align: left; }
-.source-popover > button:hover, .source-popover > button:focus-visible { background: #292929; }
+.source-popover > button:hover, .source-popover > button:focus-visible { background: #ffffff14; }
 .source-popover > button:disabled { opacity: .4; cursor: not-allowed; }
 .source-popover svg { width: 19px; height: 19px; justify-self: center; color: #b9b8be; }
 .source-popover span { min-width: 0; display: grid; gap: 2px; }
-.source-popover strong { font-size: 11px; font-weight: 550; }
-.source-popover small { overflow: hidden; color: #77767c; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.source-popover strong { font-size: 12px; font-weight: 550; }
+.source-popover small { overflow: hidden; color: #929197; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .source-popover > .source-remove { display: block; padding: 8px 10px; border-top: 1px solid #2e2e31; border-radius: 0 0 7px 7px; color: #98979d; text-align: center; }
 .source-popover > .source-remove[hidden] { display: none; }
-.rendering-badge { position: absolute; right: 12px; bottom: 12px; padding: 6px 9px; border-radius: 7px; background: #111d; color: #aaa9af; font-size: 10px; }
+.rendering-badge { position: absolute; right: 12px; bottom: 12px; padding: 6px 9px; border-radius: 7px; background: #111d; color: #aaa9af; font-size: 12px; }
 
 .actionbar { padding: 0 16px; display: grid; grid-template-columns: minmax(130px, 1fr) auto minmax(0, 1fr); align-items: center; gap: 14px; border-top: 1px solid #2f2f2f; background: #1b1b1b; }
 .asset-meta { min-width: 0; flex-direction: column; align-items: flex-start; gap: 2px; }
-.asset-meta strong { max-width: 190px; overflow: hidden; color: #d7d6db; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
-.asset-meta span { color: #727177; font-size: 9px; }
+.asset-meta strong { max-width: 190px; overflow: hidden; color: #d7d6db; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.asset-meta span { color: #727177; font-size: 12px; }
 .action-buttons { grid-column: 2; justify-content: center; gap: 7px; }
 .secondary-button, .primary-button, .resolution-pill { height: 38px; display: inline-flex; align-items: center; justify-content: center; }
 .secondary-button, .primary-button { padding: 0 17px; border-radius: 20px; font-weight: 500; }
@@ -226,7 +228,7 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .primary-button { border-radius: 0; background: #efeff1; color: #121212; }
 .primary-button:hover { background: #fff; }
 .secondary-button:disabled, .primary-button:disabled { opacity: .35; cursor: not-allowed; }
-.resolution-pill { padding: 0 13px; border-left: 1px solid #c6c5ca; color: #2f2f32; font-size: 10px; }
+.resolution-pill { padding: 0 13px; border-left: 1px solid #c6c5ca; color: #2f2f32; font-size: 12px; }
 
 .resize-grip { width: 17px; height: 17px; position: absolute; right: 0; bottom: 0; border: 0; background: linear-gradient(135deg, transparent 52%, #67666c 54% 60%, transparent 62% 70%, #67666c 72% 78%, transparent 80%); cursor: nwse-resize; opacity: .7; }
 .toast { position: fixed; left: 50%; bottom: 78px; z-index: 20; transform: translateX(-50%); padding: 9px 12px; border: 1px solid #3a393e; border-radius: 8px; background: #121212f2; box-shadow: 0 10px 28px #0008; color: #dddce1; }
@@ -243,7 +245,7 @@ html.is-collapsed .collapsed-bar { width: 100%; height: 100%; display: flex; ali
 html.is-collapsed .collapsed-bar[aria-hidden="true"] { visibility: visible; }
 .collapsed-title { min-width: 0; gap: 8px; font-weight: 600; white-space: nowrap; }
 .expand-button { width: auto; padding: 0 10px; display: flex; gap: 6px; }
-.expand-button span { font-size: 11px; }
+.expand-button span { font-size: 12px; }
 
 @media (max-width: 900px) {
   .mode-tab { padding: 0 8px; }
@@ -545,6 +547,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
   const DEFAULT_ADJUSTMENTS = Object.freeze({ scale: 1, offsetX: 0, offsetY: 0, rotation: 0, brightness: 1, contrast: 1, saturation: 1 });
   const DEFAULT_CROP = Object.freeze({ zoom: 1, offsetX: 0, offsetY: 0 });
   const baseCanvasCache = new WeakMap();
+  const apertureMaskCache = new WeakMap();
 
   function createDefaultDesign(asset) {
     validateAsset(asset);
@@ -594,10 +597,152 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
     return asset;
   }
 
+  function pointInPolygon(x, y, points) {
+    let inside = false;
+    for (let current = 0, previous = points.length - 1; current < points.length; previous = current, current += 1) {
+      const [currentX, currentY] = points[current];
+      const [previousX, previousY] = points[previous];
+      const crosses = (currentY > y) !== (previousY > y)
+        && x < ((previousX - currentX) * (y - currentY)) / (previousY - currentY || Number.EPSILON) + currentX;
+      if (crosses) inside = !inside;
+    }
+    return inside;
+  }
+
+  function chromaAlpha(red, green, blue, asset, relaxed = false) {
+    if (!asset.chromaKey?.enabled) return 0;
+    const configuredMinimum = asset.chromaKey.minimumGreen || 65;
+    const configuredDominance = asset.chromaKey.dominance || 1.18;
+    const minimumGreen = relaxed ? Math.max(10, configuredMinimum * 0.42) : configuredMinimum;
+    const dominance = relaxed ? 1 + (configuredDominance - 1) * 0.28 : configuredDominance;
+    if (green < minimumGreen || green <= red * dominance || green <= blue * dominance) return 0;
+    if (!relaxed) return 255;
+    const margin = Math.min(green - red * dominance, green - blue * dominance);
+    return Math.round(Math.max(0, Math.min(1, margin / Math.max(7, configuredMinimum * 0.1))) * 255);
+  }
+
+  function apertureAlpha(red, green, blue, asset) {
+    const relaxedAlpha = chromaAlpha(red, green, blue, asset, true);
+    if (relaxedAlpha) return relaxedAlpha;
+    const configuredMinimum = asset.chromaKey?.minimumGreen || 65;
+    const configuredDominance = asset.chromaKey?.dominance || 1.18;
+    const minimumGreen = Math.max(4, configuredMinimum * 0.08);
+    const relaxedMinimum = Math.max(10, configuredMinimum * 0.42);
+    const dominance = Math.max(1.01, 1 + (configuredDominance - 1) * 0.06);
+    if (green < minimumGreen || green <= red * dominance || green <= blue * dominance) return 0;
+    return Math.round(Math.max(0, Math.min(1, (green - minimumGreen) / Math.max(1, relaxedMinimum - minimumGreen))) * 255);
+  }
+
+  function screenApertureMask(image, asset) {
+    if (!asset.chromaKey?.enabled) return null;
+    let imageCache = apertureMaskCache.get(image);
+    if (!imageCache) {
+      imageCache = new Map();
+      apertureMaskCache.set(image, imageCache);
+    }
+    const cacheKey = `${asset.id}:${asset.revision || asset.updatedAt || "current"}`;
+    if (imageCache.has(cacheKey)) return imageCache.get(cacheKey);
+
+    const width = asset.canvas.width;
+    const height = asset.canvas.height;
+    const source = document.createElement("canvas");
+    source.width = width;
+    source.height = height;
+    const sourceContext = source.getContext("2d", { willReadFrequently: true });
+    sourceContext.drawImage(image, 0, 0, width, height);
+    const sourcePixels = sourceContext.getImageData(0, 0, width, height);
+
+    const mask = document.createElement("canvas");
+    mask.width = width;
+    mask.height = height;
+    const maskContext = mask.getContext("2d");
+    const maskPixels = maskContext.createImageData(width, height);
+    const aperturePixels = new Uint8ClampedArray(width * height);
+    const supportQuad = expandQuad(asset.screen.quad, Math.max(2, (asset.screen.bleed || 0) + 2));
+    const minimumX = Math.max(0, Math.floor(Math.min(...supportQuad.map((point) => point[0]))));
+    const maximumX = Math.min(width - 1, Math.ceil(Math.max(...supportQuad.map((point) => point[0]))));
+    const minimumY = Math.max(0, Math.floor(Math.min(...supportQuad.map((point) => point[1]))));
+    const maximumY = Math.min(height - 1, Math.ceil(Math.max(...supportQuad.map((point) => point[1]))));
+
+    for (let y = minimumY; y <= maximumY; y += 1) {
+      const runs = [];
+      let runStart = -1;
+      for (let x = minimumX; x <= maximumX; x += 1) {
+        const pixel = y * width + x;
+        let alpha = 0;
+        if (pointInPolygon(x + 0.5, y + 0.5, supportQuad)) {
+          const index = pixel * 4;
+          alpha = apertureAlpha(sourcePixels.data[index], sourcePixels.data[index + 1], sourcePixels.data[index + 2], asset);
+          aperturePixels[pixel] = alpha;
+        }
+        if (alpha && runStart < 0) runStart = x;
+        if ((!alpha || x === maximumX) && runStart >= 0) {
+          const end = alpha && x === maximumX ? x : x - 1;
+          runs.push([runStart, end]);
+          runStart = -1;
+        }
+      }
+      if (!runs.length) continue;
+      const longest = Math.max(...runs.map(([start, end]) => end - start + 1));
+      const minimumRun = Math.max(3, Math.floor(longest * 0.15));
+      const screenRuns = runs.filter(([start, end]) => end - start + 1 >= minimumRun);
+      if (!screenRuns.length) {
+        for (let x = minimumX; x <= maximumX; x += 1) aperturePixels[y * width + x] = 0;
+        continue;
+      }
+      const start = screenRuns[0][0];
+      const end = screenRuns.at(-1)[1];
+      // The plate may contain camera holes, reflections and compression gaps.
+      // Fill only between substantial same-row key runs: the outer silhouette
+      // still comes from real pixels, while interior speckles cannot become a
+      // black or green seam in the final aperture.
+      for (let x = minimumX; x < start; x += 1) aperturePixels[y * width + x] = 0;
+      for (let x = start + 1; x < end; x += 1) aperturePixels[y * width + x] = 255;
+      for (let x = end + 1; x <= maximumX; x += 1) aperturePixels[y * width + x] = 0;
+    }
+
+    const dilatedAperture = aperturePixels.slice();
+    for (let y = Math.max(1, minimumY); y <= Math.min(height - 2, maximumY); y += 1) {
+      for (let x = Math.max(1, minimumX); x <= Math.min(width - 2, maximumX); x += 1) {
+        const pixel = y * width + x;
+        if (!aperturePixels[pixel]) continue;
+        for (let offsetY = -2; offsetY <= 2; offsetY += 1) {
+          for (let offsetX = -2; offsetX <= 2; offsetX += 1) {
+            const targetX = x + offsetX;
+            const targetY = y + offsetY;
+            if (!pointInPolygon(targetX + 0.5, targetY + 0.5, supportQuad)) continue;
+            dilatedAperture[targetY * width + targetX] = 255;
+          }
+        }
+      }
+    }
+
+    for (let y = minimumY; y <= maximumY; y += 1) {
+      for (let x = minimumX; x <= maximumX; x += 1) {
+        const pixel = y * width + x;
+        const alpha = dilatedAperture[pixel];
+        if (!alpha) continue;
+        const index = pixel * 4;
+        maskPixels.data[index] = 255;
+        maskPixels.data[index + 1] = 255;
+        maskPixels.data[index + 2] = 255;
+        maskPixels.data[index + 3] = alpha;
+      }
+    }
+    maskContext.putImageData(maskPixels, 0, 0);
+    imageCache.set(cacheKey, mask);
+    return mask;
+  }
+
   function preparedBaseImage(image, asset) {
     if (!asset.chromaKey?.enabled) return image;
-    const cached = baseCanvasCache.get(image);
-    if (cached) return cached;
+    let imageCache = baseCanvasCache.get(image);
+    if (!imageCache) {
+      imageCache = new Map();
+      baseCanvasCache.set(image, imageCache);
+    }
+    const cacheKey = `${asset.id}:${asset.revision || asset.updatedAt || "current"}`;
+    if (imageCache.has(cacheKey)) return imageCache.get(cacheKey);
     const canvas = document.createElement("canvas");
     canvas.width = asset.canvas.width;
     canvas.height = asset.canvas.height;
@@ -605,21 +750,31 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
     context.drawImage(image, 0, 0, canvas.width, canvas.height);
     const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
     const replacement = asset.chromaKey.replacement || [12, 12, 12];
-    const minimumGreen = asset.chromaKey.minimumGreen || 65;
-    const dominance = asset.chromaKey.dominance || 1.18;
+    const supportQuad = expandQuad(asset.screen.quad, Math.max(2, (asset.screen.bleed || 0) + 2));
+    const minimumX = Math.floor(Math.min(...supportQuad.map((point) => point[0])));
+    const maximumX = Math.ceil(Math.max(...supportQuad.map((point) => point[0])));
+    const minimumY = Math.floor(Math.min(...supportQuad.map((point) => point[1])));
+    const maximumY = Math.ceil(Math.max(...supportQuad.map((point) => point[1])));
     for (let index = 0; index < pixels.data.length; index += 4) {
       const red = pixels.data[index];
       const green = pixels.data[index + 1];
       const blue = pixels.data[index + 2];
-      if (green >= minimumGreen && green > red * dominance && green > blue * dominance) {
+      const pixel = index / 4;
+      const x = pixel % canvas.width;
+      const y = Math.floor(pixel / canvas.width);
+      const insideSupportBounds = x >= minimumX && x <= maximumX && y >= minimumY && y <= maximumY;
+      const localRelaxation = insideSupportBounds && pointInPolygon(x + 0.5, y + 0.5, supportQuad);
+      const alpha = chromaAlpha(red, green, blue, asset, localRelaxation);
+      if (alpha) {
         const shade = Math.max(0.35, Math.min(1, green / 255));
-        pixels.data[index] = Math.round(replacement[0] * shade);
-        pixels.data[index + 1] = Math.round(replacement[1] * shade);
-        pixels.data[index + 2] = Math.round(replacement[2] * shade);
+        const mix = alpha / 255;
+        pixels.data[index] = Math.round(red * (1 - mix) + replacement[0] * shade * mix);
+        pixels.data[index + 1] = Math.round(green * (1 - mix) + replacement[1] * shade * mix);
+        pixels.data[index + 2] = Math.round(blue * (1 - mix) + replacement[2] * shade * mix);
       }
     }
     context.putImageData(pixels, 0, 0);
-    baseCanvasCache.set(image, canvas);
+    imageCache.set(cacheKey, canvas);
     return canvas;
   }
 
@@ -1213,11 +1368,39 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
       const renderQuad = hasContentGeometry
         ? frameQuadOnSurface(content.frame, targetAspect, surfaceQuad)
         : surfaceQuad;
-      fillQuad(context, renderQuad, asset.screen.underlay || "#080808");
-      context.save();
-      clipQuad(context, renderQuad);
-      drawImageToQuad(context, screenCanvas, renderQuad, quality);
-      context.restore();
+      const apertureMask = screenApertureMask(baseImage, asset);
+      if (apertureMask) {
+        const bleedCanvas = hasContentGeometry
+          ? createContentCanvas(designImage, targetAspect, fit, adjustments, 0, content)
+          : createScreenCanvas(designImage, targetAspect, fit, adjustments, 0, true, crop, null);
+        const screenLayer = document.createElement("canvas");
+        screenLayer.width = canvas.width;
+        screenLayer.height = canvas.height;
+        const screenContext = screenLayer.getContext("2d");
+        screenContext.fillStyle = asset.screen.underlay || "#080808";
+        screenContext.fillRect(0, 0, screenLayer.width, screenLayer.height);
+        // Keep the canonical render quad unchanged for editor alignment, then
+        // underpaint its outer edge into the asset's declared bleed. This
+        // covers the real pixel aperture without moving handles or content.
+        const bleedQuad = expandQuad(renderQuad, asset.screen.bleed || 0);
+        screenContext.save();
+        clipQuad(screenContext, bleedQuad);
+        drawImageToQuad(screenContext, bleedCanvas, bleedQuad, quality);
+        screenContext.restore();
+        screenContext.save();
+        clipQuad(screenContext, renderQuad);
+        drawImageToQuad(screenContext, screenCanvas, renderQuad, quality);
+        screenContext.restore();
+        screenContext.globalCompositeOperation = "destination-in";
+        screenContext.drawImage(apertureMask, 0, 0);
+        context.drawImage(screenLayer, 0, 0);
+      } else {
+        fillQuad(context, renderQuad, asset.screen.underlay || "#080808");
+        context.save();
+        clipQuad(context, renderQuad);
+        drawImageToQuad(context, screenCanvas, renderQuad, quality);
+        context.restore();
+      }
       restoreOcclusions(context, preparedBase, asset);
     }
     if (layerImages.reflection) {
@@ -1720,14 +1903,8 @@ function filteredItems() {
   });
 }
 
-function hoverTiltFor(id) {
-  let hash = 2166136261;
-  for (const character of id) {
-    hash ^= character.charCodeAt(0);
-    hash = Math.imul(hash, 16777619);
-  }
-  hash ^= hash >>> 15;
-  return (hash >>> 0) % 2 === 0 ? -4 : 4;
+function randomHoverTilt() {
+  return Math.random() < 0.5 ? -4 : 4;
 }
 
 function renderAssetGrid() {
@@ -1740,17 +1917,13 @@ function renderAssetGrid() {
     elements.catalogEmpty.querySelector("span").textContent = elements.searchInput.value ? "清空搜索或更换关键词" : "更换分类后再试";
   }
 
-  let previousTilt = 0;
-  let repeatedTilt = 0;
   for (const item of items) {
-    let tilt = hoverTiltFor(item.id);
-    if (tilt === previousTilt && repeatedTilt >= 2) tilt *= -1;
-    repeatedTilt = tilt === previousTilt ? repeatedTilt + 1 : 1;
-    previousTilt = tilt;
     const button = document.createElement("button");
     button.className = `asset-card${state.selectedAsset?.id === item.id ? " active" : ""}`;
     button.dataset.assetId = item.id;
-    button.style.setProperty("--hover-tilt", `${tilt}deg`);
+    button.addEventListener("pointerenter", () => {
+      button.style.setProperty("--hover-tilt", `${randomHoverTilt()}deg`);
+    });
 
     const image = document.createElement("img");
     image.alt = item.name;

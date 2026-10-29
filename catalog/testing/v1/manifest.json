@@ -86,7 +86,7 @@
       },
       "integrity": {
         "baseSha256": "9af4efe18bbbc3a899d57902e71960a4d9f135389da99833a7b0e922764b0eeb",
-        "thumbnailSha256": "4349fd6aac8e081e50884b7b7f3aafdeeb4c35f8e9e666a37a70b81ce169e1ab"
+        "thumbnailSha256": "8b89c8fcb8c0d93d7f5226687c73dfb6e919e021c3aac025f046172878843045"
       }
     },
     {
@@ -155,7 +155,7 @@
       },
       "integrity": {
         "baseSha256": "d530217efe71e4169a52e3b2db70237a74b6bcd9ded7d3f730217397177d5993",
-        "thumbnailSha256": "160f0f005c46675d16ef39b89c6505c4734802bbb2bb83736bdbb1592430432b"
+        "thumbnailSha256": "bf4a5a99f314cd649e09bda855d9bdd28e79a472c75f98e5b24550e5d37c4b69"
       }
     },
     {
@@ -233,7 +233,7 @@
       },
       "integrity": {
         "baseSha256": "e09768963cb11b8f7769eae3241deca2add5df0cd23a59ee948aeffda68695c4",
-        "thumbnailSha256": "80d78702ed324f2e8743b8b37fe02131f1fb2feb036aa8cb458967911c6985b1"
+        "thumbnailSha256": "542e59b0fa8e863d4e2103577e716225e4d8a593beb955211f74fed46cb3b522"
       }
     },
     {
@@ -302,7 +302,7 @@
       },
       "integrity": {
         "baseSha256": "893687802f9c1b42522cffeb2e1a361ae6dd4962da31114d2f6221c63220c66c",
-        "thumbnailSha256": "74fc5b819183630970c8e53c6f9e12305e9312875e09fee1e88bd6e46ed4e624"
+        "thumbnailSha256": "72e13c920fcda281f1d751be2c5087d025d7372c095d2a7728666f8ecd65b1fe"
       }
     }
   ]

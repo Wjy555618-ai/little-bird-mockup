@@ -484,14 +484,8 @@ function filteredItems() {
   });
 }
 
-function hoverTiltFor(id) {
-  let hash = 2166136261;
-  for (const character of id) {
-    hash ^= character.charCodeAt(0);
-    hash = Math.imul(hash, 16777619);
-  }
-  hash ^= hash >>> 15;
-  return (hash >>> 0) % 2 === 0 ? -4 : 4;
+function randomHoverTilt() {
+  return Math.random() < 0.5 ? -4 : 4;
 }
 
 function renderAssetGrid() {
@@ -504,17 +498,13 @@ function renderAssetGrid() {
     elements.catalogEmpty.querySelector("span").textContent = elements.searchInput.value ? "清空搜索或更换关键词" : "更换分类后再试";
   }
 
-  let previousTilt = 0;
-  let repeatedTilt = 0;
   for (const item of items) {
-    let tilt = hoverTiltFor(item.id);
-    if (tilt === previousTilt && repeatedTilt >= 2) tilt *= -1;
-    repeatedTilt = tilt === previousTilt ? repeatedTilt + 1 : 1;
-    previousTilt = tilt;
     const button = document.createElement("button");
     button.className = `asset-card${state.selectedAsset?.id === item.id ? " active" : ""}`;
     button.dataset.assetId = item.id;
-    button.style.setProperty("--hover-tilt", `${tilt}deg`);
+    button.addEventListener("pointerenter", () => {
+      button.style.setProperty("--hover-tilt", `${randomHoverTilt()}deg`);
+    });
 
     const image = document.createElement("img");
     image.alt = item.name;

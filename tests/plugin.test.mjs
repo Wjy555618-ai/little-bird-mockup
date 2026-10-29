@@ -145,7 +145,10 @@ test("catalog thumbnails and empty preview share one complete default mockup ren
   assert.match(rendererScript, /function createDefaultDesign\(asset\)/);
   assert.match(uiScript, /state\.designImage \|\| renderer\.createDefaultDesign\(state\.selectedAsset\)/);
   assert.match(uiScript, /const center = renderer\.bilinearPoint\(quad, 0\.5, 0\.5\)/);
-  assert.match(uiStyles, /\.screen-cta span\s*\{[^}]*border:\s*1px solid #ffffff99[^}]*backdrop-filter:\s*blur\(18px\)/s);
+  assert.match(uiStyles, /\.screen-cta span\s*\{[^}]*width:\s*40px[^}]*border:\s*0[^}]*background:\s*#07080aa3[^}]*backdrop-filter:\s*blur\(17px\)/s);
+  assert.match(uiStyles, /\.screen-cta span::before\s*\{[^}]*background:\s*#ffffffa8[^}]*transform:\s*rotate\(-22deg\)/s);
+  assert.doesNotMatch(uiStyles.match(/\.screen-cta span\s*\{[^}]*\}[\s\S]*?\.screen-cta:hover span\s*\{[^}]*\}/)?.[0] || "", /gradient/);
+  assert.match(uiStyles, /\.source-popover\s*\{[^}]*border:\s*0[^}]*background:\s*#111114b8[^}]*backdrop-filter:\s*blur\(24px\)/s);
   assert.match(uiHtml, /id="screenCta" aria-label="添加画面"/);
 });
 
@@ -212,6 +215,10 @@ test("one canonical content frame owns rendering, controls and direct transforms
   assert.match(rendererScript, /function transformFrameBetweenFrames/);
   assert.match(rendererScript, /function createContentCanvas/);
   assert.match(rendererScript, /frameQuadOnSurface\(content\.frame, targetAspect, surfaceQuad\)/);
+  assert.match(rendererScript, /function apertureAlpha/);
+  assert.match(rendererScript, /const minimumRun = Math\.max\(3, Math\.floor\(longest \* 0\.15\)\)/);
+  assert.match(rendererScript, /const bleedQuad = expandQuad\(renderQuad, asset\.screen\.bleed \|\| 0\)/);
+  assert.match(rendererScript, /drawImageToQuad\(screenContext, bleedCanvas, bleedQuad, quality\)/);
   assert.doesNotMatch(rendererScript, /createScreenCanvas\([^\n]+content\);/);
   assert.match(uiScript, /contentFrame:/);
   assert.match(uiScript, /imageFrame:/);
@@ -272,11 +279,12 @@ test("catalog spacing stays contained and hover never impersonates selection", (
   assert.match(uiStyles, /--panel-pad:\s*16px/);
   assert.match(uiStyles, /\.asset-grid\s*\{[^}]*padding:\s*12px var\(--panel-pad\) 16px/s);
   assert.match(uiStyles, /\.recent-strip > div\s*\{[^}]*overflow-x:\s*auto[^}]*display:\s*flex[^}]*justify-content:\s*flex-start/s);
-  assert.match(uiStyles, /--recent-thumb-size:\s*52px/);
+  assert.match(uiStyles, /--recent-thumb-size:\s*44px/);
   assert.match(uiStyles, /\.recent-item\s*\{[^}]*width:\s*var\(--recent-thumb-size\)[^}]*height:\s*var\(--recent-thumb-size\)/s);
   assert.match(uiStyles, /\.recent-item\s*\{[^}]*margin:\s*0[^}]*padding:\s*0/s);
   assert.match(uiStyles, /\.asset-card:hover:not\(\.active\)[^{]*\{[^}]*rotate\(var\(--hover-tilt/s);
-  assert.match(uiScript, /function hoverTiltFor/);
+  assert.match(uiScript, /function randomHoverTilt/);
+  assert.match(uiScript, /button\.addEventListener\("pointerenter"/);
   assert.match(uiScript, /\? -4 : 4/);
   assert.match(uiScript, /\.slice\(0, 10\)/);
   assert.match(uiScript, /function enableRecentScrolling/);
