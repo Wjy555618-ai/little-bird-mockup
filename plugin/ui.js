@@ -6,7 +6,9 @@ const renderer = window.MockupRenderer;
 const pdfjs = window.pdfjsLib;
 const CATALOG_CACHE_KEY = "mockup-studio-catalog-v1";
 const RECENT_KEY = "mockup-studio-recent-v1";
-const MIN_CONTENT_SWITCH_MS = 480;
+const CONTENT_BLUR_ENTER_MS = 360;
+const MIN_CONTENT_BLUR_MS = 520;
+const CONTENT_REVEAL_MS = 440;
 const memoryStorage = new Map();
 
 let pdfWorkerUrl = "";
@@ -329,6 +331,16 @@ const reducedMotionQuery = window.matchMedia?.("(prefers-reduced-motion: reduce)
 const visibilityTimers = new WeakMap();
 const visibilityRevisions = new WeakMap();
 const enterTimers = new WeakMap();
+
+function waitForNextPaint() {
+  if (reducedMotionQuery.matches) return Promise.resolve();
+  return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+}
+
+function waitForDuration(duration) {
+  if (duration <= 0) return Promise.resolve();
+  return new Promise((resolve) => setTimeout(resolve, duration));
+}
 
 function setAnimatedVisibility(element, visible) {
   const revision = (visibilityRevisions.get(element) || 0) + 1;
@@ -667,7 +679,6 @@ async function selectAsset(id) {
   const asset = state.manifest?.items.find((item) => item.id === id);
   if (!asset) return;
   const requestSequence = ++assetRequestSequence;
-  const switchStartedAt = performance.now();
   const assetChanged = state.selectedAsset?.id !== id;
   state.selectedAsset = asset;
   if (assetChanged) {
@@ -694,6 +705,7 @@ async function selectAsset(id) {
   elements.pasteButton.disabled = true;
   state.rendering = true;
   setAnimatedVisibility(elements.renderingBadge, true);
+  const blurWasActive = elements.canvasWrap.classList.contains("is-content-blurred");
   elements.canvasWrap.classList.add("is-content-switching");
   if (state.segment === "similar" && elements.categorySelect.value === "all") {
     renderAssetGrid({ animate: true });
@@ -702,12 +714,26 @@ async function selectAsset(id) {
     renderRecentStrip();
   }
 
+  if (!blurWasActive) {
+    await waitForNextPaint();
+    if (requestSequence !== assetRequestSequence) return;
+  }
+  elements.canvasWrap.classList.add("is-content-blurred");
+  const blurStartedAt = performance.now();
+
   try {
-    const baseImage = await loadImage(resolveAssetUrl(asset.layers.base));
-    const optionalLayers = await Promise.all(["reflection", "foreground"].map(async (name) => {
-      if (!asset.layers[name]) return [name, null];
-      return [name, await loadImage(resolveAssetUrl(asset.layers[name]))];
-    }));
+    const assetImagesPromise = (async () => {
+      const baseImage = await loadImage(resolveAssetUrl(asset.layers.base));
+      const optionalLayers = await Promise.all(["reflection", "foreground"].map(async (name) => {
+        if (!asset.layers[name]) return [name, null];
+        return [name, await loadImage(resolveAssetUrl(asset.layers[name]))];
+      }));
+      return { baseImage, optionalLayers };
+    })();
+    const [{ baseImage, optionalLayers }] = await Promise.all([
+      assetImagesPromise,
+      waitForDuration(reducedMotionQuery.matches ? 0 : CONTENT_BLUR_ENTER_MS)
+    ]);
     if (requestSequence !== assetRequestSequence) return;
     state.baseImage = baseImage;
     state.layerImages = Object.fromEntries(optionalLayers.filter(([, image]) => image));
@@ -721,13 +747,17 @@ async function selectAsset(id) {
     if (requestSequence === assetRequestSequence) showToast(error instanceof Error ? error.message : "样机加载失败");
   } finally {
     if (requestSequence === assetRequestSequence) {
-      const remainingBlurTime = Math.max(0, MIN_CONTENT_SWITCH_MS - (performance.now() - switchStartedAt));
+      const minimumBlurTime = reducedMotionQuery.matches ? 0 : MIN_CONTENT_BLUR_MS;
+      const remainingBlurTime = Math.max(0, minimumBlurTime - (performance.now() - blurStartedAt));
       if (remainingBlurTime > 0) {
-        await new Promise((resolve) => setTimeout(resolve, remainingBlurTime));
+        await waitForDuration(remainingBlurTime);
       }
       if (requestSequence !== assetRequestSequence) return;
-      state.rendering = false;
+      elements.canvasWrap.classList.remove("is-content-blurred");
       setAnimatedVisibility(elements.renderingBadge, false);
+      await waitForDuration(reducedMotionQuery.matches ? 0 : CONTENT_REVEAL_MS);
+      if (requestSequence !== assetRequestSequence) return;
+      state.rendering = false;
       elements.canvasWrap.classList.remove("is-content-switching");
       updateOutputAvailability();
     }
