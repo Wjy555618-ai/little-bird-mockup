@@ -206,8 +206,8 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .canvas-wrap { width: 1px; height: 1px; max-width: 100%; max-height: 100%; position: relative; overflow: hidden; border-radius: 15px; background: transparent; transform-origin: center; will-change: transform, opacity; transition: opacity var(--motion-base) ease; }
 .canvas-wrap.is-content-switching { cursor: progress; }
 .canvas-wrap.is-view-animating { transition: transform var(--motion-panel) var(--ease-out), opacity var(--motion-base) ease, filter var(--motion-base) ease; }
-.canvas-wrap canvas { width: 100%; height: 100%; display: block; background: transparent; transform: scale(1); filter: blur(0) saturate(1) brightness(1); opacity: 1; will-change: filter, transform, opacity; transition: filter var(--motion-panel) var(--ease-out), transform var(--motion-panel) var(--ease-out), opacity var(--motion-base) ease; }
-.canvas-wrap.is-content-switching canvas { transform: scale(1.025); filter: blur(12px) saturate(.78) brightness(.82); opacity: .8; }
+.canvas-wrap canvas { width: 100%; height: 100%; display: block; background: transparent; transform: scale(1); filter: blur(0) saturate(1) brightness(1); opacity: 1; will-change: filter, transform, opacity; transition: filter 280ms var(--ease-out), transform 280ms var(--ease-out), opacity var(--motion-base) ease; }
+.canvas-wrap.is-content-switching canvas { transform: scale(1.055); filter: blur(24px) saturate(.58) brightness(.72); opacity: .7; transition: none; }
 .design-editor { position: absolute; inset: 0; z-index: 4; opacity: 1; pointer-events: none; transition: opacity var(--motion-base) ease; }
 .canvas-wrap.is-content-switching .design-editor, .canvas-wrap.is-content-switching .screen-cta { opacity: 0; pointer-events: none; }
 .design-editor[hidden] { display: none; }
@@ -1488,6 +1488,7 @@ const renderer = window.MockupRenderer;
 const pdfjs = window.pdfjsLib;
 const CATALOG_CACHE_KEY = "mockup-studio-catalog-v1";
 const RECENT_KEY = "mockup-studio-recent-v1";
+const MIN_CONTENT_SWITCH_MS = 480;
 const memoryStorage = new Map();
 
 let pdfWorkerUrl = "";
@@ -2148,6 +2149,7 @@ async function selectAsset(id) {
   const asset = state.manifest?.items.find((item) => item.id === id);
   if (!asset) return;
   const requestSequence = ++assetRequestSequence;
+  const switchStartedAt = performance.now();
   const assetChanged = state.selectedAsset?.id !== id;
   state.selectedAsset = asset;
   if (assetChanged) {
@@ -2201,9 +2203,14 @@ async function selectAsset(id) {
     if (requestSequence === assetRequestSequence) showToast(error instanceof Error ? error.message : "样机加载失败");
   } finally {
     if (requestSequence === assetRequestSequence) {
+      const remainingBlurTime = Math.max(0, MIN_CONTENT_SWITCH_MS - (performance.now() - switchStartedAt));
+      if (remainingBlurTime > 0) {
+        await new Promise((resolve) => setTimeout(resolve, remainingBlurTime));
+      }
+      if (requestSequence !== assetRequestSequence) return;
       state.rendering = false;
       setAnimatedVisibility(elements.renderingBadge, false);
-      requestAnimationFrame(() => elements.canvasWrap.classList.remove("is-content-switching"));
+      elements.canvasWrap.classList.remove("is-content-switching");
       updateOutputAvailability();
     }
   }

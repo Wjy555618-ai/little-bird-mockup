@@ -323,7 +323,11 @@ test("the motion system is restrained, state-driven and reduced-motion safe", ()
   assert.match(uiStyles, /\.category-menu\s*\{[^}]*translateY\(-6px\) scale\(\.985\)[^}]*transition:/s);
   assert.match(uiScript, /function openCategoryMenu/);
   assert.match(uiScript, /function closeCategoryMenu/);
-  assert.match(uiStyles, /\.canvas-wrap\.is-content-switching canvas\s*\{[^}]*blur\(12px\)[^}]*opacity:\s*\.8/s);
+  assert.match(uiStyles, /\.canvas-wrap\.is-content-switching canvas\s*\{[^}]*blur\(24px\)[^}]*opacity:\s*\.7[^}]*transition:\s*none/s);
+  assert.match(uiScript, /const MIN_CONTENT_SWITCH_MS = 480/);
+  assert.match(uiScript, /remainingBlurTime = Math\.max\(0, MIN_CONTENT_SWITCH_MS - \(performance\.now\(\) - switchStartedAt\)\)/);
+  assert.match(uiScript, /await new Promise\(\(resolve\) => setTimeout\(resolve, remainingBlurTime\)\);[\s\S]*if \(requestSequence !== assetRequestSequence\) return;[\s\S]*classList\.remove\("is-content-switching"\)/);
+  assert.doesNotMatch(uiScript, /requestAnimationFrame\(\(\) => elements\.canvasWrap\.classList\.remove\("is-content-switching"\)\)/);
   assert.match(uiScript, /function animateStageView/);
   assert.match(uiScript, /stopStageViewAnimation\(\);[\s\S]*elements\.stage\.addEventListener\("wheel"/s);
 });

@@ -6,6 +6,7 @@ const renderer = window.MockupRenderer;
 const pdfjs = window.pdfjsLib;
 const CATALOG_CACHE_KEY = "mockup-studio-catalog-v1";
 const RECENT_KEY = "mockup-studio-recent-v1";
+const MIN_CONTENT_SWITCH_MS = 480;
 const memoryStorage = new Map();
 
 let pdfWorkerUrl = "";
@@ -666,6 +667,7 @@ async function selectAsset(id) {
   const asset = state.manifest?.items.find((item) => item.id === id);
   if (!asset) return;
   const requestSequence = ++assetRequestSequence;
+  const switchStartedAt = performance.now();
   const assetChanged = state.selectedAsset?.id !== id;
   state.selectedAsset = asset;
   if (assetChanged) {
@@ -719,9 +721,14 @@ async function selectAsset(id) {
     if (requestSequence === assetRequestSequence) showToast(error instanceof Error ? error.message : "样机加载失败");
   } finally {
     if (requestSequence === assetRequestSequence) {
+      const remainingBlurTime = Math.max(0, MIN_CONTENT_SWITCH_MS - (performance.now() - switchStartedAt));
+      if (remainingBlurTime > 0) {
+        await new Promise((resolve) => setTimeout(resolve, remainingBlurTime));
+      }
+      if (requestSequence !== assetRequestSequence) return;
       state.rendering = false;
       setAnimatedVisibility(elements.renderingBadge, false);
-      requestAnimationFrame(() => elements.canvasWrap.classList.remove("is-content-switching"));
+      elements.canvasWrap.classList.remove("is-content-switching");
       updateOutputAvailability();
     }
   }
