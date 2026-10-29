@@ -48,9 +48,10 @@
       <main class="workspace">
         <aside class="catalog-panel">
           <div class="catalog-view is-visible" id="catalogView">
-            <div class="catalog-segments" role="tablist">
-              <button class="segment active" data-filter="all">全部</button>
-              <button class="segment" data-filter="similar">相似</button>
+            <div class="catalog-segments" id="catalogSegments" data-active-filter="all" role="tablist" aria-label="样机范围">
+              <span class="segment-indicator" aria-hidden="true"></span>
+              <button class="segment active" data-filter="all" role="tab" aria-selected="true">全部</button>
+              <button class="segment" data-filter="similar" role="tab" aria-selected="false">相似</button>
             </div>
 
             <div class="catalog-tools">
@@ -60,12 +61,15 @@
                 <button id="clearSearch" aria-label="清空搜索" hidden>×</button>
               </label>
               <div class="filter-row single-filter">
-                <label class="category-select">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
-                  <select id="categorySelect" aria-label="样机分类">
-                    <option value="all">全部分类</option>
-                  </select>
-                </label>
+                <div class="category-select" id="categoryPicker">
+                  <svg class="category-leading-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+                  <input id="categorySelect" type="hidden" value="all" />
+                  <button class="category-trigger" id="categoryTrigger" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="categoryMenu">
+                    <span id="categoryLabel">全部分类</span>
+                    <svg class="category-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 9 5 5 5-5" /></svg>
+                  </button>
+                  <div class="category-menu" id="categoryMenu" role="listbox" aria-label="样机分类" hidden></div>
+                </div>
               </div>
             </div>
 

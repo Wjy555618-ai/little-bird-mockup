@@ -46,7 +46,12 @@ const elements = {
   refreshButton: document.querySelector("#refreshButton"),
   searchInput: document.querySelector("#searchInput"),
   clearSearch: document.querySelector("#clearSearch"),
+  catalogSegments: document.querySelector("#catalogSegments"),
+  categoryPicker: document.querySelector("#categoryPicker"),
   categorySelect: document.querySelector("#categorySelect"),
+  categoryTrigger: document.querySelector("#categoryTrigger"),
+  categoryLabel: document.querySelector("#categoryLabel"),
+  categoryMenu: document.querySelector("#categoryMenu"),
   catalogCount: document.querySelector("#catalogCount"),
   catalogView: document.querySelector("#catalogView"),
   adjustPanel: document.querySelector("#adjustPanel"),
@@ -363,6 +368,79 @@ function replayEnter(element) {
   enterTimers.set(element, timer);
 }
 
+function categoryOptions() {
+  return [...elements.categoryMenu.querySelectorAll(".category-option")];
+}
+
+function closeCategoryMenu({ restoreFocus = false } = {}) {
+  elements.categoryPicker.classList.remove("is-open");
+  elements.categoryTrigger.setAttribute("aria-expanded", "false");
+  setAnimatedVisibility(elements.categoryMenu, false);
+  if (restoreFocus) elements.categoryTrigger.focus();
+}
+
+function openCategoryMenu({ focusSelected = false } = {}) {
+  elements.categoryPicker.classList.add("is-open");
+  elements.categoryTrigger.setAttribute("aria-expanded", "true");
+  setAnimatedVisibility(elements.categoryMenu, true);
+  if (focusSelected) {
+    requestAnimationFrame(() => {
+      const selected = categoryOptions().find((option) => option.getAttribute("aria-selected") === "true");
+      (selected || categoryOptions()[0])?.focus();
+    });
+  }
+}
+
+function setCategory(value, { render = true, restoreFocus = false } = {}) {
+  const option = categoryOptions().find((item) => item.dataset.value === value) || categoryOptions()[0];
+  if (!option) return;
+  const changed = elements.categorySelect.value !== option.dataset.value;
+  elements.categorySelect.value = option.dataset.value;
+  elements.categoryLabel.textContent = option.textContent;
+  for (const item of categoryOptions()) {
+    item.setAttribute("aria-selected", String(item === option));
+  }
+  closeCategoryMenu({ restoreFocus });
+  if (render && changed) renderAssetGrid({ animate: true });
+}
+
+function renderCategoryMenu(categories) {
+  const entries = [{ id: "all", label: "全部分类" }, ...categories];
+  const currentValue = entries.some((entry) => entry.id === elements.categorySelect.value)
+    ? elements.categorySelect.value
+    : "all";
+  elements.categoryMenu.replaceChildren();
+  for (const entry of entries) {
+    const option = document.createElement("button");
+    option.type = "button";
+    option.tabIndex = -1;
+    option.className = "category-option";
+    option.dataset.value = entry.id;
+    option.setAttribute("role", "option");
+    option.setAttribute("aria-selected", String(entry.id === currentValue));
+    option.textContent = entry.label;
+    option.addEventListener("click", () => setCategory(entry.id, { restoreFocus: true }));
+    elements.categoryMenu.appendChild(option);
+  }
+  setCategory(currentValue, { render: false });
+}
+
+function moveCategoryFocus(direction) {
+  const options = categoryOptions();
+  if (!options.length) return;
+  const currentIndex = options.indexOf(document.activeElement);
+  const nextIndex = currentIndex < 0
+    ? (direction > 0 ? 0 : options.length - 1)
+    : (currentIndex + direction + options.length) % options.length;
+  options[nextIndex].focus();
+}
+
+function applyRandomHoverTilt(button) {
+  const direction = Math.random() < 0.5 ? -1 : 1;
+  const magnitude = 1.8 + Math.random() * 0.9;
+  button.style.setProperty("--hover-tilt", `${(direction * magnitude).toFixed(2)}deg`);
+}
+
 let toastTimer;
 function showToast(message, duration = 2600) {
   clearTimeout(toastTimer);
@@ -435,13 +513,7 @@ async function fetchCatalog() {
 
 function hydrateCatalog() {
   const categories = state.manifest.categories || [];
-  elements.categorySelect.innerHTML = '<option value="all">全部分类</option>';
-  for (const category of categories) {
-    const option = document.createElement("option");
-    option.value = category.id;
-    option.textContent = category.label;
-    elements.categorySelect.appendChild(option);
-  }
+  renderCategoryMenu(categories);
   renderAssetGrid({ animate: true });
   if (!state.selectedAsset && state.manifest.items[0]) selectAsset(state.manifest.items[0].id);
 }
@@ -555,6 +627,7 @@ function renderAssetGrid({ animate = false } = {}) {
     if (animate) {
       button.classList.add("is-entering");
       button.style.setProperty("--card-order", String(Math.min(index, 5)));
+      button.addEventListener("animationend", () => button.classList.remove("is-entering"), { once: true });
     }
 
     const image = document.createElement("img");
@@ -569,6 +642,8 @@ function renderAssetGrid({ animate = false } = {}) {
     meta.textContent = item.status === "testing" ? "测试素材" : "静态样机";
     footer.append(name, meta);
     button.append(image, footer);
+    button.addEventListener("pointerenter", () => applyRandomHoverTilt(button));
+    button.addEventListener("pointerleave", () => button.style.setProperty("--hover-tilt", "0deg"));
     button.addEventListener("click", () => selectAsset(item.id));
     elements.assetGrid.appendChild(button);
   }
@@ -1194,6 +1269,7 @@ function updatePerspectiveEditor() {
 function setMode(mode) {
   if (state.mode === mode) return;
   state.mode = mode;
+  closeCategoryMenu();
   closeSourcePopover();
   document.querySelectorAll(".mode-tab").forEach((tab) => tab.classList.toggle("active", tab.dataset.mode === mode));
   setAnimatedVisibility(elements.catalogView, mode === "catalog");
@@ -1720,8 +1796,22 @@ for (const segment of document.querySelectorAll(".segment")) {
   segment.addEventListener("click", () => {
     if (state.segment === segment.dataset.filter) return;
     state.segment = segment.dataset.filter;
-    document.querySelectorAll(".segment").forEach((item) => item.classList.toggle("active", item === segment));
+    elements.catalogSegments.dataset.activeFilter = state.segment;
+    document.querySelectorAll(".segment").forEach((item) => {
+      const active = item === segment;
+      item.classList.toggle("active", active);
+      item.setAttribute("aria-selected", String(active));
+    });
     renderAssetGrid({ animate: true });
+  });
+  segment.addEventListener("keydown", (event) => {
+    if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+    event.preventDefault();
+    const segments = [...document.querySelectorAll(".segment")];
+    const direction = event.key === "ArrowRight" ? 1 : -1;
+    const next = segments[(segments.indexOf(segment) + direction + segments.length) % segments.length];
+    next.focus();
+    next.click();
   });
 }
 
@@ -1736,7 +1826,41 @@ elements.clearSearch.addEventListener("click", () => {
   elements.searchInput.focus();
   renderAssetGrid({ animate: true });
 });
-elements.categorySelect.addEventListener("change", () => renderAssetGrid({ animate: true }));
+elements.categoryTrigger.addEventListener("click", () => {
+  if (elements.categoryTrigger.getAttribute("aria-expanded") === "true") closeCategoryMenu();
+  else openCategoryMenu();
+});
+elements.categoryTrigger.addEventListener("keydown", (event) => {
+  if (!["ArrowDown", "ArrowUp", "Escape"].includes(event.key)) return;
+  event.preventDefault();
+  if (event.key === "Escape") closeCategoryMenu();
+  else {
+    openCategoryMenu();
+    requestAnimationFrame(() => moveCategoryFocus(event.key === "ArrowDown" ? 1 : -1));
+  }
+});
+elements.categoryMenu.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    event.preventDefault();
+    closeCategoryMenu({ restoreFocus: true });
+    return;
+  }
+  if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
+  event.preventDefault();
+  if (event.key === "Home") categoryOptions()[0]?.focus();
+  else if (event.key === "End") categoryOptions().at(-1)?.focus();
+  else moveCategoryFocus(event.key === "ArrowDown" ? 1 : -1);
+});
+document.addEventListener("pointerdown", (event) => {
+  if (elements.categoryTrigger.getAttribute("aria-expanded") === "true" && !elements.categoryPicker.contains(event.target)) {
+    closeCategoryMenu();
+  }
+});
+document.addEventListener("focusin", (event) => {
+  if (elements.categoryTrigger.getAttribute("aria-expanded") === "true" && !elements.categoryPicker.contains(event.target)) {
+    closeCategoryMenu();
+  }
+});
 elements.readSelectionButton.addEventListener("click", requestSelection);
 elements.importFileButton.addEventListener("click", () => elements.imageInput.click());
 elements.imageInput.addEventListener("change", () => importDesignFile(elements.imageInput.files?.[0]));

@@ -285,7 +285,7 @@ test("inactive design gestures arbitrate click selection from stage panning", ()
   assert.match(uiScript, /event\.button === 1 \|\| stageSpacePressed/);
 });
 
-test("catalog spacing stays contained and hover remains stable", () => {
+test("catalog spacing stays contained and hover tilt randomizes once per entry without an outline", () => {
   assert.match(uiStyles, /\.catalog-panel\s*\{[^}]*overflow:\s*hidden/s);
   assert.match(uiStyles, /--panel-pad:\s*16px/);
   assert.match(uiStyles, /\.asset-grid\s*\{[^}]*padding:\s*12px var\(--panel-pad\) 16px/s);
@@ -293,9 +293,12 @@ test("catalog spacing stays contained and hover remains stable", () => {
   assert.match(uiStyles, /--recent-thumb-size:\s*44px/);
   assert.match(uiStyles, /\.recent-item\s*\{[^}]*width:\s*var\(--recent-thumb-size\)[^}]*height:\s*var\(--recent-thumb-size\)/s);
   assert.match(uiStyles, /\.recent-item\s*\{[^}]*margin:\s*0[^}]*padding:\s*0/s);
-  assert.match(uiStyles, /\.asset-card:hover:not\(\.active\)\s*\{[^}]*border-color:[^}]*box-shadow:/s);
-  assert.doesNotMatch(uiStyles, /--hover-tilt|\.asset-card:hover[^}]*rotate\(/s);
-  assert.doesNotMatch(uiScript, /randomHoverTilt|--hover-tilt/);
+  assert.match(uiStyles, /\.asset-card:hover\s*\{[^}]*rotate\(var\(--hover-tilt\)\)[^}]*translateY\(-1px\)/s);
+  assert.doesNotMatch(uiStyles, /\.asset-card:hover[^\{]*\{[^}]*border-color:/s);
+  assert.match(uiScript, /function applyRandomHoverTilt\(button\)[\s\S]*Math\.random\(\) < 0\.5[\s\S]*Math\.random\(\) \* 0\.9/s);
+  assert.match(uiScript, /addEventListener\("pointerenter", \(\) => applyRandomHoverTilt\(button\)\)/);
+  assert.match(uiScript, /addEventListener\("animationend", \(\) => button\.classList\.remove\("is-entering"\)/);
+  assert.doesNotMatch(uiScript, /addEventListener\("pointermove"[^}]*applyRandomHoverTilt/s);
   assert.match(uiScript, /\.slice\(0, 10\)/);
   assert.match(uiScript, /function enableRecentScrolling/);
 });
@@ -313,6 +316,14 @@ test("the motion system is restrained, state-driven and reduced-motion safe", ()
   assert.match(uiScript, /setAnimatedVisibility\(elements\.catalogView, mode === "catalog"\)/);
   assert.match(uiScript, /renderAssetGrid\(\{ animate: true \}\)/);
   assert.match(uiScript, /elements\.canvasWrap\.classList\.add\("is-content-switching"\)/);
+  assert.match(uiHtml, /class="segment-indicator"/);
+  assert.match(uiStyles, /\.catalog-segments\[data-active-filter="similar"\][^}]*translateX\(calc\(100% \+ 4px\)\)/s);
+  assert.match(uiScript, /elements\.catalogSegments\.dataset\.activeFilter = state\.segment/);
+  assert.match(uiHtml, /id="categoryMenu" role="listbox"/);
+  assert.match(uiStyles, /\.category-menu\s*\{[^}]*translateY\(-6px\) scale\(\.985\)[^}]*transition:/s);
+  assert.match(uiScript, /function openCategoryMenu/);
+  assert.match(uiScript, /function closeCategoryMenu/);
+  assert.match(uiStyles, /\.canvas-wrap\.is-content-switching canvas\s*\{[^}]*blur\(12px\)[^}]*opacity:\s*\.8/s);
   assert.match(uiScript, /function animateStageView/);
   assert.match(uiScript, /stopStageViewAnimation\(\);[\s\S]*elements\.stage\.addEventListener\("wheel"/s);
 });
