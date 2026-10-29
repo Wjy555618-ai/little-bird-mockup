@@ -245,7 +245,8 @@ test("the design supports direct move, four-corner proportional resize and four-
   assert.doesNotMatch(uiScript, /resizeImageFromApertureHandle/);
   assert.doesNotMatch(uiScript, /state\.imageFrame = renderer\.constrainImageFrameToCover/);
   assert.match(uiScript, /window\.addEventListener\("pointermove", move/);
-  assert.match(uiStyles, /\.design-drag-target\s*\{[^}]*cursor:\s*move/s);
+  assert.match(uiStyles, /\.design-drag-target\s*\{[^}]*cursor:\s*grab/s);
+  assert.match(uiStyles, /\.design-editor\.is-selected \.design-drag-target[^}]*cursor:\s*move/s);
   assert.equal((uiHtml.match(/class="design-scale-handle/g) || []).length, 8);
   assert.match(uiScript, /enterCropMode/);
   assert.match(uiScript, /state\.mode === "perspective" \|\| event\.metaKey \|\| event\.ctrlKey/);
@@ -272,6 +273,16 @@ test("the preview supports Figma-like pointer and trackpad navigation", () => {
   assert.match(uiScript, /height \* minimumVisible/);
   assert.match(uiScript, /interaction = \{ pointerId: event\.pointerId/);
   assert.match(uiScript, /window\.addEventListener\("pointermove", \(event\) => \{\s*if \(!interaction \|\| interaction\.pointerId !== event\.pointerId\) return;/s);
+});
+
+test("inactive design gestures arbitrate click selection from stage panning", () => {
+  assert.match(uiScript, /const directPanThreshold = 6/);
+  assert.match(uiScript, /const intent = type === "move" && !wasSelected \? "pending" : "edit"/);
+  assert.match(uiScript, /interaction\.intent === "pending"[\s\S]*Math\.hypot\(clientDx, clientDy\) < directPanThreshold[\s\S]*interaction\.intent = "pan"/);
+  assert.match(uiScript, /interaction\.intent === "pan"[\s\S]*state\.panX = interaction\.startPanX \+ clientDx[\s\S]*applyStageView\(\)/);
+  assert.match(uiScript, /intent === "pending"[\s\S]*state\.designSelected = true/);
+  assert.match(uiScript, /if \(event\.button !== 0 \|\| stageSpacePressed\) return/);
+  assert.match(uiScript, /event\.button === 1 \|\| stageSpacePressed/);
 });
 
 test("catalog spacing stays contained and hover never impersonates selection", () => {

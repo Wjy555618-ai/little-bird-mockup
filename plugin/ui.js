@@ -859,19 +859,28 @@ function syncAdjustmentsFromFrame() {
   };
 }
 
+let stageSpacePressed = false;
+
 function enableDesignEditing() {
   let interaction = null;
+  const directPanThreshold = 6;
   const warpHandles = { nw: [0], n: [0, 1], ne: [1], e: [1, 2], se: [2], s: [3, 2], sw: [3], w: [0, 3] };
   const start = (event, type) => {
     if (!state.designImage || !state.selectedAsset) return;
+    if (event.button !== 0 || stageSpacePressed) return;
     ensureContentGeometry();
     const handleName = event.currentTarget.dataset.handle;
-    state.designSelected = true;
-    updateDesignEditor();
+    const wasSelected = state.designSelected || state.cropMode;
+    const intent = type === "move" && !wasSelected ? "pending" : "edit";
+    if (intent === "edit") {
+      state.designSelected = true;
+      updateDesignEditor();
+    }
     interaction = {
       pointerId: event.pointerId,
       target: event.currentTarget,
       type,
+      intent,
       handleName,
       freeTransform: !state.cropMode && type === "scale" && (state.mode === "perspective" || event.metaKey || event.ctrlKey),
       startSurfaceQuad: cloneQuad(activeQuad()),
@@ -880,6 +889,10 @@ function enableDesignEditing() {
       startImageFrame: { ...state.imageFrame },
       startPointerPlane: pointOnScreenPlane(event),
       startPointerCanvas: pointOnCanvas(event),
+      startClientX: event.clientX,
+      startClientY: event.clientY,
+      startPanX: state.panX,
+      startPanY: state.panY,
       changed: false,
       historyPushed: false
     };
@@ -889,6 +902,21 @@ function enableDesignEditing() {
   };
   const move = (event) => {
     if (!interaction || interaction.pointerId !== event.pointerId) return;
+    const clientDx = event.clientX - interaction.startClientX;
+    const clientDy = event.clientY - interaction.startClientY;
+    if (interaction.intent === "pending") {
+      if (Math.hypot(clientDx, clientDy) < directPanThreshold) return;
+      interaction.intent = "pan";
+      interaction.changed = true;
+      elements.stage.classList.add("is-panning");
+    }
+    if (interaction.intent === "pan") {
+      state.panX = interaction.startPanX + clientDx;
+      state.panY = interaction.startPanY + clientDy;
+      applyStageView();
+      event.preventDefault();
+      return;
+    }
     const pointerPlane = pointOnScreenPlane(event);
     const pointerCanvas = pointOnCanvas(event);
     const dx = pointerPlane[0] - interaction.startPointerPlane[0];
@@ -964,10 +992,20 @@ function enableDesignEditing() {
     try {
       if (interaction.target.hasPointerCapture?.(event.pointerId)) interaction.target.releasePointerCapture(event.pointerId);
     } catch {}
-    const changed = interaction?.changed;
+    const { intent, changed } = interaction;
+    const cancelled = event.type === "pointercancel";
     interaction = null;
-    if (changed) renderFinalComposite();
-    else updateDesignEditor();
+    elements.stage.classList.remove("is-panning");
+    if (intent === "pending") {
+      if (!cancelled) state.designSelected = true;
+      updateDesignEditor();
+    } else if (intent === "pan") {
+      applyStageView();
+    } else if (changed) {
+      renderFinalComposite();
+    } else {
+      updateDesignEditor();
+    }
     event.stopPropagation();
   };
   elements.designDragTarget.addEventListener("pointerdown", (event) => start(event, "move"));
@@ -1458,7 +1496,6 @@ function fitStage() {
 
 function enableStageNavigation() {
   let interaction = null;
-  let spacePressed = false;
 
   window.addEventListener("keydown", (event) => {
     const editable = /INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName || "");
@@ -1469,7 +1506,7 @@ function enableStageNavigation() {
       return;
     }
     if (event.code === "Space" && !/INPUT|SELECT|TEXTAREA|BUTTON/.test(document.activeElement?.tagName || "")) {
-      spacePressed = true;
+      stageSpacePressed = true;
       event.preventDefault();
     }
     if (event.key === "Escape") {
@@ -1484,7 +1521,7 @@ function enableStageNavigation() {
     }
   });
   window.addEventListener("keyup", (event) => {
-    if (event.code === "Space") spacePressed = false;
+    if (event.code === "Space") stageSpacePressed = false;
   });
 
   elements.stage.addEventListener("wheel", (event) => {
@@ -1501,7 +1538,7 @@ function enableStageNavigation() {
 
   elements.stage.addEventListener("pointerdown", (event) => {
     const overInteractive = event.target.closest("button, .design-drag-target, .design-scale-handle, .source-popover, .crop-toolbar");
-    const canPan = event.button === 1 || spacePressed || (!overInteractive && event.button === 0);
+    const canPan = event.button === 1 || stageSpacePressed || (!overInteractive && event.button === 0);
     if (!canPan) return;
     if (!overInteractive && state.designSelected) {
       if (state.cropMode) finishCropMode(true);
