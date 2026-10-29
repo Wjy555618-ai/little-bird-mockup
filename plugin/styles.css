@@ -237,7 +237,6 @@ html.is-collapsed .collapsed-bar[aria-hidden="true"] { visibility: visible; }
 @media (max-width: 900px) {
   .mode-tab { padding: 0 8px; }
   .workspace { grid-template-columns: 272px minmax(0, 1fr); }
-  .canvas-wrap canvas { max-width: calc(100vw - 320px); }
   .asset-meta { display: none; }
   .actionbar { grid-template-columns: 1fr; }
   .action-buttons { grid-column: 1; }

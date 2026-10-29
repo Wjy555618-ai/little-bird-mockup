@@ -43,6 +43,13 @@ test("shared geometry converts between screen plane and perspective canvas witho
     assert.ok(Math.abs(actualFrameQuad[index][0] - expectedFrameQuad[index][0]) < 0.000001);
     assert.ok(Math.abs(actualFrameQuad[index][1] - expectedFrameQuad[index][1]) < 0.000001);
   }
+  const desiredFrameQuad = [[230, 170], [760, 130], [800, 590], [190, 620]];
+  const recoveredSurfaceQuad = renderer.surfaceQuadForFrameQuad(frame, 16 / 9, desiredFrameQuad);
+  const recoveredFrameQuad = renderer.frameQuadOnSurface(frame, 16 / 9, recoveredSurfaceQuad);
+  for (let index = 0; index < 4; index += 1) {
+    assert.ok(Math.abs(recoveredFrameQuad[index][0] - desiredFrameQuad[index][0]) < 0.000001);
+    assert.ok(Math.abs(recoveredFrameQuad[index][1] - desiredFrameQuad[index][1]) < 0.000001);
+  }
   const coverFrame = renderer.imageFrameForCover({ width: 900, height: 1600 }, { cx: 600, cy: 300, width: 1200, height: 600, rotation: 0 });
   assert.equal(Math.round(coverFrame.width), 1200);
   assert.equal(Math.round(coverFrame.height), 2133);
@@ -59,6 +66,41 @@ test("shared geometry converts between screen plane and perspective canvas witho
     JSON.parse(JSON.stringify(renderer.frameQuadOnSurface(fixedAperture, 16 / 9, [[260, 185], [1190, 185], [1190, 702], [260, 702]]))),
     [[260, 185], [1190, 185], [1190, 702], [260, 702]]
   );
+
+  const moved = renderer.constrainFrameVisibility(
+    { ...fixedAperture, cx: 5000, cy: -5000 },
+    fixedAperture,
+    0.1
+  );
+  assert.equal(moved.cx, 1680);
+  assert.equal(moved.cy, -270);
+
+  const eastResize = renderer.resizeFrameFromHandle(
+    fixedAperture,
+    "e",
+    [1200, 337.5],
+    [900, 337.5],
+    true
+  );
+  assert.deepEqual({ ...eastResize }, { cx: 450, cy: 337.5, width: 900, height: 675, rotation: 0 });
+  const cornerResize = renderer.resizeFrameFromHandle(
+    fixedAperture,
+    "se",
+    [1200, 675],
+    [900, 506.25],
+    true
+  );
+  assert.deepEqual({ ...cornerResize }, { cx: 450, cy: 253.125, width: 900, height: 506.25, rotation: 0 });
+  const fixedCoverFrame = renderer.imageFrameForCover({ width: 900, height: 1600 }, fixedAperture);
+  const transformedImage = renderer.transformFrameBetweenFrames(
+    fixedCoverFrame,
+    fixedAperture,
+    cornerResize
+  );
+  assert.equal(transformedImage.cx, cornerResize.cx);
+  assert.equal(transformedImage.cy, cornerResize.cy);
+  assert.equal(transformedImage.width, 900);
+  assert.ok(Math.abs(transformedImage.height - 1600) < 0.001);
 });
 
 test("plugin uses a fixed production domain and a development-only local catalog", () => {
@@ -146,7 +188,7 @@ test("continuous editing uses responsive preview rendering and a final-quality c
   assert.match(uiScript, /renderFinalComposite\(\);\s*const blob = await canvasBlob\(\)/);
 });
 
-test("the asset aperture is fixed while the source image owns all direct transforms", () => {
+test("one canonical content frame owns rendering, controls and direct transforms", () => {
   assert.match(rendererScript, /asset\.screen\.recommendedSize/);
   assert.doesNotMatch(uiHtml, /<option value="stretch">/);
   assert.match(uiHtml, /自动填满 · 不变形/);
@@ -154,21 +196,28 @@ test("the asset aperture is fixed while the source image owns all direct transfo
   assert.match(rendererScript, /function screenPlane/);
   assert.match(rendererScript, /function normalizeFrame/);
   assert.match(rendererScript, /function frameQuadOnSurface/);
+  assert.match(rendererScript, /function surfaceQuadForFrameQuad/);
   assert.match(rendererScript, /function imageFrameForCover/);
   assert.match(rendererScript, /function constrainImageFrameToCover/);
+  assert.match(rendererScript, /function constrainFrameVisibility/);
+  assert.match(rendererScript, /function resizeFrameFromHandle/);
+  assert.match(rendererScript, /function transformFrameBetweenFrames/);
   assert.match(rendererScript, /function createContentCanvas/);
   assert.match(rendererScript, /frameQuadOnSurface\(content\.frame, targetAspect, surfaceQuad\)/);
   assert.doesNotMatch(rendererScript, /createScreenCanvas\([^\n]+content\);/);
   assert.match(uiScript, /contentFrame:/);
   assert.match(uiScript, /imageFrame:/);
   assert.match(uiScript, /function fixedApertureFrame/);
-  assert.match(uiScript, /state\.contentFrame = fixedApertureFrame\(\)/);
+  assert.match(uiScript, /state\.contentFrame = renderer\.constrainFrameVisibility/);
   assert.match(uiScript, /return renderer\.frameQuadOnSurface\(frame, targetAspect, activeQuad\(\)\)/);
+  assert.doesNotMatch(uiScript, /state\.mode === "perspective"[^\n]*return cloneQuad\(activeQuad\(\)\)/);
+  assert.match(uiScript, /renderer\.surfaceQuadForFrameQuad/);
   assert.match(uiScript, /return frameCanvasPoints\(state\.contentFrame\)/);
   assert.doesNotMatch(uiScript, /frameCanvasPoints\(state\.imageFrame\)/);
   assert.match(uiScript, /content: state\.designImage \? \{ frame: state\.contentFrame, imageFrame: state\.imageFrame \}/);
   assert.doesNotMatch(uiScript, /constrainCoverAdjustments|cropGeometry/);
   assert.match(uiHtml, /id="recommendedSize"/);
+  assert.doesNotMatch(uiStyles, /\.canvas-wrap canvas\s*\{[^}]*max-width/s);
 });
 
 test("the design supports direct move, four-corner proportional resize and four-edge resize", () => {
@@ -176,9 +225,10 @@ test("the design supports direct move, four-corner proportional resize and four-
   assert.match(uiScript, /designDragTarget\.addEventListener\("pointerdown"/);
   assert.match(uiScript, /\.design-scale-handle/);
   assert.match(uiScript, /pointOnScreenPlane/);
-  assert.match(uiScript, /function resizeImageFromApertureHandle/);
-  assert.match(uiScript, /startImageFrame, apertureFrame, handleName, startPointer, pointer/);
-  assert.match(uiScript, /const isCorner = handleName\.length === 2/);
+  assert.match(uiScript, /renderer\.resizeFrameFromHandle/);
+  assert.match(uiScript, /renderer\.transformFrameBetweenFrames/);
+  assert.doesNotMatch(uiScript, /resizeImageFromApertureHandle/);
+  assert.doesNotMatch(uiScript, /state\.imageFrame = renderer\.constrainImageFrameToCover/);
   assert.match(uiScript, /window\.addEventListener\("pointermove", move/);
   assert.match(uiStyles, /\.design-drag-target\s*\{[^}]*cursor:\s*move/s);
   assert.equal((uiHtml.match(/class="design-scale-handle/g) || []).length, 8);
@@ -243,8 +293,9 @@ test("one editor owns selection crop perspective and constant-size handles", () 
   assert.match(uiHtml, /id="cropShade"/);
   assert.match(uiScript, /enterCropMode/);
   assert.match(uiScript, /state\.cropSnapshot = editorSnapshot\(\)/);
-  assert.doesNotMatch(uiScript, /state\.contentFrame = \{ \.\.\.interaction\.startFrame, cx:/);
-  assert.match(uiScript, /state\.imageFrame = renderer\.constrainImageFrameToCover/);
+  assert.match(uiScript, /if \(state\.cropMode\) state\.imageFrame = \{ \.\.\.interaction\.startImageFrame \}/);
+  assert.match(uiScript, /state\.contentFrame = resizedContent/);
+  assert.doesNotMatch(uiScript, /state\.imageFrame = renderer\.constrainImageFrameToCover/);
   assert.match(uiStyles, /\.design-editor\.is-cropping \.crop-shade/);
   assert.match(uiScript, /state\.mode === "perspective" \|\| event\.metaKey \|\| event\.ctrlKey/);
   assert.match(uiScript, /function undoEditor/);

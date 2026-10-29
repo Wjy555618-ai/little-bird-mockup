@@ -127,6 +127,45 @@
     ));
   }
 
+  function solveLinearSystem(matrix, values) {
+    const size = values.length;
+    const rows = matrix.map((row, index) => [...row, values[index]]);
+    for (let column = 0; column < size; column += 1) {
+      let pivot = column;
+      for (let row = column + 1; row < size; row += 1) {
+        if (Math.abs(rows[row][column]) > Math.abs(rows[pivot][column])) pivot = row;
+      }
+      if (Math.abs(rows[pivot][column]) < 0.0000001) return null;
+      [rows[column], rows[pivot]] = [rows[pivot], rows[column]];
+      const divisor = rows[column][column];
+      for (let index = column; index <= size; index += 1) rows[column][index] /= divisor;
+      for (let row = 0; row < size; row += 1) {
+        if (row === column) continue;
+        const factor = rows[row][column];
+        for (let index = column; index <= size; index += 1) rows[row][index] -= factor * rows[column][index];
+      }
+    }
+    return rows.map((row) => row[size]);
+  }
+
+  // Perspective handles edit the visible file boundary, not the hidden full
+  // mockup aperture. Recover the aperture quad whose bilinear projection maps
+  // the current file frame to the requested four visible points. This keeps
+  // normal editing, crop and perspective on one canonical set of file corners.
+  function surfaceQuadForFrameQuad(frame, targetAspect, frameQuad) {
+    const plane = screenPlane(targetAspect);
+    const normalized = normalizeFrame(frame, plane.width, plane.height);
+    const basis = frameCorners(normalized).map(([x, y]) => {
+      const u = x / plane.width;
+      const v = y / plane.height;
+      return [(1 - u) * (1 - v), u * (1 - v), u * v, (1 - u) * v];
+    });
+    const solvedX = solveLinearSystem(basis, frameQuad.map((point) => point[0]));
+    const solvedY = solveLinearSystem(basis, frameQuad.map((point) => point[1]));
+    if (!solvedX || !solvedY) return null;
+    return solvedX.map((x, index) => [x, solvedY[index]]);
+  }
+
   function imageFrameForCover(image, frame) {
     const sourceWidth = Math.max(1, image?.naturalWidth || image?.width || 1);
     const sourceHeight = Math.max(1, image?.naturalHeight || image?.height || 1);
@@ -192,6 +231,122 @@
       width,
       height,
       rotation: normalizedImage.rotation
+    };
+  }
+
+  function pointInFrameAxes(point, frame) {
+    const angle = -frame.rotation * Math.PI / 180;
+    const cosine = Math.cos(angle);
+    const sine = Math.sin(angle);
+    const dx = point[0] - frame.cx;
+    const dy = point[1] - frame.cy;
+    return [dx * cosine - dy * sine, dx * sine + dy * cosine];
+  }
+
+  function pointFromFrameAxes(point, frame) {
+    const angle = frame.rotation * Math.PI / 180;
+    const cosine = Math.cos(angle);
+    const sine = Math.sin(angle);
+    return [
+      frame.cx + point[0] * cosine - point[1] * sine,
+      frame.cy + point[0] * sine + point[1] * cosine
+    ];
+  }
+
+  // Keep an edited file reachable without snapping it back to the aperture.
+  // The old cover constraint made a full-size file mathematically immovable:
+  // every drag was immediately clamped to its starting position.
+  function constrainFrameVisibility(frame, bounds, minimumVisible = 0.1) {
+    const normalizedFrame = normalizeFrame(frame, bounds.width, bounds.height);
+    const normalizedBounds = normalizeFrame(bounds, bounds.width, bounds.height);
+    const relativeAngle = (normalizedFrame.rotation - normalizedBounds.rotation) * Math.PI / 180;
+    const halfWidth = Math.abs(Math.cos(relativeAngle)) * normalizedFrame.width / 2
+      + Math.abs(Math.sin(relativeAngle)) * normalizedFrame.height / 2;
+    const halfHeight = Math.abs(Math.sin(relativeAngle)) * normalizedFrame.width / 2
+      + Math.abs(Math.cos(relativeAngle)) * normalizedFrame.height / 2;
+    const requiredX = Math.min(normalizedBounds.width, halfWidth * 2) * Math.max(0, Math.min(1, minimumVisible));
+    const requiredY = Math.min(normalizedBounds.height, halfHeight * 2) * Math.max(0, Math.min(1, minimumVisible));
+    const local = pointInFrameAxes([normalizedFrame.cx, normalizedFrame.cy], normalizedBounds);
+    const minimumX = -normalizedBounds.width / 2 - halfWidth + requiredX;
+    const maximumX = normalizedBounds.width / 2 + halfWidth - requiredX;
+    const minimumY = -normalizedBounds.height / 2 - halfHeight + requiredY;
+    const maximumY = normalizedBounds.height / 2 + halfHeight - requiredY;
+    const center = pointFromFrameAxes([
+      Math.max(minimumX, Math.min(maximumX, local[0])),
+      Math.max(minimumY, Math.min(maximumY, local[1]))
+    ], normalizedBounds);
+    return { ...normalizedFrame, cx: center[0], cy: center[1] };
+  }
+
+  // Resize from the grabbed edge or corner while the opposite edge remains
+  // anchored. Corners preserve the original aspect ratio; side handles resize
+  // only one axis, matching Figma's normal selection-box behaviour.
+  function resizeFrameFromHandle(frame, handleName, startPointer, pointer, preserveAspect = true) {
+    const normalized = normalizeFrame(frame, frame.width, frame.height);
+    const start = pointInFrameAxes(startPointer, normalized);
+    const next = pointInFrameAxes(pointer, normalized);
+    const deltaX = next[0] - start[0];
+    const deltaY = next[1] - start[1];
+    let left = -normalized.width / 2;
+    let right = normalized.width / 2;
+    let top = -normalized.height / 2;
+    let bottom = normalized.height / 2;
+    if (handleName.includes("w")) left += deltaX;
+    if (handleName.includes("e")) right += deltaX;
+    if (handleName.includes("n")) top += deltaY;
+    if (handleName.includes("s")) bottom += deltaY;
+    const minimumSize = 20;
+    if (right - left < minimumSize) {
+      if (handleName.includes("w")) left = right - minimumSize;
+      else right = left + minimumSize;
+    }
+    if (bottom - top < minimumSize) {
+      if (handleName.includes("n")) top = bottom - minimumSize;
+      else bottom = top + minimumSize;
+    }
+
+    const isCorner = handleName.length === 2;
+    if (isCorner && preserveAspect) {
+      const scaleX = (right - left) / normalized.width;
+      const scaleY = (bottom - top) / normalized.height;
+      const scale = Math.max(0.05, Math.min(8,
+        Math.abs(scaleX - 1) >= Math.abs(scaleY - 1) ? scaleX : scaleY
+      ));
+      const width = normalized.width * scale;
+      const height = normalized.height * scale;
+      if (handleName.includes("w")) left = right - width;
+      else right = left + width;
+      if (handleName.includes("n")) top = bottom - height;
+      else bottom = top + height;
+    }
+
+    const localCenter = [(left + right) / 2, (top + bottom) / 2];
+    const center = pointFromFrameAxes(localCenter, normalized);
+    return {
+      cx: center[0],
+      cy: center[1],
+      width: Math.max(minimumSize, right - left),
+      height: Math.max(minimumSize, bottom - top),
+      rotation: normalized.rotation
+    };
+  }
+
+  // Apply the exact same local transform to the uploaded content when the
+  // ordinary selection box moves or resizes. Crop mode deliberately skips this
+  // helper so the crop window can move over a stationary source image.
+  function transformFrameBetweenFrames(subject, fromFrame, toFrame) {
+    const from = normalizeFrame(fromFrame, fromFrame.width, fromFrame.height);
+    const to = normalizeFrame(toFrame, toFrame.width, toFrame.height);
+    const local = pointInFrameAxes([subject.cx, subject.cy], from);
+    const normalizedX = local[0] / from.width;
+    const normalizedY = local[1] / from.height;
+    const center = pointFromFrameAxes([normalizedX * to.width, normalizedY * to.height], to);
+    return {
+      cx: center[0],
+      cy: center[1],
+      width: Math.max(12, subject.width * to.width / from.width),
+      height: Math.max(12, subject.height * to.height / from.height),
+      rotation: subject.rotation + to.rotation - from.rotation
     };
   }
 
@@ -506,5 +661,5 @@
     return canvas;
   }
 
-  global.MockupRenderer = Object.freeze({ VERSION, DEFAULT_ADJUSTMENTS, DEFAULT_CROP, validateAsset, quadSize, bilinearPoint, inverseBilinearPoint, screenPlane, normalizeFrame, frameCorners, frameQuadOnSurface, imageFrameForCover, constrainImageFrameToCover, expandQuad, cropGeometry, constrainCoverAdjustments, createScreenCanvas, createContentCanvas, drawImageToQuad, renderComposite });
+  global.MockupRenderer = Object.freeze({ VERSION, DEFAULT_ADJUSTMENTS, DEFAULT_CROP, validateAsset, quadSize, bilinearPoint, inverseBilinearPoint, screenPlane, normalizeFrame, frameCorners, frameQuadOnSurface, surfaceQuadForFrameQuad, imageFrameForCover, constrainImageFrameToCover, constrainFrameVisibility, resizeFrameFromHandle, transformFrameBetweenFrames, expandQuad, cropGeometry, constrainCoverAdjustments, createScreenCanvas, createContentCanvas, drawImageToQuad, renderComposite });
 })(window);
