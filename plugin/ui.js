@@ -6,10 +6,11 @@ const renderer = window.MockupRenderer;
 const pdfjs = window.pdfjsLib;
 const CATALOG_CACHE_KEY = "mockup-studio-catalog-v1";
 const RECENT_KEY = "mockup-studio-recent-v1";
-const CONTENT_BLUR_ENTER_MS = 360;
-const MIN_CONTENT_BLUR_MS = 520;
-const CONTENT_REVEAL_MS = 440;
+const CONTENT_BLUR_ENTER_MS = 280;
+const MIN_CONTENT_BLUR_MS = 380;
+const CONTENT_REVEAL_MS = 320;
 const memoryStorage = new Map();
+const catalogImageCache = new Map();
 
 let pdfWorkerUrl = "";
 if (pdfjs && window.__PDF_WORKER_SOURCE__) {
@@ -528,7 +529,11 @@ function hydrateCatalog() {
   const categories = state.manifest.categories || [];
   renderCategoryMenu(categories);
   renderAssetGrid({ animate: true });
-  if (!state.selectedAsset && state.manifest.items[0]) selectAsset(state.manifest.items[0].id);
+  if (!state.selectedAsset && state.manifest.items[0]) {
+    selectAsset(state.manifest.items[0].id).finally(scheduleCatalogPreload);
+  } else {
+    scheduleCatalogPreload();
+  }
 }
 
 function recentIds() {
@@ -667,10 +672,54 @@ function loadImage(url) {
   return new Promise((resolve, reject) => {
     const image = new Image();
     image.crossOrigin = "anonymous";
-    image.onload = () => resolve(image);
+    image.onload = async () => {
+      try {
+        await image.decode?.();
+      } catch {
+        // The image is still drawable after a successful load in older hosts.
+      }
+      resolve(image);
+    };
     image.onerror = () => reject(new Error("样机图片加载失败"));
     image.src = url;
   });
+}
+
+function loadCatalogImage(relativePath) {
+  const url = resolveAssetUrl(relativePath);
+  if (!catalogImageCache.has(url)) {
+    const request = loadImage(url).catch((error) => {
+      catalogImageCache.delete(url);
+      throw error;
+    });
+    catalogImageCache.set(url, request);
+  }
+  return catalogImageCache.get(url);
+}
+
+async function loadAssetImages(asset) {
+  const baseImage = await loadCatalogImage(asset.layers.base);
+  const optionalLayers = await Promise.all(["reflection", "foreground"].map(async (name) => {
+    if (!asset.layers[name]) return [name, null];
+    return [name, await loadCatalogImage(asset.layers[name])];
+  }));
+  return { baseImage, optionalLayers };
+}
+
+let catalogPreloadScheduled = false;
+
+function scheduleCatalogPreload() {
+  if (catalogPreloadScheduled || !state.manifest) return;
+  catalogPreloadScheduled = true;
+  const preload = () => {
+    for (const asset of state.manifest.items) {
+      loadAssetImages(asset).catch(() => {
+        // A foreground selection reports failures. Background warming stays silent.
+      });
+    }
+  };
+  if (typeof requestIdleCallback === "function") requestIdleCallback(preload, { timeout: 800 });
+  else setTimeout(preload, 180);
 }
 
 let assetRequestSequence = 0;
@@ -678,42 +727,16 @@ let assetRequestSequence = 0;
 async function selectAsset(id) {
   const asset = state.manifest?.items.find((item) => item.id === id);
   if (!asset) return;
+  if (state.selectedAsset?.id === id && state.baseImage && !state.rendering) return;
   const requestSequence = ++assetRequestSequence;
   const assetChanged = state.selectedAsset?.id !== id;
-  state.selectedAsset = asset;
-  if (assetChanged) {
-    state.customQuad = asset.screen.quad.map((point) => [...point]);
-    state.adjustments = { ...DEFAULT_ADJUSTMENTS };
-    state.crop = { ...DEFAULT_CROP };
-    state.contentFrame = null;
-    state.imageFrame = null;
-    if (state.designImage) resetContentGeometry();
-    state.designSelected = false;
-    state.cropMode = false;
-    state.cropSnapshot = null;
-    state.history = [];
-    state.future = [];
-  }
   closeSourcePopover();
-  rememberRecent(id);
-  elements.fitMode.value = "cover";
-  syncAdjustmentControls();
-  updateSourceGuide();
-  elements.assetName.textContent = asset.name;
-  elements.assetMeta.textContent = `${asset.canvas.width} × ${asset.canvas.height} · ${asset.status === "testing" ? "测试库" : "素材库"}`;
   elements.downloadButton.disabled = true;
   elements.pasteButton.disabled = true;
   state.rendering = true;
   setAnimatedVisibility(elements.renderingBadge, true);
   const blurWasActive = elements.canvasWrap.classList.contains("is-content-blurred");
   elements.canvasWrap.classList.add("is-content-switching");
-  if (state.segment === "similar" && elements.categorySelect.value === "all") {
-    renderAssetGrid({ animate: true });
-  } else {
-    syncAssetSelection();
-    renderRecentStrip();
-  }
-
   if (!blurWasActive) {
     await waitForNextPaint();
     if (requestSequence !== assetRequestSequence) return;
@@ -722,29 +745,56 @@ async function selectAsset(id) {
   const blurStartedAt = performance.now();
 
   try {
-    const assetImagesPromise = (async () => {
-      const baseImage = await loadImage(resolveAssetUrl(asset.layers.base));
-      const optionalLayers = await Promise.all(["reflection", "foreground"].map(async (name) => {
-        if (!asset.layers[name]) return [name, null];
-        return [name, await loadImage(resolveAssetUrl(asset.layers[name]))];
-      }));
-      return { baseImage, optionalLayers };
-    })();
+    const assetImagesPromise = loadAssetImages(asset);
     const [{ baseImage, optionalLayers }] = await Promise.all([
       assetImagesPromise,
       waitForDuration(reducedMotionQuery.matches ? 0 : CONTENT_BLUR_ENTER_MS)
     ]);
     if (requestSequence !== assetRequestSequence) return;
+
+    // Commit the new asset only after every required image is ready. A failed
+    // request therefore cannot leave the card selection ahead of the preview.
+    state.selectedAsset = asset;
+    if (assetChanged) {
+      state.customQuad = asset.screen.quad.map((point) => [...point]);
+      state.adjustments = { ...DEFAULT_ADJUSTMENTS };
+      state.crop = { ...DEFAULT_CROP };
+      state.contentFrame = null;
+      state.imageFrame = null;
+      if (state.designImage) resetContentGeometry();
+      state.designSelected = false;
+      state.cropMode = false;
+      state.cropSnapshot = null;
+      state.history = [];
+      state.future = [];
+    }
     state.baseImage = baseImage;
     state.layerImages = Object.fromEntries(optionalLayers.filter(([, image]) => image));
+    rememberRecent(id);
+    elements.fitMode.value = "cover";
+    syncAdjustmentControls();
+    updateSourceGuide();
+    elements.assetName.textContent = asset.name;
+    elements.assetMeta.textContent = `${asset.canvas.width} × ${asset.canvas.height} · ${asset.status === "testing" ? "测试库" : "素材库"}`;
+    if (state.segment === "similar" && elements.categorySelect.value === "all") {
+      renderAssetGrid({ animate: true });
+    } else {
+      syncAssetSelection();
+      renderRecentStrip();
+    }
     elements.previewCanvas.width = asset.canvas.width;
     elements.previewCanvas.height = asset.canvas.height;
     if (assetChanged) fitStage();
     updatePerspectiveEditor();
     updateDesignEditor();
-    await renderComposite();
+    renderComposite("preview");
   } catch (error) {
-    if (requestSequence === assetRequestSequence) showToast(error instanceof Error ? error.message : "样机加载失败");
+    if (requestSequence === assetRequestSequence) {
+      const message = state.selectedAsset
+        ? "素材暂时无法加载，已保留当前样机"
+        : "素材暂时无法加载，请确认素材服务已启动";
+      showToast(message);
+    }
   } finally {
     if (requestSequence === assetRequestSequence) {
       const minimumBlurTime = reducedMotionQuery.matches ? 0 : MIN_CONTENT_BLUR_MS;
@@ -755,6 +805,8 @@ async function selectAsset(id) {
       if (requestSequence !== assetRequestSequence) return;
       elements.canvasWrap.classList.remove("is-content-blurred");
       setAnimatedVisibility(elements.renderingBadge, false);
+      await waitForNextPaint();
+      if (requestSequence !== assetRequestSequence) return;
       await waitForDuration(reducedMotionQuery.matches ? 0 : CONTENT_REVEAL_MS);
       if (requestSequence !== assetRequestSequence) return;
       state.rendering = false;

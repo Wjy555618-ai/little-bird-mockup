@@ -325,20 +325,34 @@ test("the motion system is restrained, state-driven and reduced-motion safe", ()
   assert.match(uiScript, /function closeCategoryMenu/);
   assert.match(uiStyles, /--ease-blur-in:\s*cubic-bezier\(\.24, \.72, \.2, 1\)/);
   assert.match(uiStyles, /--ease-blur-out:\s*cubic-bezier\(\.16, 1, \.3, 1\)/);
-  assert.match(uiStyles, /\.canvas-wrap canvas\s*\{[^}]*will-change:\s*filter, opacity[^}]*filter 440ms var\(--ease-blur-out\)[^}]*opacity 360ms var\(--ease-blur-out\)/s);
-  assert.match(uiStyles, /\.canvas-wrap\.is-content-blurred canvas\s*\{[^}]*blur\(24px\)[^}]*opacity:\s*\.74[^}]*filter 360ms var\(--ease-blur-in\)[^}]*opacity 320ms var\(--ease-blur-in\)/s);
+  assert.match(uiStyles, /\.canvas-wrap canvas\s*\{[^}]*will-change:\s*filter, opacity[^}]*filter 320ms var\(--ease-blur-out\)[^}]*opacity 280ms var\(--ease-blur-out\)/s);
+  assert.match(uiStyles, /\.canvas-wrap\.is-content-blurred canvas\s*\{[^}]*blur\(24px\)[^}]*opacity:\s*\.74[^}]*filter 280ms var\(--ease-blur-in\)[^}]*opacity 250ms var\(--ease-blur-in\)/s);
   assert.doesNotMatch(uiStyles, /\.canvas-wrap\.is-content-blurred canvas\s*\{[^}]*transform:/s);
   assert.doesNotMatch(uiStyles, /\.canvas-wrap\.is-content-blurred canvas\s*\{[^}]*transition:\s*none/s);
-  assert.match(uiScript, /const CONTENT_BLUR_ENTER_MS = 360/);
-  assert.match(uiScript, /const MIN_CONTENT_BLUR_MS = 520/);
-  assert.match(uiScript, /const CONTENT_REVEAL_MS = 440/);
+  assert.match(uiScript, /const CONTENT_BLUR_ENTER_MS = 280/);
+  assert.match(uiScript, /const MIN_CONTENT_BLUR_MS = 380/);
+  assert.match(uiScript, /const CONTENT_REVEAL_MS = 320/);
   assert.match(uiScript, /function waitForNextPaint\(\)[\s\S]*requestAnimationFrame\(\(\) => requestAnimationFrame\(resolve\)\)/);
   assert.match(uiScript, /await waitForNextPaint\(\);[\s\S]*classList\.add\("is-content-blurred"\)/);
-  assert.match(uiScript, /const assetImagesPromise = \(async \(\) =>[\s\S]*Promise\.all\(\[[\s\S]*assetImagesPromise,[\s\S]*waitForDuration\(reducedMotionQuery\.matches \? 0 : CONTENT_BLUR_ENTER_MS\)/);
+  assert.match(uiScript, /const assetImagesPromise = loadAssetImages\(asset\);[\s\S]*Promise\.all\(\[[\s\S]*assetImagesPromise,[\s\S]*waitForDuration\(reducedMotionQuery\.matches \? 0 : CONTENT_BLUR_ENTER_MS\)/);
   assert.match(uiScript, /remainingBlurTime = Math\.max\(0, minimumBlurTime - \(performance\.now\(\) - blurStartedAt\)\)/);
   assert.match(uiScript, /classList\.remove\("is-content-blurred"\);[\s\S]*await waitForDuration\(reducedMotionQuery\.matches \? 0 : CONTENT_REVEAL_MS\);[\s\S]*classList\.remove\("is-content-switching"\)/);
   assert.match(uiScript, /function animateStageView/);
   assert.match(uiScript, /stopStageViewAnimation\(\);[\s\S]*elements\.stage\.addEventListener\("wheel"/s);
+});
+
+test("asset switches commit only after resources are ready and warm the catalog cache", () => {
+  const selectionSource = uiScript.slice(
+    uiScript.indexOf("async function selectAsset"),
+    uiScript.indexOf("function updateOutputAvailability")
+  );
+  assert.ok(selectionSource.indexOf("await Promise.all") < selectionSource.indexOf("state.selectedAsset = asset"));
+  assert.match(selectionSource, /state\.selectedAsset = asset;[\s\S]*rememberRecent\(id\)/);
+  assert.match(selectionSource, /renderComposite\("preview"\)/);
+  assert.match(selectionSource, /已保留当前样机/);
+  assert.match(uiScript, /const catalogImageCache = new Map\(\)/);
+  assert.match(uiScript, /function scheduleCatalogPreload\(\)/);
+  assert.match(serverScript, /max-age=31536000, immutable/);
 });
 
 test("Figma and local sources flatten to one static design object", () => {

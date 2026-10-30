@@ -67,6 +67,33 @@
     return inside;
   }
 
+  function polygonScanlineBounds(points, minimumY, maximumY) {
+    const rows = new Array(Math.max(0, maximumY - minimumY + 1)).fill(null);
+    for (let y = minimumY; y <= maximumY; y += 1) {
+      const sampleY = y + 0.5;
+      const intersections = [];
+      for (let index = 0; index < points.length; index += 1) {
+        const current = points[index];
+        const next = points[(index + 1) % points.length];
+        if ((current[1] > sampleY) === (next[1] > sampleY)) continue;
+        const ratio = (sampleY - current[1]) / (next[1] - current[1]);
+        intersections.push(current[0] + (next[0] - current[0]) * ratio);
+      }
+      if (intersections.length < 2) continue;
+      intersections.sort((a, b) => a - b);
+      rows[y - minimumY] = [
+        Math.ceil(intersections[0] - 0.5),
+        Math.floor(intersections.at(-1) - 0.5)
+      ];
+    }
+    return { minimumY, rows };
+  }
+
+  function scanlineContains(scanlines, x, y) {
+    const row = scanlines.rows[y - scanlines.minimumY];
+    return Boolean(row && x >= row[0] && x <= row[1]);
+  }
+
   function chromaAlpha(red, green, blue, asset, relaxed = false) {
     if (!asset.chromaKey?.enabled) return 0;
     const configuredMinimum = asset.chromaKey.minimumGreen || 65;
@@ -121,21 +148,23 @@
     const maximumX = Math.min(width - 1, Math.ceil(Math.max(...supportQuad.map((point) => point[0]))));
     const minimumY = Math.max(0, Math.floor(Math.min(...supportQuad.map((point) => point[1]))));
     const maximumY = Math.min(height - 1, Math.ceil(Math.max(...supportQuad.map((point) => point[1]))));
+    const supportScanlines = polygonScanlineBounds(supportQuad, minimumY, maximumY);
 
     for (let y = minimumY; y <= maximumY; y += 1) {
       const runs = [];
       let runStart = -1;
-      for (let x = minimumX; x <= maximumX; x += 1) {
+      const rowBounds = supportScanlines.rows[y - minimumY];
+      if (!rowBounds) continue;
+      const rowMinimumX = Math.max(minimumX, rowBounds[0]);
+      const rowMaximumX = Math.min(maximumX, rowBounds[1]);
+      for (let x = rowMinimumX; x <= rowMaximumX; x += 1) {
         const pixel = y * width + x;
-        let alpha = 0;
-        if (pointInPolygon(x + 0.5, y + 0.5, supportQuad)) {
-          const index = pixel * 4;
-          alpha = apertureAlpha(sourcePixels.data[index], sourcePixels.data[index + 1], sourcePixels.data[index + 2], asset);
-          aperturePixels[pixel] = alpha;
-        }
+        const index = pixel * 4;
+        const alpha = apertureAlpha(sourcePixels.data[index], sourcePixels.data[index + 1], sourcePixels.data[index + 2], asset);
+        aperturePixels[pixel] = alpha;
         if (alpha && runStart < 0) runStart = x;
-        if ((!alpha || x === maximumX) && runStart >= 0) {
-          const end = alpha && x === maximumX ? x : x - 1;
+        if ((!alpha || x === rowMaximumX) && runStart >= 0) {
+          const end = alpha && x === rowMaximumX ? x : x - 1;
           runs.push([runStart, end]);
           runStart = -1;
         }
@@ -145,7 +174,7 @@
       const minimumRun = Math.max(3, Math.floor(longest * 0.15));
       const screenRuns = runs.filter(([start, end]) => end - start + 1 >= minimumRun);
       if (!screenRuns.length) {
-        for (let x = minimumX; x <= maximumX; x += 1) aperturePixels[y * width + x] = 0;
+        for (let x = rowMinimumX; x <= rowMaximumX; x += 1) aperturePixels[y * width + x] = 0;
         continue;
       }
       const start = screenRuns[0][0];
@@ -154,9 +183,9 @@
       // Fill only between substantial same-row key runs: the outer silhouette
       // still comes from real pixels, while interior speckles cannot become a
       // black or green seam in the final aperture.
-      for (let x = minimumX; x < start; x += 1) aperturePixels[y * width + x] = 0;
+      for (let x = rowMinimumX; x < start; x += 1) aperturePixels[y * width + x] = 0;
       for (let x = start + 1; x < end; x += 1) aperturePixels[y * width + x] = 255;
-      for (let x = end + 1; x <= maximumX; x += 1) aperturePixels[y * width + x] = 0;
+      for (let x = end + 1; x <= rowMaximumX; x += 1) aperturePixels[y * width + x] = 0;
     }
 
     const dilatedAperture = aperturePixels.slice();
@@ -168,7 +197,7 @@
           for (let offsetX = -2; offsetX <= 2; offsetX += 1) {
             const targetX = x + offsetX;
             const targetY = y + offsetY;
-            if (!pointInPolygon(targetX + 0.5, targetY + 0.5, supportQuad)) continue;
+            if (!scanlineContains(supportScanlines, targetX, targetY)) continue;
             dilatedAperture[targetY * width + targetX] = 255;
           }
         }
@@ -213,6 +242,7 @@
     const maximumX = Math.ceil(Math.max(...supportQuad.map((point) => point[0])));
     const minimumY = Math.floor(Math.min(...supportQuad.map((point) => point[1])));
     const maximumY = Math.ceil(Math.max(...supportQuad.map((point) => point[1])));
+    const supportScanlines = polygonScanlineBounds(supportQuad, minimumY, maximumY);
     for (let index = 0; index < pixels.data.length; index += 4) {
       const red = pixels.data[index];
       const green = pixels.data[index + 1];
@@ -221,8 +251,10 @@
       const x = pixel % canvas.width;
       const y = Math.floor(pixel / canvas.width);
       const insideSupportBounds = x >= minimumX && x <= maximumX && y >= minimumY && y <= maximumY;
-      const localRelaxation = insideSupportBounds && pointInPolygon(x + 0.5, y + 0.5, supportQuad);
-      const alpha = chromaAlpha(red, green, blue, asset, localRelaxation);
+      let alpha = chromaAlpha(red, green, blue, asset, false);
+      if (!alpha && insideSupportBounds && scanlineContains(supportScanlines, x, y)) {
+        alpha = chromaAlpha(red, green, blue, asset, true);
+      }
       if (alpha) {
         const shade = Math.max(0.35, Math.min(1, green / 255));
         const mix = alpha / 255;

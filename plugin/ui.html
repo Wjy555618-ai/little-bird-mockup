@@ -208,8 +208,8 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .canvas-wrap { width: 1px; height: 1px; max-width: 100%; max-height: 100%; position: relative; overflow: hidden; border-radius: 15px; background: transparent; transform-origin: center; will-change: transform, opacity; transition: opacity var(--motion-base) ease; }
 .canvas-wrap.is-content-switching { cursor: progress; }
 .canvas-wrap.is-view-animating { transition: transform var(--motion-panel) var(--ease-out), opacity var(--motion-base) ease, filter var(--motion-base) ease; }
-.canvas-wrap canvas { width: 100%; height: 100%; display: block; background: transparent; filter: blur(0) saturate(1) brightness(1); opacity: 1; will-change: filter, opacity; transition: filter 440ms var(--ease-blur-out), opacity 360ms var(--ease-blur-out); }
-.canvas-wrap.is-content-blurred canvas { filter: blur(24px) saturate(.64) brightness(.76); opacity: .74; transition: filter 360ms var(--ease-blur-in), opacity 320ms var(--ease-blur-in); }
+.canvas-wrap canvas { width: 100%; height: 100%; display: block; background: transparent; filter: blur(0) saturate(1) brightness(1); opacity: 1; will-change: filter, opacity; transition: filter 320ms var(--ease-blur-out), opacity 280ms var(--ease-blur-out); }
+.canvas-wrap.is-content-blurred canvas { filter: blur(24px) saturate(.64) brightness(.76); opacity: .74; transition: filter 280ms var(--ease-blur-in), opacity 250ms var(--ease-blur-in); }
 .design-editor { position: absolute; inset: 0; z-index: 4; opacity: 1; pointer-events: none; transition: opacity var(--motion-base) ease; }
 .canvas-wrap.is-content-switching .design-editor, .canvas-wrap.is-content-switching .screen-cta { opacity: 0; pointer-events: none; }
 .design-editor[hidden] { display: none; }
@@ -674,6 +674,33 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
     return inside;
   }
 
+  function polygonScanlineBounds(points, minimumY, maximumY) {
+    const rows = new Array(Math.max(0, maximumY - minimumY + 1)).fill(null);
+    for (let y = minimumY; y <= maximumY; y += 1) {
+      const sampleY = y + 0.5;
+      const intersections = [];
+      for (let index = 0; index < points.length; index += 1) {
+        const current = points[index];
+        const next = points[(index + 1) % points.length];
+        if ((current[1] > sampleY) === (next[1] > sampleY)) continue;
+        const ratio = (sampleY - current[1]) / (next[1] - current[1]);
+        intersections.push(current[0] + (next[0] - current[0]) * ratio);
+      }
+      if (intersections.length < 2) continue;
+      intersections.sort((a, b) => a - b);
+      rows[y - minimumY] = [
+        Math.ceil(intersections[0] - 0.5),
+        Math.floor(intersections.at(-1) - 0.5)
+      ];
+    }
+    return { minimumY, rows };
+  }
+
+  function scanlineContains(scanlines, x, y) {
+    const row = scanlines.rows[y - scanlines.minimumY];
+    return Boolean(row && x >= row[0] && x <= row[1]);
+  }
+
   function chromaAlpha(red, green, blue, asset, relaxed = false) {
     if (!asset.chromaKey?.enabled) return 0;
     const configuredMinimum = asset.chromaKey.minimumGreen || 65;
@@ -728,21 +755,23 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
     const maximumX = Math.min(width - 1, Math.ceil(Math.max(...supportQuad.map((point) => point[0]))));
     const minimumY = Math.max(0, Math.floor(Math.min(...supportQuad.map((point) => point[1]))));
     const maximumY = Math.min(height - 1, Math.ceil(Math.max(...supportQuad.map((point) => point[1]))));
+    const supportScanlines = polygonScanlineBounds(supportQuad, minimumY, maximumY);
 
     for (let y = minimumY; y <= maximumY; y += 1) {
       const runs = [];
       let runStart = -1;
-      for (let x = minimumX; x <= maximumX; x += 1) {
+      const rowBounds = supportScanlines.rows[y - minimumY];
+      if (!rowBounds) continue;
+      const rowMinimumX = Math.max(minimumX, rowBounds[0]);
+      const rowMaximumX = Math.min(maximumX, rowBounds[1]);
+      for (let x = rowMinimumX; x <= rowMaximumX; x += 1) {
         const pixel = y * width + x;
-        let alpha = 0;
-        if (pointInPolygon(x + 0.5, y + 0.5, supportQuad)) {
-          const index = pixel * 4;
-          alpha = apertureAlpha(sourcePixels.data[index], sourcePixels.data[index + 1], sourcePixels.data[index + 2], asset);
-          aperturePixels[pixel] = alpha;
-        }
+        const index = pixel * 4;
+        const alpha = apertureAlpha(sourcePixels.data[index], sourcePixels.data[index + 1], sourcePixels.data[index + 2], asset);
+        aperturePixels[pixel] = alpha;
         if (alpha && runStart < 0) runStart = x;
-        if ((!alpha || x === maximumX) && runStart >= 0) {
-          const end = alpha && x === maximumX ? x : x - 1;
+        if ((!alpha || x === rowMaximumX) && runStart >= 0) {
+          const end = alpha && x === rowMaximumX ? x : x - 1;
           runs.push([runStart, end]);
           runStart = -1;
         }
@@ -752,7 +781,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
       const minimumRun = Math.max(3, Math.floor(longest * 0.15));
       const screenRuns = runs.filter(([start, end]) => end - start + 1 >= minimumRun);
       if (!screenRuns.length) {
-        for (let x = minimumX; x <= maximumX; x += 1) aperturePixels[y * width + x] = 0;
+        for (let x = rowMinimumX; x <= rowMaximumX; x += 1) aperturePixels[y * width + x] = 0;
         continue;
       }
       const start = screenRuns[0][0];
@@ -761,9 +790,9 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
       // Fill only between substantial same-row key runs: the outer silhouette
       // still comes from real pixels, while interior speckles cannot become a
       // black or green seam in the final aperture.
-      for (let x = minimumX; x < start; x += 1) aperturePixels[y * width + x] = 0;
+      for (let x = rowMinimumX; x < start; x += 1) aperturePixels[y * width + x] = 0;
       for (let x = start + 1; x < end; x += 1) aperturePixels[y * width + x] = 255;
-      for (let x = end + 1; x <= maximumX; x += 1) aperturePixels[y * width + x] = 0;
+      for (let x = end + 1; x <= rowMaximumX; x += 1) aperturePixels[y * width + x] = 0;
     }
 
     const dilatedAperture = aperturePixels.slice();
@@ -775,7 +804,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
           for (let offsetX = -2; offsetX <= 2; offsetX += 1) {
             const targetX = x + offsetX;
             const targetY = y + offsetY;
-            if (!pointInPolygon(targetX + 0.5, targetY + 0.5, supportQuad)) continue;
+            if (!scanlineContains(supportScanlines, targetX, targetY)) continue;
             dilatedAperture[targetY * width + targetX] = 255;
           }
         }
@@ -820,6 +849,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
     const maximumX = Math.ceil(Math.max(...supportQuad.map((point) => point[0])));
     const minimumY = Math.floor(Math.min(...supportQuad.map((point) => point[1])));
     const maximumY = Math.ceil(Math.max(...supportQuad.map((point) => point[1])));
+    const supportScanlines = polygonScanlineBounds(supportQuad, minimumY, maximumY);
     for (let index = 0; index < pixels.data.length; index += 4) {
       const red = pixels.data[index];
       const green = pixels.data[index + 1];
@@ -828,8 +858,10 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
       const x = pixel % canvas.width;
       const y = Math.floor(pixel / canvas.width);
       const insideSupportBounds = x >= minimumX && x <= maximumX && y >= minimumY && y <= maximumY;
-      const localRelaxation = insideSupportBounds && pointInPolygon(x + 0.5, y + 0.5, supportQuad);
-      const alpha = chromaAlpha(red, green, blue, asset, localRelaxation);
+      let alpha = chromaAlpha(red, green, blue, asset, false);
+      if (!alpha && insideSupportBounds && scanlineContains(supportScanlines, x, y)) {
+        alpha = chromaAlpha(red, green, blue, asset, true);
+      }
       if (alpha) {
         const shade = Math.max(0.35, Math.min(1, green / 255));
         const mix = alpha / 255;
@@ -1490,10 +1522,11 @@ const renderer = window.MockupRenderer;
 const pdfjs = window.pdfjsLib;
 const CATALOG_CACHE_KEY = "mockup-studio-catalog-v1";
 const RECENT_KEY = "mockup-studio-recent-v1";
-const CONTENT_BLUR_ENTER_MS = 360;
-const MIN_CONTENT_BLUR_MS = 520;
-const CONTENT_REVEAL_MS = 440;
+const CONTENT_BLUR_ENTER_MS = 280;
+const MIN_CONTENT_BLUR_MS = 380;
+const CONTENT_REVEAL_MS = 320;
 const memoryStorage = new Map();
+const catalogImageCache = new Map();
 
 let pdfWorkerUrl = "";
 if (pdfjs && window.__PDF_WORKER_SOURCE__) {
@@ -2012,7 +2045,11 @@ function hydrateCatalog() {
   const categories = state.manifest.categories || [];
   renderCategoryMenu(categories);
   renderAssetGrid({ animate: true });
-  if (!state.selectedAsset && state.manifest.items[0]) selectAsset(state.manifest.items[0].id);
+  if (!state.selectedAsset && state.manifest.items[0]) {
+    selectAsset(state.manifest.items[0].id).finally(scheduleCatalogPreload);
+  } else {
+    scheduleCatalogPreload();
+  }
 }
 
 function recentIds() {
@@ -2151,10 +2188,54 @@ function loadImage(url) {
   return new Promise((resolve, reject) => {
     const image = new Image();
     image.crossOrigin = "anonymous";
-    image.onload = () => resolve(image);
+    image.onload = async () => {
+      try {
+        await image.decode?.();
+      } catch {
+        // The image is still drawable after a successful load in older hosts.
+      }
+      resolve(image);
+    };
     image.onerror = () => reject(new Error("样机图片加载失败"));
     image.src = url;
   });
+}
+
+function loadCatalogImage(relativePath) {
+  const url = resolveAssetUrl(relativePath);
+  if (!catalogImageCache.has(url)) {
+    const request = loadImage(url).catch((error) => {
+      catalogImageCache.delete(url);
+      throw error;
+    });
+    catalogImageCache.set(url, request);
+  }
+  return catalogImageCache.get(url);
+}
+
+async function loadAssetImages(asset) {
+  const baseImage = await loadCatalogImage(asset.layers.base);
+  const optionalLayers = await Promise.all(["reflection", "foreground"].map(async (name) => {
+    if (!asset.layers[name]) return [name, null];
+    return [name, await loadCatalogImage(asset.layers[name])];
+  }));
+  return { baseImage, optionalLayers };
+}
+
+let catalogPreloadScheduled = false;
+
+function scheduleCatalogPreload() {
+  if (catalogPreloadScheduled || !state.manifest) return;
+  catalogPreloadScheduled = true;
+  const preload = () => {
+    for (const asset of state.manifest.items) {
+      loadAssetImages(asset).catch(() => {
+        // A foreground selection reports failures. Background warming stays silent.
+      });
+    }
+  };
+  if (typeof requestIdleCallback === "function") requestIdleCallback(preload, { timeout: 800 });
+  else setTimeout(preload, 180);
 }
 
 let assetRequestSequence = 0;
@@ -2162,42 +2243,16 @@ let assetRequestSequence = 0;
 async function selectAsset(id) {
   const asset = state.manifest?.items.find((item) => item.id === id);
   if (!asset) return;
+  if (state.selectedAsset?.id === id && state.baseImage && !state.rendering) return;
   const requestSequence = ++assetRequestSequence;
   const assetChanged = state.selectedAsset?.id !== id;
-  state.selectedAsset = asset;
-  if (assetChanged) {
-    state.customQuad = asset.screen.quad.map((point) => [...point]);
-    state.adjustments = { ...DEFAULT_ADJUSTMENTS };
-    state.crop = { ...DEFAULT_CROP };
-    state.contentFrame = null;
-    state.imageFrame = null;
-    if (state.designImage) resetContentGeometry();
-    state.designSelected = false;
-    state.cropMode = false;
-    state.cropSnapshot = null;
-    state.history = [];
-    state.future = [];
-  }
   closeSourcePopover();
-  rememberRecent(id);
-  elements.fitMode.value = "cover";
-  syncAdjustmentControls();
-  updateSourceGuide();
-  elements.assetName.textContent = asset.name;
-  elements.assetMeta.textContent = `${asset.canvas.width} × ${asset.canvas.height} · ${asset.status === "testing" ? "测试库" : "素材库"}`;
   elements.downloadButton.disabled = true;
   elements.pasteButton.disabled = true;
   state.rendering = true;
   setAnimatedVisibility(elements.renderingBadge, true);
   const blurWasActive = elements.canvasWrap.classList.contains("is-content-blurred");
   elements.canvasWrap.classList.add("is-content-switching");
-  if (state.segment === "similar" && elements.categorySelect.value === "all") {
-    renderAssetGrid({ animate: true });
-  } else {
-    syncAssetSelection();
-    renderRecentStrip();
-  }
-
   if (!blurWasActive) {
     await waitForNextPaint();
     if (requestSequence !== assetRequestSequence) return;
@@ -2206,29 +2261,56 @@ async function selectAsset(id) {
   const blurStartedAt = performance.now();
 
   try {
-    const assetImagesPromise = (async () => {
-      const baseImage = await loadImage(resolveAssetUrl(asset.layers.base));
-      const optionalLayers = await Promise.all(["reflection", "foreground"].map(async (name) => {
-        if (!asset.layers[name]) return [name, null];
-        return [name, await loadImage(resolveAssetUrl(asset.layers[name]))];
-      }));
-      return { baseImage, optionalLayers };
-    })();
+    const assetImagesPromise = loadAssetImages(asset);
     const [{ baseImage, optionalLayers }] = await Promise.all([
       assetImagesPromise,
       waitForDuration(reducedMotionQuery.matches ? 0 : CONTENT_BLUR_ENTER_MS)
     ]);
     if (requestSequence !== assetRequestSequence) return;
+
+    // Commit the new asset only after every required image is ready. A failed
+    // request therefore cannot leave the card selection ahead of the preview.
+    state.selectedAsset = asset;
+    if (assetChanged) {
+      state.customQuad = asset.screen.quad.map((point) => [...point]);
+      state.adjustments = { ...DEFAULT_ADJUSTMENTS };
+      state.crop = { ...DEFAULT_CROP };
+      state.contentFrame = null;
+      state.imageFrame = null;
+      if (state.designImage) resetContentGeometry();
+      state.designSelected = false;
+      state.cropMode = false;
+      state.cropSnapshot = null;
+      state.history = [];
+      state.future = [];
+    }
     state.baseImage = baseImage;
     state.layerImages = Object.fromEntries(optionalLayers.filter(([, image]) => image));
+    rememberRecent(id);
+    elements.fitMode.value = "cover";
+    syncAdjustmentControls();
+    updateSourceGuide();
+    elements.assetName.textContent = asset.name;
+    elements.assetMeta.textContent = `${asset.canvas.width} × ${asset.canvas.height} · ${asset.status === "testing" ? "测试库" : "素材库"}`;
+    if (state.segment === "similar" && elements.categorySelect.value === "all") {
+      renderAssetGrid({ animate: true });
+    } else {
+      syncAssetSelection();
+      renderRecentStrip();
+    }
     elements.previewCanvas.width = asset.canvas.width;
     elements.previewCanvas.height = asset.canvas.height;
     if (assetChanged) fitStage();
     updatePerspectiveEditor();
     updateDesignEditor();
-    await renderComposite();
+    renderComposite("preview");
   } catch (error) {
-    if (requestSequence === assetRequestSequence) showToast(error instanceof Error ? error.message : "样机加载失败");
+    if (requestSequence === assetRequestSequence) {
+      const message = state.selectedAsset
+        ? "素材暂时无法加载，已保留当前样机"
+        : "素材暂时无法加载，请确认素材服务已启动";
+      showToast(message);
+    }
   } finally {
     if (requestSequence === assetRequestSequence) {
       const minimumBlurTime = reducedMotionQuery.matches ? 0 : MIN_CONTENT_BLUR_MS;
@@ -2239,6 +2321,8 @@ async function selectAsset(id) {
       if (requestSequence !== assetRequestSequence) return;
       elements.canvasWrap.classList.remove("is-content-blurred");
       setAnimatedVisibility(elements.renderingBadge, false);
+      await waitForNextPaint();
+      if (requestSequence !== assetRequestSequence) return;
       await waitForDuration(reducedMotionQuery.matches ? 0 : CONTENT_REVEAL_MS);
       if (requestSequence !== assetRequestSequence) return;
       state.rendering = false;

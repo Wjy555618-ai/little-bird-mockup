@@ -94,7 +94,9 @@ async function serveFile(request, response, filePath) {
     const data = await readFile(filePath);
     response.writeHead(200, {
       "Content-Type": contentTypes[extname(filePath).toLowerCase()] || "application/octet-stream",
-      "Cache-Control": "no-store"
+      "Cache-Control": /-r\d+\.(?:png|jpe?g|webp|glb)$/i.test(filePath)
+        ? "public, max-age=31536000, immutable"
+        : "no-store"
     });
     if (request.method === "HEAD") response.end();
     else response.end(data);
