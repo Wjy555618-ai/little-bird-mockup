@@ -608,7 +608,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
     <script>(function attachMockupRenderer(global) {
   "use strict";
 
-  const VERSION = "2.1.0";
+  const VERSION = "2.2.0";
   const DEFAULT_ADJUSTMENTS = Object.freeze({ scale: 1, offsetX: 0, offsetY: 0, rotation: 0, brightness: 1, contrast: 1, saturation: 1 });
   const DEFAULT_CROP = Object.freeze({ zoom: 1, offsetX: 0, offsetY: 0 });
   const baseCanvasCache = new WeakMap();
@@ -644,15 +644,44 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
     return canvas;
   }
 
+  function assertQuad(quad, asset, label) {
+    if (!Array.isArray(quad) || quad.length !== 4) throw new Error(`${asset.id} ${label}必须有四个顶点`);
+    for (const point of quad) {
+      if (!Array.isArray(point) || point.length !== 2 || !point.every(Number.isFinite)) throw new Error(`${asset.id} ${label}存在无效顶点`);
+      if (point[0] < 0 || point[0] > asset.canvas.width || point[1] < 0 || point[1] > asset.canvas.height) throw new Error(`${asset.id} ${label}顶点超出画布`);
+    }
+  }
+
+  function normalizeCornerRadii(value) {
+    const values = Array.isArray(value) ? value : [value ?? 0];
+    if (![1, 4].includes(values.length) || values.some((radius) => !Number.isFinite(radius) || radius < 0 || radius > 0.49)) {
+      throw new Error("屏幕孔径圆角必须是 0–0.49 之间的一个值或四角数组");
+    }
+    return values.length === 4 ? [...values] : [values[0], values[0], values[0], values[0]];
+  }
+
+  function screenApertureGeometry(asset) {
+    const aperture = asset.screen?.aperture;
+    return {
+      quad: aperture?.quad || asset.screen?.quad,
+      cornerRadii: normalizeCornerRadii(aperture?.cornerRadii ?? asset.screen?.cornerRadius ?? 0)
+    };
+  }
+
+  function cornerRadiiPixels(value, minimumDimension) {
+    return normalizeCornerRadii(value).map((radius) => Math.max(0, minimumDimension * radius));
+  }
+
   function validateAsset(asset) {
     if (!asset || !asset.id || !asset.name) throw new Error("样机缺少 id 或名称");
-    if (!["static-screen-v1", "static-screen-v2"].includes(asset.renderer)) throw new Error(`${asset.id} 渲染器不受支持`);
+    if (!["static-screen-v1", "static-screen-v2", "static-screen-v3"].includes(asset.renderer)) throw new Error(`${asset.id} 渲染器不受支持`);
     if (!Number.isFinite(asset.canvas?.width) || !Number.isFinite(asset.canvas?.height)) throw new Error(`${asset.id} 画布尺寸无效`);
-    if (!Array.isArray(asset.screen?.quad) || asset.screen.quad.length !== 4) throw new Error(`${asset.id} 屏幕必须有四个顶点`);
-    for (const point of asset.screen.quad) {
-      if (!Array.isArray(point) || point.length !== 2 || !point.every(Number.isFinite)) throw new Error(`${asset.id} 存在无效顶点`);
-      if (point[0] < 0 || point[0] > asset.canvas.width || point[1] < 0 || point[1] > asset.canvas.height) throw new Error(`${asset.id} 屏幕顶点超出画布`);
+    assertQuad(asset.screen?.quad, asset, "内容映射面");
+    if (asset.renderer === "static-screen-v3" && (!asset.screen?.aperture || !Array.isArray(asset.screen.aperture.quad) || !Array.isArray(asset.screen.aperture.cornerRadii))) {
+      throw new Error(`${asset.id} 缺少独立的可见孔径几何`);
     }
+    const aperture = screenApertureGeometry(asset);
+    assertQuad(aperture.quad, asset, "可见孔径");
     if (!asset.layers?.base) throw new Error(`${asset.id} 缺少基础图层`);
     if (!Number.isInteger(asset.screen?.recommendedSize?.width) || !Number.isInteger(asset.screen?.recommendedSize?.height) || asset.screen.recommendedSize.width < 1 || asset.screen.recommendedSize.height < 1) {
       throw new Error(`${asset.id} 缺少有效的推荐画面尺寸`);
@@ -681,14 +710,14 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
   }
 
   function screenApertureMask(image, asset, renderScale = 1) {
-    if (!asset.chromaKey?.enabled) return null;
     let imageCache = apertureMaskCache.get(image);
     if (!imageCache) {
       imageCache = new Map();
       apertureMaskCache.set(image, imageCache);
     }
     const scale = Math.max(1, Math.min(2, Number(renderScale) || 1));
-    const cacheKey = `${asset.id}:${asset.revision || asset.updatedAt || "current"}:aperture-${scale.toFixed(2)}`;
+    const aperture = screenApertureGeometry(asset);
+    const cacheKey = `${asset.id}:${asset.revision || asset.updatedAt || "current"}:aperture-${scale.toFixed(2)}:${JSON.stringify(aperture)}`;
     if (imageCache.has(cacheKey)) return imageCache.get(cacheKey);
 
     const width = Math.round(asset.canvas.width * scale);
@@ -712,14 +741,16 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
     shape.width = plane.width;
     shape.height = plane.height;
     const shapeContext = shape.getContext("2d");
-    const radius = Math.max(0, Math.min(plane.width, plane.height) * Math.min(0.49, asset.screen.cornerRadius || 0));
+    const radii = cornerRadiiPixels(aperture.cornerRadii, Math.min(plane.width, plane.height));
     shapeContext.fillStyle = "#fff";
     shapeContext.beginPath();
-    shapeContext.roundRect(0, 0, plane.width, plane.height, radius);
+    shapeContext.roundRect(0, 0, plane.width, plane.height, radii);
     shapeContext.fill();
 
-    const apertureQuad = expandQuad(asset.screen.quad, asset.screen.bleed || 0);
-    drawImageToQuad(maskContext, shape, apertureQuad, "final");
+    // The visible aperture is exact. Bleed belongs only to the hidden
+    // underpaint used to close sub-pixel seams; expanding this mask lets
+    // content escape into the physical bezel.
+    drawImageToQuad(maskContext, shape, aperture.quad, "final");
     imageCache.set(cacheKey, mask);
     return mask;
   }
@@ -1173,7 +1204,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
     };
   }
 
-  function createScreenCanvas(image, targetAspect, fit, adjustments, cornerRadius = 0, transparent = false, crop, content) {
+  function createScreenCanvas(image, targetAspect, fit, adjustments, cornerRadii = 0, transparent = false, crop, content) {
     const plane = screenPlane(targetAspect);
     const { width, height } = plane;
     if (content?.frame || content?.imageFrame) {
@@ -1183,10 +1214,10 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
       canvas.width = width;
       canvas.height = height;
       const context = canvas.getContext("2d");
-      const outerRadius = Math.max(0, Math.min(width, height) * Math.min(0.49, cornerRadius));
+      const outerRadii = cornerRadiiPixels(cornerRadii, Math.min(width, height));
       context.save();
       context.beginPath();
-      context.roundRect(0, 0, width, height, outerRadius);
+      context.roundRect(0, 0, width, height, outerRadii);
       context.clip();
       if (!transparent) {
         context.fillStyle = "#0d0d0d";
@@ -1196,8 +1227,8 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
       context.translate(frame.cx, frame.cy);
       context.rotate(frame.rotation * Math.PI / 180);
       context.beginPath();
-      const frameRadius = Math.max(0, Math.min(frame.width, frame.height) * Math.min(0.49, cornerRadius));
-      context.roundRect(-frame.width / 2, -frame.height / 2, frame.width, frame.height, frameRadius);
+      const frameRadii = cornerRadiiPixels(cornerRadii, Math.min(frame.width, frame.height));
+      context.roundRect(-frame.width / 2, -frame.height / 2, frame.width, frame.height, frameRadii);
       context.clip();
       context.rotate(-frame.rotation * Math.PI / 180);
       context.translate(-frame.cx, -frame.cy);
@@ -1235,10 +1266,10 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
     canvas.width = width;
     canvas.height = height;
     const context = canvas.getContext("2d");
-    const radius = Math.max(0, Math.min(width, height) * Math.min(0.49, cornerRadius));
+    const radii = cornerRadiiPixels(cornerRadii, Math.min(width, height));
     context.save();
     context.beginPath();
-    context.roundRect(0, 0, width, height, radius);
+    context.roundRect(0, 0, width, height, radii);
     context.clip();
     if (!transparent) {
       context.fillStyle = "#0d0d0d";
@@ -1254,7 +1285,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
     return canvas;
   }
 
-  function createContentCanvas(image, targetAspect, fit, adjustments, cornerRadius = 0, content) {
+  function createContentCanvas(image, targetAspect, fit, adjustments, cornerRadii = 0, content) {
     const plane = screenPlane(targetAspect);
     const frame = normalizeFrame(content?.frame, plane.width, plane.height);
     const imageFrame = normalizeFrame(content?.imageFrame, plane.width, plane.height);
@@ -1264,7 +1295,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
     const context = canvas.getContext("2d");
     const scaleX = canvas.width / frame.width;
     const scaleY = canvas.height / frame.height;
-    const radius = Math.max(0, Math.min(frame.width, frame.height) * Math.min(0.49, cornerRadius));
+    const radii = cornerRadiiPixels(cornerRadii, Math.min(frame.width, frame.height));
 
     // Work only in frame-local coordinates. Both this bitmap and the editor
     // boundary are projected through frameQuadOnSurface, so render, hit target
@@ -1272,7 +1303,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
     context.scale(scaleX, scaleY);
     context.save();
     context.beginPath();
-    context.roundRect(0, 0, frame.width, frame.height, radius);
+    context.roundRect(0, 0, frame.width, frame.height, radii);
     context.clip();
 
     const frameAngle = frame.rotation * Math.PI / 180;
@@ -1367,15 +1398,17 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
     context.imageSmoothingQuality = "high";
     const preparedBase = preparedBaseImage(baseImage, asset);
     context.drawImage(preparedBase, 0, 0, logicalWidth, logicalHeight);
-    const screenMaskQuad = expandQuad(quad || asset.screen.quad, asset.screen.bleed || 0);
     if (designImage) {
       const recommended = asset.screen.recommendedSize;
       const targetAspect = recommended.width / recommended.height;
-      const surfaceQuad = designQuad || screenMaskQuad;
+      // Content/editing geometry, visible aperture and hidden seam bleed are
+      // deliberately separate. Only the first controls projection.
+      const surfaceQuad = designQuad || quad || asset.screen.quad;
+      const aperture = screenApertureGeometry(asset);
       const hasContentGeometry = Boolean(content?.frame || content?.imageFrame);
       const screenCanvas = hasContentGeometry
-        ? createContentCanvas(designImage, targetAspect, fit, adjustments, asset.screen.cornerRadius || 0, content)
-        : createScreenCanvas(designImage, targetAspect, fit, adjustments, asset.screen.cornerRadius || 0, true, crop, null);
+        ? createContentCanvas(designImage, targetAspect, fit, adjustments, aperture.cornerRadii, content)
+        : createScreenCanvas(designImage, targetAspect, fit, adjustments, aperture.cornerRadii, true, crop, null);
       // Rendering and editing deliberately derive from one frame quad. Mapping
       // the whole transparent screen plane here used to apply geometry twice,
       // which made pixels drift away from their handles after crop or zoom.
@@ -1431,7 +1464,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
     return canvas;
   }
 
-  global.MockupRenderer = Object.freeze({ VERSION, DEFAULT_ADJUSTMENTS, DEFAULT_CROP, createDefaultDesign, validateAsset, quadSize, bilinearPoint, inverseBilinearPoint, screenPlane, normalizeFrame, frameCorners, frameQuadOnSurface, surfaceQuadForFrameQuad, imageFrameForCover, constrainImageFrameToCover, constrainFrameVisibility, resizeFrameFromHandle, transformFrameBetweenFrames, expandQuad, cropGeometry, constrainCoverAdjustments, createScreenCanvas, createContentCanvas, drawImageToQuad, renderComposite });
+  global.MockupRenderer = Object.freeze({ VERSION, DEFAULT_ADJUSTMENTS, DEFAULT_CROP, createDefaultDesign, validateAsset, screenApertureGeometry, quadSize, bilinearPoint, inverseBilinearPoint, screenPlane, normalizeFrame, frameCorners, frameQuadOnSurface, surfaceQuadForFrameQuad, imageFrameForCover, constrainImageFrameToCover, constrainFrameVisibility, resizeFrameFromHandle, transformFrameBetweenFrames, expandQuad, cropGeometry, constrainCoverAdjustments, createScreenCanvas, createContentCanvas, drawImageToQuad, renderComposite });
 })(window);
 </script>
     <script>const PLUGIN_VERSION = "0.1.0";
@@ -1440,7 +1473,7 @@ const PRODUCTION_CATALOG_URL = "https://assets.mockup-studio.example/v1/manifest
 const ACTIVE_CATALOG_URL = DEVELOPMENT_CATALOG_URL;
 const renderer = window.MockupRenderer;
 const pdfjs = window.pdfjsLib;
-const CATALOG_CACHE_KEY = "mockup-studio-catalog-v1";
+const CATALOG_CACHE_KEY = "mockup-studio-catalog-v3";
 const RECENT_KEY = "mockup-studio-recent-v1";
 const CONTENT_BLUR_ENTER_MS = 280;
 const MIN_CONTENT_BLUR_MS = 380;
@@ -1910,7 +1943,7 @@ function withTimeout(promise, milliseconds) {
 }
 
 function validateManifest(manifest) {
-  if (!manifest || ![1, 2].includes(manifest.schemaVersion)) throw new Error("不支持的素材清单版本");
+  if (!manifest || ![1, 2, 3].includes(manifest.schemaVersion)) throw new Error("不支持的素材清单版本");
   if (!Array.isArray(manifest.items)) throw new Error("素材清单缺少 items");
   for (const item of manifest.items) {
     renderer.validateAsset(item);
@@ -2405,9 +2438,13 @@ function designHandlePoints(points) {
   };
 }
 
-function roundedFramePath(frame, radiusRatio = 0) {
+function roundedFramePath(frame, radiusRatios = 0) {
   if (!frame) return "";
-  const radius = Math.max(0, Math.min(frame.width, frame.height) * Math.min(0.49, radiusRatio));
+  const values = Array.isArray(radiusRatios) ? radiusRatios : [radiusRatios];
+  const normalized = values.length === 4 ? values : [values[0] || 0, values[0] || 0, values[0] || 0, values[0] || 0];
+  const [topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius] = normalized.map((ratio) => (
+    Math.max(0, Math.min(frame.width, frame.height) * Math.min(0.49, Number(ratio) || 0))
+  ));
   const localPoint = (x, y) => {
     const angle = frame.rotation * Math.PI / 180;
     const cosine = Math.cos(angle);
@@ -2419,17 +2456,17 @@ function roundedFramePath(frame, radiusRatio = 0) {
   const top = -frame.height / 2;
   const bottom = frame.height / 2;
   const point = (value) => `${value[0]} ${value[1]}`;
-  const p0 = localPoint(left + radius, top);
-  const p1 = localPoint(right - radius, top);
+  const p0 = localPoint(left + topLeftRadius, top);
+  const p1 = localPoint(right - topRightRadius, top);
   const c1 = localPoint(right, top);
-  const p2 = localPoint(right, top + radius);
-  const p3 = localPoint(right, bottom - radius);
+  const p2 = localPoint(right, top + topRightRadius);
+  const p3 = localPoint(right, bottom - bottomRightRadius);
   const c2 = localPoint(right, bottom);
-  const p4 = localPoint(right - radius, bottom);
-  const p5 = localPoint(left + radius, bottom);
+  const p4 = localPoint(right - bottomRightRadius, bottom);
+  const p5 = localPoint(left + bottomLeftRadius, bottom);
   const c3 = localPoint(left, bottom);
-  const p6 = localPoint(left, bottom - radius);
-  const p7 = localPoint(left, top + radius);
+  const p6 = localPoint(left, bottom - bottomLeftRadius);
+  const p7 = localPoint(left, top + topLeftRadius);
   const c4 = localPoint(left, top);
   return `M${point(p0)}L${point(p1)}Q${point(c1)} ${point(p2)}L${point(p3)}Q${point(c2)} ${point(p4)}L${point(p5)}Q${point(c3)} ${point(p6)}L${point(p7)}Q${point(c4)} ${point(p0)}Z`;
 }
@@ -2448,11 +2485,11 @@ function updateDesignEditor() {
   elements.designDragTarget.setAttribute("points", pointString);
   const svg = elements.designPolygon.ownerSVGElement;
   svg.setAttribute("viewBox", `0 0 ${state.selectedAsset.canvas.width} ${state.selectedAsset.canvas.height}`);
-  const cornerRadius = state.selectedAsset.screen.cornerRadius || 0;
-  elements.cropFrame.setAttribute("d", roundedFramePath(state.contentFrame, cornerRadius));
+  const cornerRadii = renderer.screenApertureGeometry(state.selectedAsset).cornerRadii;
+  elements.cropFrame.setAttribute("d", roundedFramePath(state.contentFrame, cornerRadii));
   elements.cropShade.setAttribute(
     "d",
-    `M0 0H${state.selectedAsset.canvas.width}V${state.selectedAsset.canvas.height}H0Z ${roundedFramePath(state.contentFrame, cornerRadius)}`
+    `M0 0H${state.selectedAsset.canvas.width}V${state.selectedAsset.canvas.height}H0Z ${roundedFramePath(state.contentFrame, cornerRadii)}`
   );
   const handlePoints = designHandlePoints(points);
   for (const handle of elements.designEditor.querySelectorAll(".design-scale-handle")) {

@@ -220,7 +220,8 @@ test("one canonical content frame owns rendering, controls and direct transforms
   assert.match(rendererScript, /function createContentCanvas/);
   assert.match(rendererScript, /frameQuadOnSurface\(content\.frame, targetAspect, surfaceQuad\)/);
   assert.match(rendererScript, /function screenApertureMask/);
-  assert.match(rendererScript, /shapeContext\.roundRect\(0, 0, plane\.width, plane\.height, radius\)/);
+  assert.match(rendererScript, /shapeContext\.roundRect\(0, 0, plane\.width, plane\.height, radii\)/);
+  assert.match(rendererScript, /function screenApertureGeometry/);
   assert.match(rendererScript, /function chromaSpillAlpha/);
   assert.match(rendererScript, /const apertureCoverage = aperturePixels\.data\[index \+ 3\] \/ 255/);
   assert.match(rendererScript, /const keyAlpha = apertureCoverage/);
@@ -249,9 +250,13 @@ test("screen aperture uses canonical vector geometry without raster-edge dilatio
   assert.match(rendererScript, /function screenApertureMask\(image, asset, renderScale = 1\)/);
   assert.match(apertureSource, /const plane = screenPlane\(targetAspect\)/);
   assert.match(apertureSource, /shapeContext\.roundRect/);
-  assert.match(apertureSource, /const apertureQuad = expandQuad\(asset\.screen\.quad, asset\.screen\.bleed \|\| 0\)/);
-  assert.match(apertureSource, /drawImageToQuad\(maskContext, shape, apertureQuad, "final"\)/);
+  assert.match(apertureSource, /const aperture = screenApertureGeometry\(asset\)/);
+  assert.match(apertureSource, /drawImageToQuad\(maskContext, shape, aperture\.quad, "final"\)/);
+  assert.doesNotMatch(apertureSource, /expandQuad|screen\.bleed/);
+  assert.doesNotMatch(apertureSource, /chromaKey/);
   assert.doesNotMatch(apertureSource, /getImageData|aperturePixels|dilatedAperture|offsetY = -2|offsetX = -2/);
+  assert.match(rendererScript, /const surfaceQuad = designQuad \|\| quad \|\| asset\.screen\.quad/);
+  assert.match(rendererScript, /const bleedQuad = expandQuad\(renderQuad, asset\.screen\.bleed \|\| 0\)/);
   assert.match(rendererScript, /const renderScaleX = canvas\.width \/ logicalWidth/);
   assert.match(rendererScript, /screenApertureMask\(baseImage, asset, renderScale\)/);
   assert.match(rendererScript, /context\.transform\(a, b, c, d, e, f\)/);
@@ -408,13 +413,13 @@ test("one editor owns selection crop perspective and constant-size handles", () 
   assert.match(uiScript, /state\.mode === "perspective" \|\| event\.metaKey \|\| event\.ctrlKey/);
   assert.match(uiScript, /function undoEditor/);
   assert.match(uiScript, /function redoEditor/);
-  assert.match(rendererScript, /const surfaceQuad = designQuad \|\| screenMaskQuad/);
+  assert.match(rendererScript, /const surfaceQuad = designQuad \|\| quad \|\| asset\.screen\.quad/);
   assert.match(rendererScript, /frameQuadOnSurface\(content\.frame, targetAspect, surfaceQuad\)/);
   assert.match(rendererScript, /clipQuad\(context, renderQuad\)/);
 });
 
 test("plugin and asset lab use one shared renderer and one catalog schema", () => {
-  assert.match(rendererScript, /const VERSION = "2\.1\.0"/);
+  assert.match(rendererScript, /const VERSION = "2\.2\.0"/);
   assert.match(labHtml, /src="\/shared\/mockup-renderer\.js"/);
   assert.match(labScript, /renderer\.renderComposite/);
   assert.match(serverScript, /catalog\/testing\/v1/);

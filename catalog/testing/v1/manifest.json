@@ -1,9 +1,9 @@
 {
-  "schemaVersion": 2,
-  "catalogVersion": "2026.10.29.1",
-  "publishedAt": "2026-10-29T10:32:28.282Z",
+  "schemaVersion": 3,
+  "catalogVersion": "2026.10.30.1",
+  "publishedAt": "2026-10-30T14:56:42.034Z",
   "environment": "testing",
-  "rendererVersion": "2.1.0",
+  "rendererVersion": "2.2.0",
   "minimumPluginVersion": "0.1.0",
   "categories": [
     {
@@ -33,7 +33,7 @@
         "金属",
         "monitor"
       ],
-      "renderer": "static-screen-v2",
+      "renderer": "static-screen-v3",
       "chromaKey": {
         "enabled": true,
         "minimumGreen": 65,
@@ -72,7 +72,32 @@
           "height": 1080,
           "label": "16:9"
         },
-        "cornerRadius": 0,
+        "aperture": {
+          "quad": [
+            [
+              260,
+              185
+            ],
+            [
+              1190,
+              185
+            ],
+            [
+              1190,
+              702
+            ],
+            [
+              260,
+              702
+            ]
+          ],
+          "cornerRadii": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
         "bleed": 3,
         "defaultFit": "cover"
       },
@@ -102,7 +127,7 @@
         "正面",
         "phone"
       ],
-      "renderer": "static-screen-v2",
+      "renderer": "static-screen-v3",
       "chromaKey": {
         "enabled": true,
         "minimumGreen": 65,
@@ -120,20 +145,20 @@
       "screen": {
         "quad": [
           [
-            556,
+            554,
             154
           ],
           [
-            892,
+            893,
             154
           ],
           [
-            892,
-            884
+            893,
+            886
           ],
           [
-            556,
-            884
+            554,
+            886
           ]
         ],
         "recommendedSize": {
@@ -141,7 +166,32 @@
           "height": 2796,
           "label": "约 9:19.5"
         },
-        "cornerRadius": 0.06,
+        "aperture": {
+          "quad": [
+            [
+              554,
+              154
+            ],
+            [
+              893,
+              154
+            ],
+            [
+              893,
+              886
+            ],
+            [
+              554,
+              886
+            ]
+          ],
+          "cornerRadii": [
+            0.12,
+            0.12,
+            0.12,
+            0.12
+          ]
+        },
         "bleed": 4,
         "defaultFit": "cover"
       },
@@ -171,7 +221,7 @@
         "透视",
         "phone"
       ],
-      "renderer": "static-screen-v2",
+      "renderer": "static-screen-v3",
       "chromaKey": {
         "enabled": true,
         "minimumGreen": 20,
@@ -210,7 +260,32 @@
           "height": 2796,
           "label": "约 9:19.5"
         },
-        "cornerRadius": 0.055,
+        "aperture": {
+          "quad": [
+            [
+              644,
+              163
+            ],
+            [
+              862,
+              114
+            ],
+            [
+              862,
+              798
+            ],
+            [
+              644,
+              855
+            ]
+          ],
+          "cornerRadii": [
+            0.12,
+            0.12,
+            0.12,
+            0.12
+          ]
+        },
         "bleed": 4,
         "defaultFit": "cover",
         "occlusions": [
@@ -249,7 +324,7 @@
         "透视",
         "laptop"
       ],
-      "renderer": "static-screen-v2",
+      "renderer": "static-screen-v3",
       "chromaKey": {
         "enabled": true,
         "minimumGreen": 65,
@@ -288,7 +363,32 @@
           "height": 1600,
           "label": "16:10"
         },
-        "cornerRadius": 0.008,
+        "aperture": {
+          "quad": [
+            [
+              235,
+              164
+            ],
+            [
+              939,
+              140
+            ],
+            [
+              1004,
+              587
+            ],
+            [
+              297,
+              664
+            ]
+          ],
+          "cornerRadii": [
+            0.008,
+            0.008,
+            0.008,
+            0.008
+          ]
+        },
         "bleed": 4,
         "defaultFit": "cover"
       },

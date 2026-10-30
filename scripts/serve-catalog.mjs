@@ -16,7 +16,7 @@ const host = "127.0.0.1";
 
 const REQUIRED_PATTERNS = ["grid", "landscape", "portrait", "edge"];
 const MANUAL_KEYS = ["frameFit", "perspective", "edgeMask", "imageQuality", "allPatterns"];
-const AUTOMATIC_KEYS = ["schema", "renderer", "dimensions", "recommendedSize", "geometry", "provenance", "integrity"];
+const AUTOMATIC_KEYS = ["schema", "renderer", "dimensions", "recommendedSize", "geometry", "aperture", "provenance", "integrity"];
 
 const contentTypes = {
   ".css": "text/css; charset=utf-8",
@@ -75,11 +75,13 @@ async function readBody(request) {
 }
 
 async function verifyItem(manifest, item) {
-  if (manifest.schemaVersion !== 2 || manifest.rendererVersion !== "2.1.0") throw new Error("测试库规范或渲染器版本不匹配");
-  if (!item || item.status !== "testing" || item.renderer !== "static-screen-v2") throw new Error("素材不是可质检的静态样机");
+  if (manifest.schemaVersion !== 3 || manifest.rendererVersion !== "2.2.0") throw new Error("测试库规范或渲染器版本不匹配");
+  if (!item || item.status !== "testing" || item.renderer !== "static-screen-v3") throw new Error("素材不是可质检的静态样机");
   if (!Number.isInteger(item.canvas?.width) || !Number.isInteger(item.canvas?.height)) throw new Error("画布尺寸无效");
   if (!Number.isInteger(item.screen?.recommendedSize?.width) || !Number.isInteger(item.screen?.recommendedSize?.height) || !item.screen.recommendedSize.label) throw new Error("推荐画面尺寸无效");
   assertQuad(item, item.screen?.quad);
+  assertQuad(item, item.screen?.aperture?.quad);
+  if (!Array.isArray(item.screen?.aperture?.cornerRadii) || item.screen.aperture.cornerRadii.length !== 4 || item.screen.aperture.cornerRadii.some((radius) => !Number.isFinite(radius) || radius < 0 || radius > 0.49)) throw new Error("可见孔径圆角无效");
   if (item.provenance?.kind !== "generated-in-house") throw new Error("素材来源未标记为项目自制");
   const basePath = safePath(testingRoot, item.layers?.base);
   const thumbnailPath = safePath(testingRoot, item.thumbnail);
@@ -134,10 +136,16 @@ async function handleApi(request, response, url) {
     const item = manifest.items.find((candidate) => candidate.id === body.assetId);
     if (!item) throw new Error("找不到待检样机");
     assertQuad(item, body.quad);
-    const cornerRadius = Number(body.cornerRadius);
-    if (!Number.isFinite(cornerRadius) || cornerRadius < 0 || cornerRadius > 0.49) throw new Error("圆角比例无效");
+    const apertureQuad = body.apertureQuad || body.quad;
+    assertQuad(item, apertureQuad);
+    const cornerRadii = Array.isArray(body.cornerRadii) ? body.cornerRadii.map(Number) : [];
+    if (cornerRadii.length !== 4 || cornerRadii.some((radius) => !Number.isFinite(radius) || radius < 0 || radius > 0.49)) throw new Error("四角圆角比例无效");
     item.screen.quad = body.quad.map(([x, y]) => [Math.round(x), Math.round(y)]);
-    item.screen.cornerRadius = cornerRadius;
+    item.screen.aperture = {
+      quad: apertureQuad.map(([x, y]) => [Math.round(x), Math.round(y)]),
+      cornerRadii
+    };
+    delete item.screen.cornerRadius;
     manifest.publishedAt = new Date().toISOString();
     await writeFile(testingManifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
     json(response, 200, { ok: true, item });
@@ -151,6 +159,7 @@ async function handleApi(request, response, url) {
     if (!item) throw new Error("找不到待检样机");
     await verifyItem(manifest, item);
     if (JSON.stringify(body.quad) !== JSON.stringify(item.screen.quad)) throw new Error("当前坐标尚未保存到测试库");
+    if (JSON.stringify(body.apertureQuad) !== JSON.stringify(item.screen.aperture.quad)) throw new Error("当前可见孔径尚未保存到测试库");
     if (!AUTOMATIC_KEYS.every((key) => body.automaticChecks?.[key] === true)) throw new Error("自动检查尚未全部通过");
     if (!MANUAL_KEYS.every((key) => body.manualChecks?.[key] === true)) throw new Error("人工验收尚未全部确认");
     if (!REQUIRED_PATTERNS.every((id) => body.patternIds?.includes(id))) throw new Error("四种测试图尚未全部查看");

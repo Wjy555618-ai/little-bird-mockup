@@ -41,7 +41,7 @@ async function approvalFor(item) {
   try { approval = JSON.parse(await readFile(path, "utf8")); }
   catch { throw new Error(`${item.id} 尚未在样机质检台通过`); }
   if (approval.status !== "approved" || approval.assetId !== item.id || approval.revision !== item.revision) throw new Error(`${item.id} 的质检报告无效`);
-  if (approval.rendererVersion !== "2.1.0" || approval.itemSha256 !== itemDigest(item)) throw new Error(`${item.id} 的质检报告已过期，请重新验收`);
+  if (approval.rendererVersion !== "2.2.0" || approval.itemSha256 !== itemDigest(item)) throw new Error(`${item.id} 的质检报告已过期，请重新验收`);
   return approval;
 }
 

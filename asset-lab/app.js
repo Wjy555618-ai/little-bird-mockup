@@ -15,6 +15,7 @@ const state = {
   baseImage: null,
   layerImages: {},
   quad: null,
+  apertureQuad: null,
   pattern: "grid",
   visitedPatterns: new Set(["grid"]),
   automaticChecks: {},
@@ -124,6 +125,7 @@ async function runAutomaticChecks() {
     dimensions: false,
     recommendedSize: false,
     geometry: false,
+    aperture: false,
     provenance: false,
     integrity: false
   };
@@ -132,6 +134,10 @@ async function runAutomaticChecks() {
   checks.dimensions = state.baseImage?.naturalWidth === asset.canvas.width && state.baseImage?.naturalHeight === asset.canvas.height;
   checks.recommendedSize = Number.isInteger(asset.screen?.recommendedSize?.width) && Number.isInteger(asset.screen?.recommendedSize?.height) && Boolean(asset.screen?.recommendedSize?.label);
   checks.geometry = quadInside(asset, state.quad);
+  checks.aperture = quadInside(asset, state.apertureQuad)
+    && Array.isArray(asset.screen?.aperture?.cornerRadii)
+    && asset.screen.aperture.cornerRadii.length === 4
+    && asset.screen.aperture.cornerRadii.every((radius) => Number.isFinite(radius) && radius >= 0 && radius <= 0.49);
   checks.provenance = asset.provenance?.kind === "generated-in-house";
   try {
     const [baseDigest, thumbnailDigest] = await Promise.all([sha256(resolveAsset(asset.layers.base)), sha256(resolveAsset(asset.thumbnail))]);
@@ -147,6 +153,7 @@ const checkLabels = {
   dimensions: "源图尺寸与清单画布一致",
   recommendedSize: "推荐画面尺寸与比例已填写",
   geometry: "四个屏幕顶点均在画布内",
+  aperture: "可见孔径与四角曲率独立且有效",
   provenance: "素材来源标记为项目自制",
   integrity: "基础图与缩略图哈希正确"
 };
@@ -207,9 +214,19 @@ function updateGeometryEditor() {
 
 function renderComposite() {
   if (!state.selected || !state.baseImage) return;
+  const asset = {
+    ...state.selected,
+    screen: {
+      ...state.selected.screen,
+      aperture: {
+        ...state.selected.screen.aperture,
+        quad: state.apertureQuad
+      }
+    }
+  };
   renderer.renderComposite({
     canvas: elements.previewCanvas,
-    asset: state.selected,
+    asset,
     baseImage: state.baseImage,
     designImage: makePattern(state.pattern),
     fit: state.selected.screen.defaultFit || "cover",
@@ -238,6 +255,7 @@ async function selectAsset(id) {
   if (!asset) return;
   state.selected = asset;
   state.quad = asset.screen.quad.map((point) => [...point]);
+  state.apertureQuad = asset.screen.aperture.quad.map((point) => [...point]);
   state.visitedPatterns = new Set([state.pattern]);
   state.automaticChecks = {};
   for (const input of document.querySelectorAll("[data-manual]")) input.checked = false;
@@ -309,8 +327,10 @@ for (const handle of elements.quadEditor.querySelectorAll("button")) {
     const x = Math.max(0, Math.min(state.selected.canvas.width, (event.clientX - rect.left) / rect.width * state.selected.canvas.width));
     const y = Math.max(0, Math.min(state.selected.canvas.height, (event.clientY - rect.top) / rect.height * state.selected.canvas.height));
     state.quad[state.draggingCorner] = [Math.round(x), Math.round(y)];
+    state.apertureQuad[state.draggingCorner] = [Math.round(x), Math.round(y)];
     renderComposite();
     state.automaticChecks.geometry = quadInside(state.selected, state.quad);
+    state.automaticChecks.aperture = quadInside(state.selected, state.apertureQuad);
     renderChecks();
   });
   handle.addEventListener("pointerup", () => { state.draggingCorner = null; });
@@ -318,6 +338,7 @@ for (const handle of elements.quadEditor.querySelectorAll("button")) {
 
 elements.resetGeometryButton.addEventListener("click", () => {
   state.quad = state.selected.screen.quad.map((point) => [...point]);
+  state.apertureQuad = state.selected.screen.aperture.quad.map((point) => [...point]);
   renderComposite();
   runAutomaticChecks();
 });
@@ -327,11 +348,17 @@ elements.saveGeometryButton.addEventListener("click", async () => {
   const response = await fetch("/api/lab/geometry", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ assetId: state.selected.id, quad: state.quad, cornerRadius: state.selected.screen.cornerRadius || 0 })
+    body: JSON.stringify({
+      assetId: state.selected.id,
+      quad: state.quad,
+      apertureQuad: state.apertureQuad,
+      cornerRadii: state.selected.screen.aperture.cornerRadii
+    })
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) { toast(data.error || "坐标保存失败"); return; }
   state.selected.screen.quad = data.item.screen.quad.map((point) => [...point]);
+  state.selected.screen.aperture = structuredClone(data.item.screen.aperture);
   toast("屏幕坐标已写回测试库");
 });
 
@@ -342,6 +369,7 @@ elements.approveButton.addEventListener("click", async () => {
     body: JSON.stringify({
       assetId: state.selected.id,
       quad: state.quad,
+      apertureQuad: state.apertureQuad,
       automaticChecks: state.automaticChecks,
       manualChecks: manualValues(),
       patternIds: [...state.visitedPatterns]

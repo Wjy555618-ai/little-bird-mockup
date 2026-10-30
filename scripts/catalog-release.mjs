@@ -30,20 +30,19 @@ function safeCatalogPath(relativePath, label) {
   return absolutePath;
 }
 
-function assertQuad(item) {
-  const quad = item.screen?.quad;
-  if (!Array.isArray(quad) || quad.length !== 4) fail(`${item.id} 必须有 4 个屏幕顶点`);
+function assertQuad(item, quad, label) {
+  if (!Array.isArray(quad) || quad.length !== 4) fail(`${item.id} 必须有 4 个${label}顶点`);
   for (const point of quad) {
-    if (!Array.isArray(point) || point.length !== 2 || !point.every(Number.isFinite)) fail(`${item.id} 存在无效屏幕顶点`);
+    if (!Array.isArray(point) || point.length !== 2 || !point.every(Number.isFinite)) fail(`${item.id} 存在无效${label}顶点`);
     if (point[0] < 0 || point[0] > item.canvas.width || point[1] < 0 || point[1] > item.canvas.height) {
-      fail(`${item.id} 的屏幕顶点超出画布`);
+      fail(`${item.id} 的${label}顶点超出画布`);
     }
   }
   const area = Math.abs(quad.reduce((sum, point, index) => {
     const next = quad[(index + 1) % quad.length];
     return sum + point[0] * next[1] - next[0] * point[1];
   }, 0) / 2);
-  if (area < item.canvas.width * item.canvas.height * 0.005) fail(`${item.id} 的屏幕区域过小或顶点顺序错误`);
+  if (area < item.canvas.width * item.canvas.height * 0.005) fail(`${item.id} 的${label}区域过小或顶点顺序错误`);
 }
 
 async function sha256(path) {
@@ -51,9 +50,9 @@ async function sha256(path) {
 }
 
 const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
-if (manifest.schemaVersion !== 2) fail("只支持 schemaVersion 2");
+if (manifest.schemaVersion !== 3) fail("只支持 schemaVersion 3");
 if (manifest.environment !== library) fail(`清单 environment 必须是 ${library}`);
-if (manifest.rendererVersion !== "2.1.0") fail("rendererVersion 必须是 2.1.0");
+if (manifest.rendererVersion !== "2.2.0") fail("rendererVersion 必须是 2.2.0");
 if (!versionPattern.test(manifest.catalogVersion)) fail("当前 catalogVersion 格式无效");
 if (!Number.isFinite(Date.parse(manifest.publishedAt))) fail("publishedAt 不是有效时间");
 if (!Array.isArray(manifest.categories) || !Array.isArray(manifest.items)) fail("清单缺少 categories 或 items");
@@ -70,7 +69,7 @@ for (const item of manifest.items) {
   itemIds.add(item.id);
   if (!Number.isInteger(item.revision) || item.revision < 1) fail(`${item.id} revision 必须是正整数`);
   if (!item.name || !categoryIds.has(item.category)) fail(`${item.id} 的名称或分类无效`);
-  if (item.renderer !== "static-screen-v2") fail(`${item.id} 使用了未支持的渲染器`);
+  if (item.renderer !== "static-screen-v3") fail(`${item.id} 使用了未支持的渲染器`);
   if (item.status !== (library === "testing" ? "testing" : "approved")) fail(`${item.id} 状态不属于 ${library} 库`);
   if (item.provenance?.kind !== "generated-in-house") fail(`${item.id} 缺少项目自制来源标记`);
   if (!Number.isInteger(item.canvas?.width) || !Number.isInteger(item.canvas?.height) || item.canvas.width < 1 || item.canvas.height < 1) {
@@ -80,7 +79,11 @@ for (const item of manifest.items) {
   if (!Number.isInteger(item.screen?.recommendedSize?.width) || !Number.isInteger(item.screen?.recommendedSize?.height) || item.screen.recommendedSize.width < 1 || item.screen.recommendedSize.height < 1 || !item.screen.recommendedSize.label) {
     fail(`${item.id} 推荐画面尺寸无效`);
   }
-  assertQuad(item);
+  assertQuad(item, item.screen?.quad, "内容映射面");
+  assertQuad(item, item.screen?.aperture?.quad, "可见孔径");
+  if (!Array.isArray(item.screen?.aperture?.cornerRadii) || item.screen.aperture.cornerRadii.length !== 4 || item.screen.aperture.cornerRadii.some((radius) => !Number.isFinite(radius) || radius < 0 || radius > 0.49)) {
+    fail(`${item.id} 可见孔径必须声明四个有效圆角比例`);
+  }
 
   const basePath = safeCatalogPath(item.layers?.base, `${item.id} base`);
   const thumbnailPath = safeCatalogPath(item.thumbnail, `${item.id} thumbnail`);

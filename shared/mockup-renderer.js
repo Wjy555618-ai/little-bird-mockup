@@ -1,7 +1,7 @@
 (function attachMockupRenderer(global) {
   "use strict";
 
-  const VERSION = "2.1.0";
+  const VERSION = "2.2.0";
   const DEFAULT_ADJUSTMENTS = Object.freeze({ scale: 1, offsetX: 0, offsetY: 0, rotation: 0, brightness: 1, contrast: 1, saturation: 1 });
   const DEFAULT_CROP = Object.freeze({ zoom: 1, offsetX: 0, offsetY: 0 });
   const baseCanvasCache = new WeakMap();
@@ -37,15 +37,44 @@
     return canvas;
   }
 
+  function assertQuad(quad, asset, label) {
+    if (!Array.isArray(quad) || quad.length !== 4) throw new Error(`${asset.id} ${label}必须有四个顶点`);
+    for (const point of quad) {
+      if (!Array.isArray(point) || point.length !== 2 || !point.every(Number.isFinite)) throw new Error(`${asset.id} ${label}存在无效顶点`);
+      if (point[0] < 0 || point[0] > asset.canvas.width || point[1] < 0 || point[1] > asset.canvas.height) throw new Error(`${asset.id} ${label}顶点超出画布`);
+    }
+  }
+
+  function normalizeCornerRadii(value) {
+    const values = Array.isArray(value) ? value : [value ?? 0];
+    if (![1, 4].includes(values.length) || values.some((radius) => !Number.isFinite(radius) || radius < 0 || radius > 0.49)) {
+      throw new Error("屏幕孔径圆角必须是 0–0.49 之间的一个值或四角数组");
+    }
+    return values.length === 4 ? [...values] : [values[0], values[0], values[0], values[0]];
+  }
+
+  function screenApertureGeometry(asset) {
+    const aperture = asset.screen?.aperture;
+    return {
+      quad: aperture?.quad || asset.screen?.quad,
+      cornerRadii: normalizeCornerRadii(aperture?.cornerRadii ?? asset.screen?.cornerRadius ?? 0)
+    };
+  }
+
+  function cornerRadiiPixels(value, minimumDimension) {
+    return normalizeCornerRadii(value).map((radius) => Math.max(0, minimumDimension * radius));
+  }
+
   function validateAsset(asset) {
     if (!asset || !asset.id || !asset.name) throw new Error("样机缺少 id 或名称");
-    if (!["static-screen-v1", "static-screen-v2"].includes(asset.renderer)) throw new Error(`${asset.id} 渲染器不受支持`);
+    if (!["static-screen-v1", "static-screen-v2", "static-screen-v3"].includes(asset.renderer)) throw new Error(`${asset.id} 渲染器不受支持`);
     if (!Number.isFinite(asset.canvas?.width) || !Number.isFinite(asset.canvas?.height)) throw new Error(`${asset.id} 画布尺寸无效`);
-    if (!Array.isArray(asset.screen?.quad) || asset.screen.quad.length !== 4) throw new Error(`${asset.id} 屏幕必须有四个顶点`);
-    for (const point of asset.screen.quad) {
-      if (!Array.isArray(point) || point.length !== 2 || !point.every(Number.isFinite)) throw new Error(`${asset.id} 存在无效顶点`);
-      if (point[0] < 0 || point[0] > asset.canvas.width || point[1] < 0 || point[1] > asset.canvas.height) throw new Error(`${asset.id} 屏幕顶点超出画布`);
+    assertQuad(asset.screen?.quad, asset, "内容映射面");
+    if (asset.renderer === "static-screen-v3" && (!asset.screen?.aperture || !Array.isArray(asset.screen.aperture.quad) || !Array.isArray(asset.screen.aperture.cornerRadii))) {
+      throw new Error(`${asset.id} 缺少独立的可见孔径几何`);
     }
+    const aperture = screenApertureGeometry(asset);
+    assertQuad(aperture.quad, asset, "可见孔径");
     if (!asset.layers?.base) throw new Error(`${asset.id} 缺少基础图层`);
     if (!Number.isInteger(asset.screen?.recommendedSize?.width) || !Number.isInteger(asset.screen?.recommendedSize?.height) || asset.screen.recommendedSize.width < 1 || asset.screen.recommendedSize.height < 1) {
       throw new Error(`${asset.id} 缺少有效的推荐画面尺寸`);
@@ -74,14 +103,14 @@
   }
 
   function screenApertureMask(image, asset, renderScale = 1) {
-    if (!asset.chromaKey?.enabled) return null;
     let imageCache = apertureMaskCache.get(image);
     if (!imageCache) {
       imageCache = new Map();
       apertureMaskCache.set(image, imageCache);
     }
     const scale = Math.max(1, Math.min(2, Number(renderScale) || 1));
-    const cacheKey = `${asset.id}:${asset.revision || asset.updatedAt || "current"}:aperture-${scale.toFixed(2)}`;
+    const aperture = screenApertureGeometry(asset);
+    const cacheKey = `${asset.id}:${asset.revision || asset.updatedAt || "current"}:aperture-${scale.toFixed(2)}:${JSON.stringify(aperture)}`;
     if (imageCache.has(cacheKey)) return imageCache.get(cacheKey);
 
     const width = Math.round(asset.canvas.width * scale);
@@ -105,14 +134,16 @@
     shape.width = plane.width;
     shape.height = plane.height;
     const shapeContext = shape.getContext("2d");
-    const radius = Math.max(0, Math.min(plane.width, plane.height) * Math.min(0.49, asset.screen.cornerRadius || 0));
+    const radii = cornerRadiiPixels(aperture.cornerRadii, Math.min(plane.width, plane.height));
     shapeContext.fillStyle = "#fff";
     shapeContext.beginPath();
-    shapeContext.roundRect(0, 0, plane.width, plane.height, radius);
+    shapeContext.roundRect(0, 0, plane.width, plane.height, radii);
     shapeContext.fill();
 
-    const apertureQuad = expandQuad(asset.screen.quad, asset.screen.bleed || 0);
-    drawImageToQuad(maskContext, shape, apertureQuad, "final");
+    // The visible aperture is exact. Bleed belongs only to the hidden
+    // underpaint used to close sub-pixel seams; expanding this mask lets
+    // content escape into the physical bezel.
+    drawImageToQuad(maskContext, shape, aperture.quad, "final");
     imageCache.set(cacheKey, mask);
     return mask;
   }
@@ -566,7 +597,7 @@
     };
   }
 
-  function createScreenCanvas(image, targetAspect, fit, adjustments, cornerRadius = 0, transparent = false, crop, content) {
+  function createScreenCanvas(image, targetAspect, fit, adjustments, cornerRadii = 0, transparent = false, crop, content) {
     const plane = screenPlane(targetAspect);
     const { width, height } = plane;
     if (content?.frame || content?.imageFrame) {
@@ -576,10 +607,10 @@
       canvas.width = width;
       canvas.height = height;
       const context = canvas.getContext("2d");
-      const outerRadius = Math.max(0, Math.min(width, height) * Math.min(0.49, cornerRadius));
+      const outerRadii = cornerRadiiPixels(cornerRadii, Math.min(width, height));
       context.save();
       context.beginPath();
-      context.roundRect(0, 0, width, height, outerRadius);
+      context.roundRect(0, 0, width, height, outerRadii);
       context.clip();
       if (!transparent) {
         context.fillStyle = "#0d0d0d";
@@ -589,8 +620,8 @@
       context.translate(frame.cx, frame.cy);
       context.rotate(frame.rotation * Math.PI / 180);
       context.beginPath();
-      const frameRadius = Math.max(0, Math.min(frame.width, frame.height) * Math.min(0.49, cornerRadius));
-      context.roundRect(-frame.width / 2, -frame.height / 2, frame.width, frame.height, frameRadius);
+      const frameRadii = cornerRadiiPixels(cornerRadii, Math.min(frame.width, frame.height));
+      context.roundRect(-frame.width / 2, -frame.height / 2, frame.width, frame.height, frameRadii);
       context.clip();
       context.rotate(-frame.rotation * Math.PI / 180);
       context.translate(-frame.cx, -frame.cy);
@@ -628,10 +659,10 @@
     canvas.width = width;
     canvas.height = height;
     const context = canvas.getContext("2d");
-    const radius = Math.max(0, Math.min(width, height) * Math.min(0.49, cornerRadius));
+    const radii = cornerRadiiPixels(cornerRadii, Math.min(width, height));
     context.save();
     context.beginPath();
-    context.roundRect(0, 0, width, height, radius);
+    context.roundRect(0, 0, width, height, radii);
     context.clip();
     if (!transparent) {
       context.fillStyle = "#0d0d0d";
@@ -647,7 +678,7 @@
     return canvas;
   }
 
-  function createContentCanvas(image, targetAspect, fit, adjustments, cornerRadius = 0, content) {
+  function createContentCanvas(image, targetAspect, fit, adjustments, cornerRadii = 0, content) {
     const plane = screenPlane(targetAspect);
     const frame = normalizeFrame(content?.frame, plane.width, plane.height);
     const imageFrame = normalizeFrame(content?.imageFrame, plane.width, plane.height);
@@ -657,7 +688,7 @@
     const context = canvas.getContext("2d");
     const scaleX = canvas.width / frame.width;
     const scaleY = canvas.height / frame.height;
-    const radius = Math.max(0, Math.min(frame.width, frame.height) * Math.min(0.49, cornerRadius));
+    const radii = cornerRadiiPixels(cornerRadii, Math.min(frame.width, frame.height));
 
     // Work only in frame-local coordinates. Both this bitmap and the editor
     // boundary are projected through frameQuadOnSurface, so render, hit target
@@ -665,7 +696,7 @@
     context.scale(scaleX, scaleY);
     context.save();
     context.beginPath();
-    context.roundRect(0, 0, frame.width, frame.height, radius);
+    context.roundRect(0, 0, frame.width, frame.height, radii);
     context.clip();
 
     const frameAngle = frame.rotation * Math.PI / 180;
@@ -760,15 +791,17 @@
     context.imageSmoothingQuality = "high";
     const preparedBase = preparedBaseImage(baseImage, asset);
     context.drawImage(preparedBase, 0, 0, logicalWidth, logicalHeight);
-    const screenMaskQuad = expandQuad(quad || asset.screen.quad, asset.screen.bleed || 0);
     if (designImage) {
       const recommended = asset.screen.recommendedSize;
       const targetAspect = recommended.width / recommended.height;
-      const surfaceQuad = designQuad || screenMaskQuad;
+      // Content/editing geometry, visible aperture and hidden seam bleed are
+      // deliberately separate. Only the first controls projection.
+      const surfaceQuad = designQuad || quad || asset.screen.quad;
+      const aperture = screenApertureGeometry(asset);
       const hasContentGeometry = Boolean(content?.frame || content?.imageFrame);
       const screenCanvas = hasContentGeometry
-        ? createContentCanvas(designImage, targetAspect, fit, adjustments, asset.screen.cornerRadius || 0, content)
-        : createScreenCanvas(designImage, targetAspect, fit, adjustments, asset.screen.cornerRadius || 0, true, crop, null);
+        ? createContentCanvas(designImage, targetAspect, fit, adjustments, aperture.cornerRadii, content)
+        : createScreenCanvas(designImage, targetAspect, fit, adjustments, aperture.cornerRadii, true, crop, null);
       // Rendering and editing deliberately derive from one frame quad. Mapping
       // the whole transparent screen plane here used to apply geometry twice,
       // which made pixels drift away from their handles after crop or zoom.
@@ -824,5 +857,5 @@
     return canvas;
   }
 
-  global.MockupRenderer = Object.freeze({ VERSION, DEFAULT_ADJUSTMENTS, DEFAULT_CROP, createDefaultDesign, validateAsset, quadSize, bilinearPoint, inverseBilinearPoint, screenPlane, normalizeFrame, frameCorners, frameQuadOnSurface, surfaceQuadForFrameQuad, imageFrameForCover, constrainImageFrameToCover, constrainFrameVisibility, resizeFrameFromHandle, transformFrameBetweenFrames, expandQuad, cropGeometry, constrainCoverAdjustments, createScreenCanvas, createContentCanvas, drawImageToQuad, renderComposite });
+  global.MockupRenderer = Object.freeze({ VERSION, DEFAULT_ADJUSTMENTS, DEFAULT_CROP, createDefaultDesign, validateAsset, screenApertureGeometry, quadSize, bilinearPoint, inverseBilinearPoint, screenPlane, normalizeFrame, frameCorners, frameQuadOnSurface, surfaceQuadForFrameQuad, imageFrameForCover, constrainImageFrameToCover, constrainFrameVisibility, resizeFrameFromHandle, transformFrameBetweenFrames, expandQuad, cropGeometry, constrainCoverAdjustments, createScreenCanvas, createContentCanvas, drawImageToQuad, renderComposite });
 })(window);

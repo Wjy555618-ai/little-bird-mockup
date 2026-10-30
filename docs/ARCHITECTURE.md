@@ -20,13 +20,13 @@
 
 ### 共享渲染器
 
-`shared/mockup-renderer.js` 是唯一的合成实现，当前版本为 `2.1.0`。它负责：
+`shared/mockup-renderer.js` 是唯一的合成实现，当前版本为 `2.2.0`。它负责：
 
 - contain、cover 两种保持原比例的适配；不再提供会导致非等比变形的 stretch；
 - 先按 `recommendedSize` 建立设备真实屏幕比例，再映射到样机四边形，避免把透视后的窄宽度重复当成源文件比例；
 - 缩放、位移、旋转、亮度、对比度和饱和度；
 - 矩形或任意四边形透视；
-- 圆角屏幕、出血、遮挡、反射层和前景层；
+- 独立的内容映射面、精确可见孔径、隐藏出血、遮挡、反射层和前景层；
 - 临时测试素材的绿幕清理。
 
 插件构建时将该文件注入 `plugin/ui.html`；质检台直接引用同一个文件。manifest 还声明 `rendererVersion`，版本不一致时自动检查不通过。
@@ -37,7 +37,7 @@
 
 - 可拖动的四角坐标编辑器；
 - 网格、横屏、竖屏、明暗边界 4 种测试画面；
-- 7 项自动检查：数据结构、渲染器版本、源图尺寸、推荐画面尺寸、坐标边界、来源声明、文件哈希；
+- 8 项自动检查：数据结构、渲染器版本、源图尺寸、推荐画面尺寸、内容坐标、可见孔径、来源声明、文件哈希；
 - 5 项人工检查：画框贴合、透视自然、边缘无穿帮、清晰度合格、四种画面均已检查；
 - 只有全部通过后才能写入批准报告。
 
@@ -48,19 +48,22 @@
 - `scripts/promote-mockup.mjs`：验证报告中的 item 摘要、revision 和 rendererVersion，再复制素材、报告和元数据。
 - `netlify.toml`：未来只发布 `catalog/production`，不会暴露测试库、质检台或插件源码。
 
-## 静态样机数据契约 v2
+## 静态样机数据契约 v3
 
 ```json
 {
   "id": "studio-display-front",
   "revision": 1,
   "status": "testing",
-  "renderer": "static-screen-v2",
+  "renderer": "static-screen-v3",
   "canvas": { "width": 1448, "height": 1086 },
   "screen": {
     "quad": [[260, 185], [1190, 185], [1190, 702], [260, 702]],
     "recommendedSize": { "width": 1920, "height": 1080, "label": "16:9" },
-    "cornerRadius": 0,
+    "aperture": {
+      "quad": [[260, 185], [1190, 185], [1190, 702], [260, 702]],
+      "cornerRadii": [0, 0, 0, 0]
+    },
     "bleed": 3,
     "defaultFit": "contain"
   },
@@ -78,7 +81,7 @@
 }
 ```
 
-`screen.quad` 的顺序固定为左上、右上、右下、左下。`screen.recommendedSize` 描述用户内容在进入透视映射前的真实画面比例，也是插件显示给用户的推荐尺寸。可选 `layers.reflection` 和 `layers.foreground` 会在共享渲染器中按固定顺序叠加。复杂度继续通过数据契约扩展，不能在质检台和插件中分别增加两套特例。
+`screen.quad` 是内容映射与编辑坐标，`screen.aperture.quad` 是机身真实可见开口，二者都按左上、右上、右下、左下排列。`screen.aperture.cornerRadii` 依次记录四角曲率，比例基于透视前画面的短边。`screen.bleed` 只允许给可见孔径下方补边，绝不能扩大可见遮罩。`screen.recommendedSize` 描述用户内容在进入透视映射前的真实画面比例，也是插件显示给用户的推荐尺寸。可选 `layers.reflection` 和 `layers.foreground` 会在共享渲染器中按固定顺序叠加。复杂度继续通过数据契约扩展，不能在质检台和插件中分别增加两套特例。
 
 ## 发布闸门
 

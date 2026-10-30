@@ -1,9 +1,9 @@
 {
-  "schemaVersion": 2,
-  "catalogVersion": "2026.10.29.1",
-  "publishedAt": "2026-10-29T10:32:28.352Z",
+  "schemaVersion": 3,
+  "catalogVersion": "2026.10.30.1",
+  "publishedAt": "2026-10-30T14:56:42.146Z",
   "environment": "production",
-  "rendererVersion": "2.1.0",
+  "rendererVersion": "2.2.0",
   "minimumPluginVersion": "0.1.0",
   "categories": [
     {
@@ -33,7 +33,7 @@
         "金属",
         "monitor"
       ],
-      "renderer": "static-screen-v2",
+      "renderer": "static-screen-v3",
       "chromaKey": {
         "enabled": true,
         "minimumGreen": 65,
@@ -72,7 +72,32 @@
           "height": 1080,
           "label": "16:9"
         },
-        "cornerRadius": 0,
+        "aperture": {
+          "quad": [
+            [
+              260,
+              185
+            ],
+            [
+              1190,
+              185
+            ],
+            [
+              1190,
+              702
+            ],
+            [
+              260,
+              702
+            ]
+          ],
+          "cornerRadii": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
         "bleed": 3,
         "defaultFit": "cover"
       },
@@ -89,9 +114,9 @@
         "thumbnailSha256": "8b89c8fcb8c0d93d7f5226687c73dfb6e919e021c3aac025f046172878843045"
       },
       "qa": {
-        "approvedAt": "2026-10-27T21:10:20.475Z",
-        "rendererVersion": "2.1.0",
-        "sourceItemSha256": "26e3493377ede4d68b7843f67c187c6e4392ee9588e057ab263301a5a09a2988",
+        "approvedAt": "2026-10-30T14:54:51.178Z",
+        "rendererVersion": "2.2.0",
+        "sourceItemSha256": "e06f3f63c4242607d703813af38735c3574bccea3be864bfb0a2b06ed4003412",
         "report": "approvals/studio-display-front-r1.json"
       }
     },
@@ -108,7 +133,7 @@
         "正面",
         "phone"
       ],
-      "renderer": "static-screen-v2",
+      "renderer": "static-screen-v3",
       "chromaKey": {
         "enabled": true,
         "minimumGreen": 65,
@@ -126,20 +151,20 @@
       "screen": {
         "quad": [
           [
-            556,
+            554,
             154
           ],
           [
-            892,
+            893,
             154
           ],
           [
-            892,
-            884
+            893,
+            886
           ],
           [
-            556,
-            884
+            554,
+            886
           ]
         ],
         "recommendedSize": {
@@ -147,7 +172,32 @@
           "height": 2796,
           "label": "约 9:19.5"
         },
-        "cornerRadius": 0.06,
+        "aperture": {
+          "quad": [
+            [
+              554,
+              154
+            ],
+            [
+              893,
+              154
+            ],
+            [
+              893,
+              886
+            ],
+            [
+              554,
+              886
+            ]
+          ],
+          "cornerRadii": [
+            0.12,
+            0.12,
+            0.12,
+            0.12
+          ]
+        },
         "bleed": 4,
         "defaultFit": "cover"
       },
@@ -164,9 +214,9 @@
         "thumbnailSha256": "bf4a5a99f314cd649e09bda855d9bdd28e79a472c75f98e5b24550e5d37c4b69"
       },
       "qa": {
-        "approvedAt": "2026-10-27T21:10:20.944Z",
-        "rendererVersion": "2.1.0",
-        "sourceItemSha256": "918bd4a249d1cbc96d0bfc950d57ff8847cfd01ab6dff8d7e572dd0b5c26aab7",
+        "approvedAt": "2026-10-30T14:55:22.135Z",
+        "rendererVersion": "2.2.0",
+        "sourceItemSha256": "066eef467393f103570195503ff1895ad82d5f3c2c8b73469e6430971c102778",
         "report": "approvals/rock-phone-front-r1.json"
       }
     },
@@ -183,7 +233,7 @@
         "透视",
         "phone"
       ],
-      "renderer": "static-screen-v2",
+      "renderer": "static-screen-v3",
       "chromaKey": {
         "enabled": true,
         "minimumGreen": 20,
@@ -222,7 +272,32 @@
           "height": 2796,
           "label": "约 9:19.5"
         },
-        "cornerRadius": 0.055,
+        "aperture": {
+          "quad": [
+            [
+              644,
+              163
+            ],
+            [
+              862,
+              114
+            ],
+            [
+              862,
+              798
+            ],
+            [
+              644,
+              855
+            ]
+          ],
+          "cornerRadii": [
+            0.12,
+            0.12,
+            0.12,
+            0.12
+          ]
+        },
         "bleed": 4,
         "defaultFit": "cover",
         "occlusions": [
@@ -248,9 +323,9 @@
         "thumbnailSha256": "542e59b0fa8e863d4e2103577e716225e4d8a593beb955211f74fed46cb3b522"
       },
       "qa": {
-        "approvedAt": "2026-10-27T21:10:21.423Z",
-        "rendererVersion": "2.1.0",
-        "sourceItemSha256": "2f65b5ea002b8c126a140088247202e94cd829d5ab239f9cafadea014a6698f4",
+        "approvedAt": "2026-10-30T14:55:59.922Z",
+        "rendererVersion": "2.2.0",
+        "sourceItemSha256": "65d697f41e7966a116b37e22c34818a49f306bb6fbeb937c8c426518b2b18278",
         "report": "approvals/rail-phone-angle-r1.json"
       }
     },
@@ -267,7 +342,7 @@
         "透视",
         "laptop"
       ],
-      "renderer": "static-screen-v2",
+      "renderer": "static-screen-v3",
       "chromaKey": {
         "enabled": true,
         "minimumGreen": 65,
@@ -306,7 +381,32 @@
           "height": 1600,
           "label": "16:10"
         },
-        "cornerRadius": 0.008,
+        "aperture": {
+          "quad": [
+            [
+              235,
+              164
+            ],
+            [
+              939,
+              140
+            ],
+            [
+              1004,
+              587
+            ],
+            [
+              297,
+              664
+            ]
+          ],
+          "cornerRadii": [
+            0.008,
+            0.008,
+            0.008,
+            0.008
+          ]
+        },
         "bleed": 4,
         "defaultFit": "cover"
       },
@@ -323,9 +423,9 @@
         "thumbnailSha256": "72e13c920fcda281f1d751be2c5087d025d7372c095d2a7728666f8ecd65b1fe"
       },
       "qa": {
-        "approvedAt": "2026-10-27T21:10:21.896Z",
-        "rendererVersion": "2.1.0",
-        "sourceItemSha256": "00aae042ae73594891f140a845db6333e2a70320500c25aa5f1181f471f0d360",
+        "approvedAt": "2026-10-30T14:56:23.050Z",
+        "rendererVersion": "2.2.0",
+        "sourceItemSha256": "3086d810b266475db0c0c527d7785278bb5bd595df0b45c4b155b53f9fdb8b6a",
         "report": "approvals/graphite-laptop-angle-r1.json"
       }
     }

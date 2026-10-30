@@ -4,7 +4,7 @@ const PRODUCTION_CATALOG_URL = "https://assets.mockup-studio.example/v1/manifest
 const ACTIVE_CATALOG_URL = DEVELOPMENT_CATALOG_URL;
 const renderer = window.MockupRenderer;
 const pdfjs = window.pdfjsLib;
-const CATALOG_CACHE_KEY = "mockup-studio-catalog-v1";
+const CATALOG_CACHE_KEY = "mockup-studio-catalog-v3";
 const RECENT_KEY = "mockup-studio-recent-v1";
 const CONTENT_BLUR_ENTER_MS = 280;
 const MIN_CONTENT_BLUR_MS = 380;
@@ -474,7 +474,7 @@ function withTimeout(promise, milliseconds) {
 }
 
 function validateManifest(manifest) {
-  if (!manifest || ![1, 2].includes(manifest.schemaVersion)) throw new Error("不支持的素材清单版本");
+  if (!manifest || ![1, 2, 3].includes(manifest.schemaVersion)) throw new Error("不支持的素材清单版本");
   if (!Array.isArray(manifest.items)) throw new Error("素材清单缺少 items");
   for (const item of manifest.items) {
     renderer.validateAsset(item);
@@ -969,9 +969,13 @@ function designHandlePoints(points) {
   };
 }
 
-function roundedFramePath(frame, radiusRatio = 0) {
+function roundedFramePath(frame, radiusRatios = 0) {
   if (!frame) return "";
-  const radius = Math.max(0, Math.min(frame.width, frame.height) * Math.min(0.49, radiusRatio));
+  const values = Array.isArray(radiusRatios) ? radiusRatios : [radiusRatios];
+  const normalized = values.length === 4 ? values : [values[0] || 0, values[0] || 0, values[0] || 0, values[0] || 0];
+  const [topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius] = normalized.map((ratio) => (
+    Math.max(0, Math.min(frame.width, frame.height) * Math.min(0.49, Number(ratio) || 0))
+  ));
   const localPoint = (x, y) => {
     const angle = frame.rotation * Math.PI / 180;
     const cosine = Math.cos(angle);
@@ -983,17 +987,17 @@ function roundedFramePath(frame, radiusRatio = 0) {
   const top = -frame.height / 2;
   const bottom = frame.height / 2;
   const point = (value) => `${value[0]} ${value[1]}`;
-  const p0 = localPoint(left + radius, top);
-  const p1 = localPoint(right - radius, top);
+  const p0 = localPoint(left + topLeftRadius, top);
+  const p1 = localPoint(right - topRightRadius, top);
   const c1 = localPoint(right, top);
-  const p2 = localPoint(right, top + radius);
-  const p3 = localPoint(right, bottom - radius);
+  const p2 = localPoint(right, top + topRightRadius);
+  const p3 = localPoint(right, bottom - bottomRightRadius);
   const c2 = localPoint(right, bottom);
-  const p4 = localPoint(right - radius, bottom);
-  const p5 = localPoint(left + radius, bottom);
+  const p4 = localPoint(right - bottomRightRadius, bottom);
+  const p5 = localPoint(left + bottomLeftRadius, bottom);
   const c3 = localPoint(left, bottom);
-  const p6 = localPoint(left, bottom - radius);
-  const p7 = localPoint(left, top + radius);
+  const p6 = localPoint(left, bottom - bottomLeftRadius);
+  const p7 = localPoint(left, top + topLeftRadius);
   const c4 = localPoint(left, top);
   return `M${point(p0)}L${point(p1)}Q${point(c1)} ${point(p2)}L${point(p3)}Q${point(c2)} ${point(p4)}L${point(p5)}Q${point(c3)} ${point(p6)}L${point(p7)}Q${point(c4)} ${point(p0)}Z`;
 }
@@ -1012,11 +1016,11 @@ function updateDesignEditor() {
   elements.designDragTarget.setAttribute("points", pointString);
   const svg = elements.designPolygon.ownerSVGElement;
   svg.setAttribute("viewBox", `0 0 ${state.selectedAsset.canvas.width} ${state.selectedAsset.canvas.height}`);
-  const cornerRadius = state.selectedAsset.screen.cornerRadius || 0;
-  elements.cropFrame.setAttribute("d", roundedFramePath(state.contentFrame, cornerRadius));
+  const cornerRadii = renderer.screenApertureGeometry(state.selectedAsset).cornerRadii;
+  elements.cropFrame.setAttribute("d", roundedFramePath(state.contentFrame, cornerRadii));
   elements.cropShade.setAttribute(
     "d",
-    `M0 0H${state.selectedAsset.canvas.width}V${state.selectedAsset.canvas.height}H0Z ${roundedFramePath(state.contentFrame, cornerRadius)}`
+    `M0 0H${state.selectedAsset.canvas.width}V${state.selectedAsset.canvas.height}H0Z ${roundedFramePath(state.contentFrame, cornerRadii)}`
   );
   const handlePoints = designHandlePoints(points);
   for (const handle of elements.designEditor.querySelectorAll(".design-scale-handle")) {

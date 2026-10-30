@@ -11,13 +11,13 @@ const productionRoot = resolve(projectRoot, "catalog/production/v1");
 const testing = JSON.parse(await readFile(resolve(testingRoot, "manifest.json"), "utf8"));
 const production = JSON.parse(await readFile(resolve(productionRoot, "manifest.json"), "utf8"));
 
-test("testing and production catalogs share schema v2 with separate environments", () => {
-  assert.equal(testing.schemaVersion, 2);
-  assert.equal(production.schemaVersion, 2);
+test("testing and production catalogs share schema v3 with separate aperture geometry", () => {
+  assert.equal(testing.schemaVersion, 3);
+  assert.equal(production.schemaVersion, 3);
   assert.equal(testing.environment, "testing");
   assert.equal(production.environment, "production");
-  assert.equal(testing.rendererVersion, "2.1.0");
-  assert.equal(production.rendererVersion, "2.1.0");
+  assert.equal(testing.rendererVersion, "2.2.0");
+  assert.equal(production.rendererVersion, "2.2.0");
   assert.equal(testing.items.length, 4, "the functional closure is intentionally limited to four temporary mockups");
   for (const manifest of [testing, production]) {
     assert.match(manifest.catalogVersion, /^\d{4}\.\d{2}\.\d{2}\.\d+$/);
@@ -28,7 +28,7 @@ test("testing and production catalogs share schema v2 with separate environments
 
 async function verifyCatalog(manifest, catalogRoot, expectedStatus) {
   for (const item of manifest.items) {
-    assert.equal(item.renderer, "static-screen-v2");
+    assert.equal(item.renderer, "static-screen-v3");
     assert.equal(item.status, expectedStatus);
     assert.equal(item.provenance.kind, "generated-in-house");
     assert.ok(item.canvas.width > 0);
@@ -42,6 +42,10 @@ async function verifyCatalog(manifest, catalogRoot, expectedStatus) {
       assert.ok(x >= 0 && x <= item.canvas.width, `${item.id} x coordinate is outside canvas`);
       assert.ok(y >= 0 && y <= item.canvas.height, `${item.id} y coordinate is outside canvas`);
     }
+    assert.equal(item.screen.aperture.quad.length, 4);
+    assert.equal(item.screen.aperture.cornerRadii.length, 4);
+    assert.ok(item.screen.aperture.cornerRadii.every((radius) => radius >= 0 && radius <= 0.49));
+    assert.equal(Object.hasOwn(item.screen, "cornerRadius"), false, `${item.id} must not retain the ambiguous legacy radius`);
 
     const assetPath = resolve(catalogRoot, item.layers.base);
     const thumbnailPath = resolve(catalogRoot, item.thumbnail);
