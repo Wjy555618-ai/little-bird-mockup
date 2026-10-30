@@ -1,11 +1,11 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "assetId": "studio-display-front",
   "revision": 1,
   "status": "approved",
-  "rendererVersion": "2.2.0",
-  "itemSha256": "e06f3f63c4242607d703813af38735c3574bccea3be864bfb0a2b06ed4003412",
-  "approvedAt": "2026-10-30T14:54:51.178Z",
+  "rendererVersion": "2.3.0",
+  "itemSha256": "01a2e7d81d7c62ee5adc096ac7c638143aaa835dff277712b12e50eb5391c073",
+  "approvedAt": "2026-10-30T15:45:47.267Z",
   "patternIds": [
     "grid",
     "landscape",
@@ -19,8 +19,24 @@
     "recommendedSize": true,
     "geometry": true,
     "aperture": true,
+    "seam": true,
     "provenance": true,
     "integrity": true
+  },
+  "seamMetrics": {
+    "mode": "chroma-edge",
+    "maxEdgeExtension": 2,
+    "edgeExtensionLimit": 12,
+    "edgeExtensions": [
+      0,
+      0,
+      2,
+      1
+    ],
+    "truncatedSamples": 0,
+    "truncatedEdgeRatio": 0,
+    "interiorSpillRatio": 0.9989247311827957,
+    "pass": true
   },
   "manualChecks": {
     "frameFit": true,

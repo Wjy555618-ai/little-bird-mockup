@@ -4,7 +4,7 @@ const PRODUCTION_CATALOG_URL = "https://assets.mockup-studio.example/v1/manifest
 const ACTIVE_CATALOG_URL = DEVELOPMENT_CATALOG_URL;
 const renderer = window.MockupRenderer;
 const pdfjs = window.pdfjsLib;
-const CATALOG_CACHE_KEY = "mockup-studio-catalog-v3";
+const CATALOG_CACHE_KEY = "mockup-studio-catalog-v4";
 const RECENT_KEY = "mockup-studio-recent-v1";
 const CONTENT_BLUR_ENTER_MS = 280;
 const MIN_CONTENT_BLUR_MS = 380;
@@ -474,7 +474,7 @@ function withTimeout(promise, milliseconds) {
 }
 
 function validateManifest(manifest) {
-  if (!manifest || ![1, 2, 3].includes(manifest.schemaVersion)) throw new Error("不支持的素材清单版本");
+  if (!manifest || ![1, 2, 3, 4].includes(manifest.schemaVersion)) throw new Error("不支持的素材清单版本");
   if (!Array.isArray(manifest.items)) throw new Error("素材清单缺少 items");
   for (const item of manifest.items) {
     renderer.validateAsset(item);

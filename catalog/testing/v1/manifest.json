@@ -1,9 +1,9 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "catalogVersion": "2026.10.30.1",
   "publishedAt": "2026-10-30T14:56:42.034Z",
   "environment": "testing",
-  "rendererVersion": "2.2.0",
+  "rendererVersion": "2.3.0",
   "minimumPluginVersion": "0.1.0",
   "categories": [
     {
@@ -33,7 +33,7 @@
         "金属",
         "monitor"
       ],
-      "renderer": "static-screen-v3",
+      "renderer": "static-screen-v4",
       "chromaKey": {
         "enabled": true,
         "minimumGreen": 65,
@@ -98,7 +98,11 @@
             0
           ]
         },
-        "bleed": 3,
+        "compositing": {
+          "mode": "chroma-edge",
+          "maxEdgeExtension": 12
+        },
+        "underlap": 16,
         "defaultFit": "cover"
       },
       "layers": {
@@ -127,7 +131,7 @@
         "正面",
         "phone"
       ],
-      "renderer": "static-screen-v3",
+      "renderer": "static-screen-v4",
       "chromaKey": {
         "enabled": true,
         "minimumGreen": 65,
@@ -192,7 +196,11 @@
             0.12
           ]
         },
-        "bleed": 4,
+        "compositing": {
+          "mode": "chroma-edge",
+          "maxEdgeExtension": 12
+        },
+        "underlap": 16,
         "defaultFit": "cover"
       },
       "layers": {
@@ -221,7 +229,7 @@
         "透视",
         "phone"
       ],
-      "renderer": "static-screen-v3",
+      "renderer": "static-screen-v4",
       "chromaKey": {
         "enabled": true,
         "minimumGreen": 20,
@@ -286,7 +294,11 @@
             0.12
           ]
         },
-        "bleed": 4,
+        "compositing": {
+          "mode": "chroma-edge",
+          "maxEdgeExtension": 12
+        },
+        "underlap": 16,
         "defaultFit": "cover",
         "occlusions": [
           {
@@ -324,7 +336,7 @@
         "透视",
         "laptop"
       ],
-      "renderer": "static-screen-v3",
+      "renderer": "static-screen-v4",
       "chromaKey": {
         "enabled": true,
         "minimumGreen": 65,
@@ -389,7 +401,11 @@
             0.008
           ]
         },
-        "bleed": 4,
+        "compositing": {
+          "mode": "chroma-edge",
+          "maxEdgeExtension": 12
+        },
+        "underlap": 16,
         "defaultFit": "cover"
       },
       "layers": {

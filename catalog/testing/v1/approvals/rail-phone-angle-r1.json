@@ -1,11 +1,11 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "assetId": "rail-phone-angle",
   "revision": 1,
   "status": "approved",
-  "rendererVersion": "2.2.0",
-  "itemSha256": "65d697f41e7966a116b37e22c34818a49f306bb6fbeb937c8c426518b2b18278",
-  "approvedAt": "2026-10-30T14:55:59.922Z",
+  "rendererVersion": "2.3.0",
+  "itemSha256": "0abe3d19e874442032104b80f093c3a07fa6a17eaaf0f012c5b24eea86910cdd",
+  "approvedAt": "2026-10-30T15:45:52.078Z",
   "patternIds": [
     "grid",
     "landscape",
@@ -19,8 +19,24 @@
     "recommendedSize": true,
     "geometry": true,
     "aperture": true,
+    "seam": true,
     "provenance": true,
     "integrity": true
+  },
+  "seamMetrics": {
+    "mode": "chroma-edge",
+    "maxEdgeExtension": 5,
+    "edgeExtensionLimit": 12,
+    "edgeExtensions": [
+      5,
+      1,
+      5,
+      2
+    ],
+    "truncatedSamples": 0,
+    "truncatedEdgeRatio": 0,
+    "interiorSpillRatio": 0.9990407512996814,
+    "pass": true
   },
   "manualChecks": {
     "frameFit": true,

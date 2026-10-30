@@ -19,6 +19,7 @@ const state = {
   pattern: "grid",
   visitedPatterns: new Set(["grid"]),
   automaticChecks: {},
+  seamMetrics: null,
   approvedIds: new Set(),
   draggingCorner: null
 };
@@ -126,6 +127,7 @@ async function runAutomaticChecks() {
     recommendedSize: false,
     geometry: false,
     aperture: false,
+    seam: false,
     provenance: false,
     integrity: false
   };
@@ -138,6 +140,13 @@ async function runAutomaticChecks() {
     && Array.isArray(asset.screen?.aperture?.cornerRadii)
     && asset.screen.aperture.cornerRadii.length === 4
     && asset.screen.aperture.cornerRadii.every((radius) => Number.isFinite(radius) && radius >= 0 && radius <= 0.49);
+  try {
+    state.seamMetrics = renderer.screenCoverageMetrics(state.baseImage, asset);
+    checks.seam = state.seamMetrics.pass === true;
+  } catch {
+    state.seamMetrics = null;
+    checks.seam = false;
+  }
   checks.provenance = asset.provenance?.kind === "generated-in-house";
   try {
     const [baseDigest, thumbnailDigest] = await Promise.all([sha256(resolveAsset(asset.layers.base)), sha256(resolveAsset(asset.thumbnail))]);
@@ -154,6 +163,7 @@ const checkLabels = {
   recommendedSize: "推荐画面尺寸与比例已填写",
   geometry: "四个屏幕顶点均在画布内",
   aperture: "可见孔径与四角曲率独立且有效",
+  seam: "接缝软边覆盖完整且未越过安全上限",
   provenance: "素材来源标记为项目自制",
   integrity: "基础图与缩略图哈希正确"
 };
@@ -166,7 +176,10 @@ function renderChecks() {
   for (const [key, label] of entries) {
     const row = document.createElement("div");
     row.className = `check-row${state.automaticChecks[key] ? " pass" : ""}`;
-    row.innerHTML = `<i>${state.automaticChecks[key] ? "✓" : "·"}</i><span>${label}</span>`;
+    const detail = key === "seam" && state.seamMetrics
+      ? ` · 外延 ${state.seamMetrics.maxEdgeExtension}/${state.seamMetrics.edgeExtensionLimit}px · 截断率 ${(state.seamMetrics.truncatedEdgeRatio * 100).toFixed(2)}%`
+      : "";
+    row.innerHTML = `<i>${state.automaticChecks[key] ? "✓" : "·"}</i><span>${label}${detail}</span>`;
     elements.automaticChecks.appendChild(row);
   }
   updateApprovalState();
@@ -258,6 +271,7 @@ async function selectAsset(id) {
   state.apertureQuad = asset.screen.aperture.quad.map((point) => [...point]);
   state.visitedPatterns = new Set([state.pattern]);
   state.automaticChecks = {};
+  state.seamMetrics = null;
   for (const input of document.querySelectorAll("[data-manual]")) input.checked = false;
   elements.assetName.textContent = asset.name;
   elements.assetMeta.textContent = `${asset.id} · r${asset.revision} · ${asset.renderer}`;
@@ -371,6 +385,7 @@ elements.approveButton.addEventListener("click", async () => {
       quad: state.quad,
       apertureQuad: state.apertureQuad,
       automaticChecks: state.automaticChecks,
+      seamMetrics: state.seamMetrics,
       manualChecks: manualValues(),
       patternIds: [...state.visitedPatterns]
     })

@@ -1,11 +1,11 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "assetId": "rock-phone-front",
   "revision": 1,
   "status": "approved",
-  "rendererVersion": "2.2.0",
-  "itemSha256": "066eef467393f103570195503ff1895ad82d5f3c2c8b73469e6430971c102778",
-  "approvedAt": "2026-10-30T14:55:22.135Z",
+  "rendererVersion": "2.3.0",
+  "itemSha256": "17a4e5aa9f0d3cc08ab2c46e3aa21fa63dba7d5693e039758c9456342ad8bc97",
+  "approvedAt": "2026-10-30T15:45:49.658Z",
   "patternIds": [
     "grid",
     "landscape",
@@ -19,8 +19,24 @@
     "recommendedSize": true,
     "geometry": true,
     "aperture": true,
+    "seam": true,
     "provenance": true,
     "integrity": true
+  },
+  "seamMetrics": {
+    "mode": "chroma-edge",
+    "maxEdgeExtension": 3,
+    "edgeExtensionLimit": 12,
+    "edgeExtensions": [
+      3,
+      0,
+      1,
+      0
+    ],
+    "truncatedSamples": 0,
+    "truncatedEdgeRatio": 0,
+    "interiorSpillRatio": 0.9999432591920109,
+    "pass": true
   },
   "manualChecks": {
     "frameFit": true,

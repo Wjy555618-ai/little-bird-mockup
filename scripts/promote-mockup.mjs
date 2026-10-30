@@ -41,7 +41,7 @@ async function approvalFor(item) {
   try { approval = JSON.parse(await readFile(path, "utf8")); }
   catch { throw new Error(`${item.id} 尚未在样机质检台通过`); }
   if (approval.status !== "approved" || approval.assetId !== item.id || approval.revision !== item.revision) throw new Error(`${item.id} 的质检报告无效`);
-  if (approval.rendererVersion !== "2.2.0" || approval.itemSha256 !== itemDigest(item)) throw new Error(`${item.id} 的质检报告已过期，请重新验收`);
+  if (approval.rendererVersion !== "2.3.0" || approval.schemaVersion !== 2 || approval.seamMetrics?.pass !== true || approval.itemSha256 !== itemDigest(item)) throw new Error(`${item.id} 的质检报告已过期，请重新验收`);
   return approval;
 }
 
@@ -54,6 +54,9 @@ async function copyAssetFile(relativePath) {
 
 const testing = JSON.parse(await readFile(testingManifestPath, "utf8"));
 const production = JSON.parse(await readFile(productionManifestPath, "utf8"));
+if (testing.schemaVersion !== 4 || testing.rendererVersion !== "2.3.0") throw new Error("测试库不是当前接缝安全规范");
+production.schemaVersion = testing.schemaVersion;
+production.rendererVersion = testing.rendererVersion;
 const targets = promoteAll ? testing.items : testing.items.filter((item) => item.id === requestedId);
 if (!targets.length) throw new Error(`测试库中找不到样机：${requestedId}`);
 

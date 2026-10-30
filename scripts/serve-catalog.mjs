@@ -16,7 +16,7 @@ const host = "127.0.0.1";
 
 const REQUIRED_PATTERNS = ["grid", "landscape", "portrait", "edge"];
 const MANUAL_KEYS = ["frameFit", "perspective", "edgeMask", "imageQuality", "allPatterns"];
-const AUTOMATIC_KEYS = ["schema", "renderer", "dimensions", "recommendedSize", "geometry", "aperture", "provenance", "integrity"];
+const AUTOMATIC_KEYS = ["schema", "renderer", "dimensions", "recommendedSize", "geometry", "aperture", "seam", "provenance", "integrity"];
 
 const contentTypes = {
   ".css": "text/css; charset=utf-8",
@@ -75,13 +75,15 @@ async function readBody(request) {
 }
 
 async function verifyItem(manifest, item) {
-  if (manifest.schemaVersion !== 3 || manifest.rendererVersion !== "2.2.0") throw new Error("测试库规范或渲染器版本不匹配");
-  if (!item || item.status !== "testing" || item.renderer !== "static-screen-v3") throw new Error("素材不是可质检的静态样机");
+  if (manifest.schemaVersion !== 4 || manifest.rendererVersion !== "2.3.0") throw new Error("测试库规范或渲染器版本不匹配");
+  if (!item || item.status !== "testing" || item.renderer !== "static-screen-v4") throw new Error("素材不是可质检的静态样机");
   if (!Number.isInteger(item.canvas?.width) || !Number.isInteger(item.canvas?.height)) throw new Error("画布尺寸无效");
   if (!Number.isInteger(item.screen?.recommendedSize?.width) || !Number.isInteger(item.screen?.recommendedSize?.height) || !item.screen.recommendedSize.label) throw new Error("推荐画面尺寸无效");
   assertQuad(item, item.screen?.quad);
   assertQuad(item, item.screen?.aperture?.quad);
   if (!Array.isArray(item.screen?.aperture?.cornerRadii) || item.screen.aperture.cornerRadii.length !== 4 || item.screen.aperture.cornerRadii.some((radius) => !Number.isFinite(radius) || radius < 0 || radius > 0.49)) throw new Error("可见孔径圆角无效");
+  if (item.screen?.compositing?.mode !== "chroma-edge" || !item.chromaKey?.enabled || !Number.isInteger(item.screen.compositing.maxEdgeExtension) || item.screen.compositing.maxEdgeExtension < 1 || item.screen.compositing.maxEdgeExtension > 12) throw new Error("接缝软边配置无效");
+  if (!Number.isFinite(item.screen?.underlap) || item.screen.underlap < item.screen.compositing.maxEdgeExtension || item.screen.underlap > 24 || Object.hasOwn(item.screen, "bleed")) throw new Error("隐藏衬底配置无效");
   if (item.provenance?.kind !== "generated-in-house") throw new Error("素材来源未标记为项目自制");
   const basePath = safePath(testingRoot, item.layers?.base);
   const thumbnailPath = safePath(testingRoot, item.thumbnail);
@@ -161,10 +163,14 @@ async function handleApi(request, response, url) {
     if (JSON.stringify(body.quad) !== JSON.stringify(item.screen.quad)) throw new Error("当前坐标尚未保存到测试库");
     if (JSON.stringify(body.apertureQuad) !== JSON.stringify(item.screen.aperture.quad)) throw new Error("当前可见孔径尚未保存到测试库");
     if (!AUTOMATIC_KEYS.every((key) => body.automaticChecks?.[key] === true)) throw new Error("自动检查尚未全部通过");
+    const seamMetrics = body.seamMetrics;
+    if (!seamMetrics || seamMetrics.pass !== true || seamMetrics.mode !== item.screen.compositing.mode || seamMetrics.edgeExtensionLimit !== item.screen.compositing.maxEdgeExtension || seamMetrics.maxEdgeExtension > seamMetrics.edgeExtensionLimit || seamMetrics.interiorSpillRatio < 0.85 || seamMetrics.truncatedSamples !== 0 || seamMetrics.truncatedEdgeRatio !== 0) {
+      throw new Error("接缝像素门禁未通过");
+    }
     if (!MANUAL_KEYS.every((key) => body.manualChecks?.[key] === true)) throw new Error("人工验收尚未全部确认");
     if (!REQUIRED_PATTERNS.every((id) => body.patternIds?.includes(id))) throw new Error("四种测试图尚未全部查看");
     const report = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       assetId: item.id,
       revision: item.revision,
       status: "approved",
@@ -173,6 +179,7 @@ async function handleApi(request, response, url) {
       approvedAt: new Date().toISOString(),
       patternIds: REQUIRED_PATTERNS,
       automaticChecks: Object.fromEntries(AUTOMATIC_KEYS.map((key) => [key, true])),
+      seamMetrics,
       manualChecks: Object.fromEntries(MANUAL_KEYS.map((key) => [key, true]))
     };
     const approvalPath = resolve(testingRoot, `approvals/${item.id}-r${item.revision}.json`);

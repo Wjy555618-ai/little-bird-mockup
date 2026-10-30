@@ -1,9 +1,9 @@
 {
-  "schemaVersion": 3,
-  "catalogVersion": "2026.10.30.1",
-  "publishedAt": "2026-10-30T14:56:42.146Z",
+  "schemaVersion": 4,
+  "catalogVersion": "2026.10.30.2",
+  "publishedAt": "2026-10-30T15:46:51.209Z",
   "environment": "production",
-  "rendererVersion": "2.2.0",
+  "rendererVersion": "2.3.0",
   "minimumPluginVersion": "0.1.0",
   "categories": [
     {
@@ -33,7 +33,7 @@
         "金属",
         "monitor"
       ],
-      "renderer": "static-screen-v3",
+      "renderer": "static-screen-v4",
       "chromaKey": {
         "enabled": true,
         "minimumGreen": 65,
@@ -98,7 +98,11 @@
             0
           ]
         },
-        "bleed": 3,
+        "compositing": {
+          "mode": "chroma-edge",
+          "maxEdgeExtension": 12
+        },
+        "underlap": 16,
         "defaultFit": "cover"
       },
       "layers": {
@@ -114,9 +118,9 @@
         "thumbnailSha256": "8b89c8fcb8c0d93d7f5226687c73dfb6e919e021c3aac025f046172878843045"
       },
       "qa": {
-        "approvedAt": "2026-10-30T14:54:51.178Z",
-        "rendererVersion": "2.2.0",
-        "sourceItemSha256": "e06f3f63c4242607d703813af38735c3574bccea3be864bfb0a2b06ed4003412",
+        "approvedAt": "2026-10-30T15:45:47.267Z",
+        "rendererVersion": "2.3.0",
+        "sourceItemSha256": "01a2e7d81d7c62ee5adc096ac7c638143aaa835dff277712b12e50eb5391c073",
         "report": "approvals/studio-display-front-r1.json"
       }
     },
@@ -133,7 +137,7 @@
         "正面",
         "phone"
       ],
-      "renderer": "static-screen-v3",
+      "renderer": "static-screen-v4",
       "chromaKey": {
         "enabled": true,
         "minimumGreen": 65,
@@ -198,7 +202,11 @@
             0.12
           ]
         },
-        "bleed": 4,
+        "compositing": {
+          "mode": "chroma-edge",
+          "maxEdgeExtension": 12
+        },
+        "underlap": 16,
         "defaultFit": "cover"
       },
       "layers": {
@@ -214,9 +222,9 @@
         "thumbnailSha256": "bf4a5a99f314cd649e09bda855d9bdd28e79a472c75f98e5b24550e5d37c4b69"
       },
       "qa": {
-        "approvedAt": "2026-10-30T14:55:22.135Z",
-        "rendererVersion": "2.2.0",
-        "sourceItemSha256": "066eef467393f103570195503ff1895ad82d5f3c2c8b73469e6430971c102778",
+        "approvedAt": "2026-10-30T15:45:49.658Z",
+        "rendererVersion": "2.3.0",
+        "sourceItemSha256": "17a4e5aa9f0d3cc08ab2c46e3aa21fa63dba7d5693e039758c9456342ad8bc97",
         "report": "approvals/rock-phone-front-r1.json"
       }
     },
@@ -233,7 +241,7 @@
         "透视",
         "phone"
       ],
-      "renderer": "static-screen-v3",
+      "renderer": "static-screen-v4",
       "chromaKey": {
         "enabled": true,
         "minimumGreen": 20,
@@ -298,7 +306,11 @@
             0.12
           ]
         },
-        "bleed": 4,
+        "compositing": {
+          "mode": "chroma-edge",
+          "maxEdgeExtension": 12
+        },
+        "underlap": 16,
         "defaultFit": "cover",
         "occlusions": [
           {
@@ -323,9 +335,9 @@
         "thumbnailSha256": "542e59b0fa8e863d4e2103577e716225e4d8a593beb955211f74fed46cb3b522"
       },
       "qa": {
-        "approvedAt": "2026-10-30T14:55:59.922Z",
-        "rendererVersion": "2.2.0",
-        "sourceItemSha256": "65d697f41e7966a116b37e22c34818a49f306bb6fbeb937c8c426518b2b18278",
+        "approvedAt": "2026-10-30T15:45:52.078Z",
+        "rendererVersion": "2.3.0",
+        "sourceItemSha256": "0abe3d19e874442032104b80f093c3a07fa6a17eaaf0f012c5b24eea86910cdd",
         "report": "approvals/rail-phone-angle-r1.json"
       }
     },
@@ -342,7 +354,7 @@
         "透视",
         "laptop"
       ],
-      "renderer": "static-screen-v3",
+      "renderer": "static-screen-v4",
       "chromaKey": {
         "enabled": true,
         "minimumGreen": 65,
@@ -407,7 +419,11 @@
             0.008
           ]
         },
-        "bleed": 4,
+        "compositing": {
+          "mode": "chroma-edge",
+          "maxEdgeExtension": 12
+        },
+        "underlap": 16,
         "defaultFit": "cover"
       },
       "layers": {
@@ -423,9 +439,9 @@
         "thumbnailSha256": "72e13c920fcda281f1d751be2c5087d025d7372c095d2a7728666f8ecd65b1fe"
       },
       "qa": {
-        "approvedAt": "2026-10-30T14:56:23.050Z",
-        "rendererVersion": "2.2.0",
-        "sourceItemSha256": "3086d810b266475db0c0c527d7785278bb5bd595df0b45c4b155b53f9fdb8b6a",
+        "approvedAt": "2026-10-30T15:45:54.497Z",
+        "rendererVersion": "2.3.0",
+        "sourceItemSha256": "d471b2b10031de0480017a19a20d367c91b465b842aedd6acf51f840d1cafc40",
         "report": "approvals/graphite-laptop-angle-r1.json"
       }
     }

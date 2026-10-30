@@ -223,12 +223,12 @@ test("one canonical content frame owns rendering, controls and direct transforms
   assert.match(rendererScript, /shapeContext\.roundRect\(0, 0, plane\.width, plane\.height, radii\)/);
   assert.match(rendererScript, /function screenApertureGeometry/);
   assert.match(rendererScript, /function chromaSpillAlpha/);
-  assert.match(rendererScript, /const apertureCoverage = aperturePixels\.data\[index \+ 3\] \/ 255/);
-  assert.match(rendererScript, /const keyAlpha = apertureCoverage/);
+  assert.match(rendererScript, /const screenCoverage = coveragePixels\.data\[index \+ 3\] \/ 255/);
+  assert.match(rendererScript, /const keyAlpha = screenCoverage/);
   assert.match(rendererScript, /const neutral = Math\.round\(red \* 0\.2126 \+ green \* 0\.7152 \+ blue \* 0\.0722\)/);
   assert.match(rendererScript, /Math\.min\(nextGreen, Math\.max\(nextRed, nextBlue\) \+ 1\)/);
-  assert.match(rendererScript, /const bleedQuad = expandQuad\(renderQuad, asset\.screen\.bleed \|\| 0\)/);
-  assert.match(rendererScript, /drawImageToQuad\(screenContext, bleedCanvas, bleedQuad, quality\)/);
+  assert.match(rendererScript, /const underlap = asset\.screen\.underlap/);
+  assert.match(rendererScript, /drawImageToQuad\(screenContext, underlapCanvas, underlapQuad, quality\)/);
   assert.doesNotMatch(rendererScript, /createScreenCanvas\([^\n]+content\);/);
   assert.match(uiScript, /contentFrame:/);
   assert.match(uiScript, /imageFrame:/);
@@ -245,8 +245,9 @@ test("one canonical content frame owns rendering, controls and direct transforms
   assert.doesNotMatch(uiStyles, /\.canvas-wrap canvas\s*\{[^}]*max-width/s);
 });
 
-test("screen aperture uses canonical vector geometry without raster-edge dilation", () => {
-  const apertureSource = rendererScript.match(/function screenApertureMask[\s\S]*?\n  }\n\n  function preparedBaseImage/)?.[0] || "";
+test("physical aperture and measured seam coverage remain separate vector geometries", () => {
+  const apertureSource = rendererScript.match(/function screenApertureMask[\s\S]*?\n  }\n\n  function lineIntersection/)?.[0] || "";
+  const coverageSource = rendererScript.match(/function sourceCoverageGeometry[\s\S]*?\n  }\n\n  function screenCoverageMask/)?.[0] || "";
   assert.match(rendererScript, /function screenApertureMask\(image, asset, renderScale = 1\)/);
   assert.match(apertureSource, /const plane = screenPlane\(targetAspect\)/);
   assert.match(apertureSource, /shapeContext\.roundRect/);
@@ -255,14 +256,24 @@ test("screen aperture uses canonical vector geometry without raster-edge dilatio
   assert.doesNotMatch(apertureSource, /expandQuad|screen\.bleed/);
   assert.doesNotMatch(apertureSource, /chromaKey/);
   assert.doesNotMatch(apertureSource, /getImageData|aperturePixels|dilatedAperture|offsetY = -2|offsetX = -2/);
+  assert.match(coverageSource, /outwardEdgeNormal/);
+  assert.match(coverageSource, /offset <= compositing\.maxEdgeExtension \+ 1/);
+  assert.match(coverageSource, /return Math\.max\(\.\.\.distances\)/);
+  assert.match(coverageSource, /truncatedSamples === 0/);
+  assert.match(rendererScript, /function screenCoverageMask\(image, asset, renderScale = 1\)/);
+  assert.match(rendererScript, /drawImageToQuad\(context, shape, source\.geometry\.quad, "final"\)/);
+  assert.match(rendererScript, /JSON\.stringify\(screenApertureGeometry\(asset\)\).*JSON\.stringify\(screenCompositing\(asset\)\)/);
+  assert.doesNotMatch(rendererScript, /static-screen-v1|static-screen-v2|static-screen-v3/);
   assert.match(rendererScript, /const surfaceQuad = designQuad \|\| quad \|\| asset\.screen\.quad/);
-  assert.match(rendererScript, /const bleedQuad = expandQuad\(renderQuad, asset\.screen\.bleed \|\| 0\)/);
+  assert.match(rendererScript, /const underlapQuad = expandQuad\(renderQuad, underlap\)/);
   assert.match(rendererScript, /const renderScaleX = canvas\.width \/ logicalWidth/);
-  assert.match(rendererScript, /screenApertureMask\(baseImage, asset, renderScale\)/);
+  assert.match(rendererScript, /screenCoverageMask\(baseImage, asset, renderScale\)/);
   assert.match(rendererScript, /context\.transform\(a, b, c, d, e, f\)/);
   assert.doesNotMatch(rendererScript, /context\.setTransform\(a, b, c, d, e, f\)/);
   assert.match(uiScript, /canvas\.width = state\.selectedAsset\.canvas\.width/);
   assert.match(uiScript, /width: outputCanvas\.width/);
+  assert.match(serverScript, /seamMetrics\.truncatedSamples !== 0/);
+  assert.match(serverScript, /item\.screen\?\.compositing\?\.mode !== "chroma-edge"/);
 });
 
 test("the design supports direct move, four-corner proportional resize and four-edge resize", () => {
@@ -419,9 +430,10 @@ test("one editor owns selection crop perspective and constant-size handles", () 
 });
 
 test("plugin and asset lab use one shared renderer and one catalog schema", () => {
-  assert.match(rendererScript, /const VERSION = "2\.2\.0"/);
+  assert.match(rendererScript, /const VERSION = "2\.3\.0"/);
   assert.match(labHtml, /src="\/shared\/mockup-renderer\.js"/);
   assert.match(labScript, /renderer\.renderComposite/);
+  assert.match(labScript, /renderer\.screenCoverageMetrics/);
   assert.match(serverScript, /catalog\/testing\/v1/);
   assert.match(serverScript, /\/api\/lab\/approve/);
   assert.match(serverScript, /\/api\/lab\/geometry/);

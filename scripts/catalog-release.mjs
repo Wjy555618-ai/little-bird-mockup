@@ -50,9 +50,9 @@ async function sha256(path) {
 }
 
 const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
-if (manifest.schemaVersion !== 3) fail("只支持 schemaVersion 3");
+if (manifest.schemaVersion !== 4) fail("只支持 schemaVersion 4");
 if (manifest.environment !== library) fail(`清单 environment 必须是 ${library}`);
-if (manifest.rendererVersion !== "2.2.0") fail("rendererVersion 必须是 2.2.0");
+if (manifest.rendererVersion !== "2.3.0") fail("rendererVersion 必须是 2.3.0");
 if (!versionPattern.test(manifest.catalogVersion)) fail("当前 catalogVersion 格式无效");
 if (!Number.isFinite(Date.parse(manifest.publishedAt))) fail("publishedAt 不是有效时间");
 if (!Array.isArray(manifest.categories) || !Array.isArray(manifest.items)) fail("清单缺少 categories 或 items");
@@ -69,7 +69,7 @@ for (const item of manifest.items) {
   itemIds.add(item.id);
   if (!Number.isInteger(item.revision) || item.revision < 1) fail(`${item.id} revision 必须是正整数`);
   if (!item.name || !categoryIds.has(item.category)) fail(`${item.id} 的名称或分类无效`);
-  if (item.renderer !== "static-screen-v3") fail(`${item.id} 使用了未支持的渲染器`);
+  if (item.renderer !== "static-screen-v4") fail(`${item.id} 使用了未支持的渲染器`);
   if (item.status !== (library === "testing" ? "testing" : "approved")) fail(`${item.id} 状态不属于 ${library} 库`);
   if (item.provenance?.kind !== "generated-in-house") fail(`${item.id} 缺少项目自制来源标记`);
   if (!Number.isInteger(item.canvas?.width) || !Number.isInteger(item.canvas?.height) || item.canvas.width < 1 || item.canvas.height < 1) {
@@ -84,6 +84,8 @@ for (const item of manifest.items) {
   if (!Array.isArray(item.screen?.aperture?.cornerRadii) || item.screen.aperture.cornerRadii.length !== 4 || item.screen.aperture.cornerRadii.some((radius) => !Number.isFinite(radius) || radius < 0 || radius > 0.49)) {
     fail(`${item.id} 可见孔径必须声明四个有效圆角比例`);
   }
+  if (item.screen?.compositing?.mode !== "chroma-edge" || !item.chromaKey?.enabled || !Number.isInteger(item.screen.compositing.maxEdgeExtension) || item.screen.compositing.maxEdgeExtension < 1 || item.screen.compositing.maxEdgeExtension > 12) fail(`${item.id} 接缝软边配置无效`);
+  if (!Number.isFinite(item.screen?.underlap) || item.screen.underlap < item.screen.compositing.maxEdgeExtension || item.screen.underlap > 24 || Object.hasOwn(item.screen, "bleed")) fail(`${item.id} 隐藏衬底配置无效`);
 
   const basePath = safeCatalogPath(item.layers?.base, `${item.id} base`);
   const thumbnailPath = safeCatalogPath(item.thumbnail, `${item.id} thumbnail`);
@@ -112,6 +114,7 @@ for (const item of manifest.items) {
     if (report.rendererVersion !== manifest.rendererVersion || report.approvedAt !== item.qa.approvedAt) {
       fail(`${item.id} 的质检报告版本或时间不匹配`);
     }
+    if (report.schemaVersion !== 2 || report.seamMetrics?.pass !== true || report.seamMetrics.mode !== item.screen.compositing.mode || report.seamMetrics.edgeExtensionLimit !== item.screen.compositing.maxEdgeExtension || report.seamMetrics.maxEdgeExtension > report.seamMetrics.edgeExtensionLimit || report.seamMetrics.interiorSpillRatio < 0.85 || report.seamMetrics.truncatedSamples !== 0 || report.seamMetrics.truncatedEdgeRatio !== 0) fail(`${item.id} 缺少通过的接缝像素证据`);
     if (report.itemSha256 !== item.qa.sourceItemSha256) fail(`${item.id} 的质检摘要不匹配`);
   }
 }

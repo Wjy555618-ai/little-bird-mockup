@@ -11,13 +11,13 @@ const productionRoot = resolve(projectRoot, "catalog/production/v1");
 const testing = JSON.parse(await readFile(resolve(testingRoot, "manifest.json"), "utf8"));
 const production = JSON.parse(await readFile(resolve(productionRoot, "manifest.json"), "utf8"));
 
-test("testing and production catalogs share schema v3 with separate aperture geometry", () => {
-  assert.equal(testing.schemaVersion, 3);
-  assert.equal(production.schemaVersion, 3);
+test("testing and production catalogs share seam-safe schema v4", () => {
+  assert.equal(testing.schemaVersion, 4);
+  assert.equal(production.schemaVersion, 4);
   assert.equal(testing.environment, "testing");
   assert.equal(production.environment, "production");
-  assert.equal(testing.rendererVersion, "2.2.0");
-  assert.equal(production.rendererVersion, "2.2.0");
+  assert.equal(testing.rendererVersion, "2.3.0");
+  assert.equal(production.rendererVersion, "2.3.0");
   assert.equal(testing.items.length, 4, "the functional closure is intentionally limited to four temporary mockups");
   for (const manifest of [testing, production]) {
     assert.match(manifest.catalogVersion, /^\d{4}\.\d{2}\.\d{2}\.\d+$/);
@@ -28,7 +28,7 @@ test("testing and production catalogs share schema v3 with separate aperture geo
 
 async function verifyCatalog(manifest, catalogRoot, expectedStatus) {
   for (const item of manifest.items) {
-    assert.equal(item.renderer, "static-screen-v3");
+    assert.equal(item.renderer, "static-screen-v4");
     assert.equal(item.status, expectedStatus);
     assert.equal(item.provenance.kind, "generated-in-house");
     assert.ok(item.canvas.width > 0);
@@ -46,6 +46,12 @@ async function verifyCatalog(manifest, catalogRoot, expectedStatus) {
     assert.equal(item.screen.aperture.cornerRadii.length, 4);
     assert.ok(item.screen.aperture.cornerRadii.every((radius) => radius >= 0 && radius <= 0.49));
     assert.equal(Object.hasOwn(item.screen, "cornerRadius"), false, `${item.id} must not retain the ambiguous legacy radius`);
+    assert.equal(item.screen.compositing.mode, "chroma-edge");
+    assert.equal(item.chromaKey.enabled, true);
+    assert.ok(Number.isInteger(item.screen.compositing.maxEdgeExtension));
+    assert.ok(item.screen.compositing.maxEdgeExtension >= 1 && item.screen.compositing.maxEdgeExtension <= 12);
+    assert.ok(item.screen.underlap >= item.screen.compositing.maxEdgeExtension && item.screen.underlap <= 24);
+    assert.equal(Object.hasOwn(item.screen, "bleed"), false, `${item.id} must use unambiguous underlap semantics`);
 
     const assetPath = resolve(catalogRoot, item.layers.base);
     const thumbnailPath = resolve(catalogRoot, item.thumbnail);
@@ -72,6 +78,12 @@ test("production contains only promoted approved mockups", async () => {
     assert.equal(report.revision, item.revision);
     assert.equal(report.rendererVersion, production.rendererVersion);
     assert.equal(report.itemSha256, item.qa.sourceItemSha256);
+    assert.equal(report.schemaVersion, 2);
+    assert.equal(report.seamMetrics?.pass, true);
+    assert.equal(report.seamMetrics?.mode, item.screen.compositing.mode);
+    assert.equal(report.seamMetrics?.edgeExtensionLimit, item.screen.compositing.maxEdgeExtension);
+    assert.equal(report.seamMetrics?.truncatedSamples, 0);
+    assert.equal(report.seamMetrics?.truncatedEdgeRatio, 0);
   }
 });
 
