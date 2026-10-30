@@ -55,168 +55,64 @@
     return asset;
   }
 
-  function pointInPolygon(x, y, points) {
-    let inside = false;
-    for (let current = 0, previous = points.length - 1; current < points.length; previous = current, current += 1) {
-      const [currentX, currentY] = points[current];
-      const [previousX, previousY] = points[previous];
-      const crosses = (currentY > y) !== (previousY > y)
-        && x < ((previousX - currentX) * (y - currentY)) / (previousY - currentY || Number.EPSILON) + currentX;
-      if (crosses) inside = !inside;
-    }
-    return inside;
-  }
-
-  function polygonScanlineBounds(points, minimumY, maximumY) {
-    const rows = new Array(Math.max(0, maximumY - minimumY + 1)).fill(null);
-    for (let y = minimumY; y <= maximumY; y += 1) {
-      const sampleY = y + 0.5;
-      const intersections = [];
-      for (let index = 0; index < points.length; index += 1) {
-        const current = points[index];
-        const next = points[(index + 1) % points.length];
-        if ((current[1] > sampleY) === (next[1] > sampleY)) continue;
-        const ratio = (sampleY - current[1]) / (next[1] - current[1]);
-        intersections.push(current[0] + (next[0] - current[0]) * ratio);
-      }
-      if (intersections.length < 2) continue;
-      intersections.sort((a, b) => a - b);
-      rows[y - minimumY] = [
-        Math.ceil(intersections[0] - 0.5),
-        Math.floor(intersections.at(-1) - 0.5)
-      ];
-    }
-    return { minimumY, rows };
-  }
-
-  function scanlineContains(scanlines, x, y) {
-    const row = scanlines.rows[y - scanlines.minimumY];
-    return Boolean(row && x >= row[0] && x <= row[1]);
-  }
-
-  function chromaAlpha(red, green, blue, asset, relaxed = false) {
+  function chromaAlpha(red, green, blue, asset) {
     if (!asset.chromaKey?.enabled) return 0;
     const configuredMinimum = asset.chromaKey.minimumGreen || 65;
     const configuredDominance = asset.chromaKey.dominance || 1.18;
-    const minimumGreen = relaxed ? Math.max(10, configuredMinimum * 0.42) : configuredMinimum;
-    const dominance = relaxed ? 1 + (configuredDominance - 1) * 0.28 : configuredDominance;
-    if (green < minimumGreen || green <= red * dominance || green <= blue * dominance) return 0;
-    if (!relaxed) return 255;
-    const margin = Math.min(green - red * dominance, green - blue * dominance);
-    return Math.round(Math.max(0, Math.min(1, margin / Math.max(7, configuredMinimum * 0.1))) * 255);
+    if (green < configuredMinimum || green <= red * configuredDominance || green <= blue * configuredDominance) return 0;
+    return 255;
   }
 
-  function apertureAlpha(red, green, blue, asset) {
-    const relaxedAlpha = chromaAlpha(red, green, blue, asset, true);
-    if (relaxedAlpha) return relaxedAlpha;
+  function chromaSpillAlpha(red, green, blue, asset) {
     const configuredMinimum = asset.chromaKey?.minimumGreen || 65;
     const configuredDominance = asset.chromaKey?.dominance || 1.18;
     const minimumGreen = Math.max(4, configuredMinimum * 0.08);
-    const relaxedMinimum = Math.max(10, configuredMinimum * 0.42);
+    const fullGreen = Math.max(10, configuredMinimum * 0.42);
     const dominance = Math.max(1.01, 1 + (configuredDominance - 1) * 0.06);
     if (green < minimumGreen || green <= red * dominance || green <= blue * dominance) return 0;
-    return Math.round(Math.max(0, Math.min(1, (green - minimumGreen) / Math.max(1, relaxedMinimum - minimumGreen))) * 255);
+    return Math.round(Math.max(0, Math.min(1, (green - minimumGreen) / Math.max(1, fullGreen - minimumGreen))) * 255);
   }
 
-  function screenApertureMask(image, asset) {
+  function screenApertureMask(image, asset, renderScale = 1) {
     if (!asset.chromaKey?.enabled) return null;
     let imageCache = apertureMaskCache.get(image);
     if (!imageCache) {
       imageCache = new Map();
       apertureMaskCache.set(image, imageCache);
     }
-    const cacheKey = `${asset.id}:${asset.revision || asset.updatedAt || "current"}`;
+    const scale = Math.max(1, Math.min(2, Number(renderScale) || 1));
+    const cacheKey = `${asset.id}:${asset.revision || asset.updatedAt || "current"}:aperture-${scale.toFixed(2)}`;
     if (imageCache.has(cacheKey)) return imageCache.get(cacheKey);
 
-    const width = asset.canvas.width;
-    const height = asset.canvas.height;
-    const source = document.createElement("canvas");
-    source.width = width;
-    source.height = height;
-    const sourceContext = source.getContext("2d", { willReadFrequently: true });
-    sourceContext.drawImage(image, 0, 0, width, height);
-    const sourcePixels = sourceContext.getImageData(0, 0, width, height);
-
+    const width = Math.round(asset.canvas.width * scale);
+    const height = Math.round(asset.canvas.height * scale);
+    const scaleX = width / asset.canvas.width;
+    const scaleY = height / asset.canvas.height;
     const mask = document.createElement("canvas");
     mask.width = width;
     mask.height = height;
     const maskContext = mask.getContext("2d");
-    const maskPixels = maskContext.createImageData(width, height);
-    const aperturePixels = new Uint8ClampedArray(width * height);
-    const supportQuad = expandQuad(asset.screen.quad, Math.max(2, (asset.screen.bleed || 0) + 2));
-    const minimumX = Math.max(0, Math.floor(Math.min(...supportQuad.map((point) => point[0]))));
-    const maximumX = Math.min(width - 1, Math.ceil(Math.max(...supportQuad.map((point) => point[0]))));
-    const minimumY = Math.max(0, Math.floor(Math.min(...supportQuad.map((point) => point[1]))));
-    const maximumY = Math.min(height - 1, Math.ceil(Math.max(...supportQuad.map((point) => point[1]))));
-    const supportScanlines = polygonScanlineBounds(supportQuad, minimumY, maximumY);
+    maskContext.setTransform(scaleX, 0, 0, scaleY, 0, 0);
+    maskContext.imageSmoothingEnabled = true;
+    maskContext.imageSmoothingQuality = "high";
 
-    for (let y = minimumY; y <= maximumY; y += 1) {
-      const runs = [];
-      let runStart = -1;
-      const rowBounds = supportScanlines.rows[y - minimumY];
-      if (!rowBounds) continue;
-      const rowMinimumX = Math.max(minimumX, rowBounds[0]);
-      const rowMaximumX = Math.min(maximumX, rowBounds[1]);
-      for (let x = rowMinimumX; x <= rowMaximumX; x += 1) {
-        const pixel = y * width + x;
-        const index = pixel * 4;
-        const alpha = apertureAlpha(sourcePixels.data[index], sourcePixels.data[index + 1], sourcePixels.data[index + 2], asset);
-        aperturePixels[pixel] = alpha;
-        if (alpha && runStart < 0) runStart = x;
-        if ((!alpha || x === rowMaximumX) && runStart >= 0) {
-          const end = alpha && x === rowMaximumX ? x : x - 1;
-          runs.push([runStart, end]);
-          runStart = -1;
-        }
-      }
-      if (!runs.length) continue;
-      const longest = Math.max(...runs.map(([start, end]) => end - start + 1));
-      const minimumRun = Math.max(3, Math.floor(longest * 0.15));
-      const screenRuns = runs.filter(([start, end]) => end - start + 1 >= minimumRun);
-      if (!screenRuns.length) {
-        for (let x = rowMinimumX; x <= rowMaximumX; x += 1) aperturePixels[y * width + x] = 0;
-        continue;
-      }
-      const start = screenRuns[0][0];
-      const end = screenRuns.at(-1)[1];
-      // The plate may contain camera holes, reflections and compression gaps.
-      // Fill only between substantial same-row key runs: the outer silhouette
-      // still comes from real pixels, while interior speckles cannot become a
-      // black or green seam in the final aperture.
-      for (let x = rowMinimumX; x < start; x += 1) aperturePixels[y * width + x] = 0;
-      for (let x = start + 1; x < end; x += 1) aperturePixels[y * width + x] = 255;
-      for (let x = end + 1; x <= rowMaximumX; x += 1) aperturePixels[y * width + x] = 0;
-    }
+    // The catalog geometry is the single source of truth for the aperture.
+    // Chroma keying removes the green plate from the photographic base, but a
+    // sampled raster edge must never redefine a mathematically rounded screen.
+    const targetAspect = asset.screen.recommendedSize.width / asset.screen.recommendedSize.height;
+    const plane = screenPlane(targetAspect);
+    const shape = document.createElement("canvas");
+    shape.width = plane.width;
+    shape.height = plane.height;
+    const shapeContext = shape.getContext("2d");
+    const radius = Math.max(0, Math.min(plane.width, plane.height) * Math.min(0.49, asset.screen.cornerRadius || 0));
+    shapeContext.fillStyle = "#fff";
+    shapeContext.beginPath();
+    shapeContext.roundRect(0, 0, plane.width, plane.height, radius);
+    shapeContext.fill();
 
-    const dilatedAperture = aperturePixels.slice();
-    for (let y = Math.max(1, minimumY); y <= Math.min(height - 2, maximumY); y += 1) {
-      for (let x = Math.max(1, minimumX); x <= Math.min(width - 2, maximumX); x += 1) {
-        const pixel = y * width + x;
-        if (!aperturePixels[pixel]) continue;
-        for (let offsetY = -2; offsetY <= 2; offsetY += 1) {
-          for (let offsetX = -2; offsetX <= 2; offsetX += 1) {
-            const targetX = x + offsetX;
-            const targetY = y + offsetY;
-            if (!scanlineContains(supportScanlines, targetX, targetY)) continue;
-            dilatedAperture[targetY * width + targetX] = 255;
-          }
-        }
-      }
-    }
-
-    for (let y = minimumY; y <= maximumY; y += 1) {
-      for (let x = minimumX; x <= maximumX; x += 1) {
-        const pixel = y * width + x;
-        const alpha = dilatedAperture[pixel];
-        if (!alpha) continue;
-        const index = pixel * 4;
-        maskPixels.data[index] = 255;
-        maskPixels.data[index + 1] = 255;
-        maskPixels.data[index + 2] = 255;
-        maskPixels.data[index + 3] = alpha;
-      }
-    }
-    maskContext.putImageData(maskPixels, 0, 0);
+    const apertureQuad = expandQuad(asset.screen.quad, asset.screen.bleed || 0);
+    drawImageToQuad(maskContext, shape, apertureQuad, "final");
     imageCache.set(cacheKey, mask);
     return mask;
   }
@@ -236,31 +132,41 @@
     const context = canvas.getContext("2d", { willReadFrequently: true });
     context.drawImage(image, 0, 0, canvas.width, canvas.height);
     const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+    const apertureMask = screenApertureMask(image, asset, 1);
+    const apertureContext = apertureMask.getContext("2d", { willReadFrequently: true });
+    const aperturePixels = apertureContext.getImageData(0, 0, canvas.width, canvas.height);
     const replacement = asset.chromaKey.replacement || [12, 12, 12];
-    const supportQuad = expandQuad(asset.screen.quad, Math.max(2, (asset.screen.bleed || 0) + 2));
-    const minimumX = Math.floor(Math.min(...supportQuad.map((point) => point[0])));
-    const maximumX = Math.ceil(Math.max(...supportQuad.map((point) => point[0])));
-    const minimumY = Math.floor(Math.min(...supportQuad.map((point) => point[1])));
-    const maximumY = Math.ceil(Math.max(...supportQuad.map((point) => point[1])));
-    const supportScanlines = polygonScanlineBounds(supportQuad, minimumY, maximumY);
     for (let index = 0; index < pixels.data.length; index += 4) {
       const red = pixels.data[index];
       const green = pixels.data[index + 1];
       const blue = pixels.data[index + 2];
-      const pixel = index / 4;
-      const x = pixel % canvas.width;
-      const y = Math.floor(pixel / canvas.width);
-      const insideSupportBounds = x >= minimumX && x <= maximumX && y >= minimumY && y <= maximumY;
-      let alpha = chromaAlpha(red, green, blue, asset, false);
-      if (!alpha && insideSupportBounds && scanlineContains(supportScanlines, x, y)) {
-        alpha = chromaAlpha(red, green, blue, asset, true);
-      }
+      const apertureCoverage = aperturePixels.data[index + 3] / 255;
+      // Green reflections can fall well outside the authored screen quad. A
+      // chroma-enabled asset treats that hue as synthetic everywhere: neutralize
+      // it globally, but reserve underlay replacement for the vector aperture.
+      const spillAlpha = chromaSpillAlpha(red, green, blue, asset);
+      const keyAlpha = apertureCoverage
+        ? Math.max(chromaAlpha(red, green, blue, asset), spillAlpha) * apertureCoverage
+        : 0;
+      const alpha = Math.round(keyAlpha);
       if (alpha) {
         const shade = Math.max(0.35, Math.min(1, green / 255));
         const mix = alpha / 255;
-        pixels.data[index] = Math.round(red * (1 - mix) + replacement[0] * shade * mix);
-        pixels.data[index + 1] = Math.round(green * (1 - mix) + replacement[1] * shade * mix);
-        pixels.data[index + 2] = Math.round(blue * (1 - mix) + replacement[2] * shade * mix);
+        const nextRed = Math.round(red * (1 - mix) + replacement[0] * shade * mix);
+        const nextGreen = Math.round(green * (1 - mix) + replacement[1] * shade * mix);
+        const nextBlue = Math.round(blue * (1 - mix) + replacement[2] * shade * mix);
+        pixels.data[index] = nextRed;
+        pixels.data[index + 1] = Math.min(nextGreen, Math.max(nextRed, nextBlue) + 1);
+        pixels.data[index + 2] = nextBlue;
+      } else if (spillAlpha) {
+        // A reflected green plate outside the authored aperture is scene light,
+        // not a hole. Preserve its luminance and texture while removing only
+        // the key hue; replacing it with the underlay created a jagged black
+        // patch on reflective stands.
+        const neutral = Math.round(red * 0.2126 + green * 0.7152 + blue * 0.0722);
+        pixels.data[index] = neutral;
+        pixels.data[index + 1] = neutral;
+        pixels.data[index + 2] = neutral;
       }
     }
     context.putImageData(pixels, 0, 0);
@@ -594,7 +500,10 @@
     context.lineTo(d2[0], d2[1]);
     context.closePath();
     context.clip();
-    context.setTransform(a, b, c, d, e, f);
+    // Compose with the caller's backing-store transform. Replacing the
+    // transform here silently discarded high-DPI preview scaling and rendered
+    // the mapped content into only the top-left fraction of the surface.
+    context.transform(a, b, c, d, e, f);
     context.drawImage(image, 0, 0);
     context.restore();
   }
@@ -836,13 +745,21 @@
 
   function renderComposite({ canvas, asset, baseImage, designImage, fit = "cover", adjustments, crop, content, quad, designQuad, layerImages = {}, quality = "final" }) {
     validateAsset(asset);
+    const logicalWidth = asset.canvas.width;
+    const logicalHeight = asset.canvas.height;
+    const renderScaleX = canvas.width / logicalWidth;
+    const renderScaleY = canvas.height / logicalHeight;
+    const renderScale = Math.max(1, Math.min(2, Math.min(renderScaleX, renderScaleY)));
     const context = canvas.getContext("2d", { alpha: false });
     context.setTransform(1, 0, 0, 1, 0, 0);
     context.globalAlpha = 1;
     context.globalCompositeOperation = "source-over";
     context.clearRect(0, 0, canvas.width, canvas.height);
+    context.setTransform(renderScaleX, 0, 0, renderScaleY, 0, 0);
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = "high";
     const preparedBase = preparedBaseImage(baseImage, asset);
-    context.drawImage(preparedBase, 0, 0, canvas.width, canvas.height);
+    context.drawImage(preparedBase, 0, 0, logicalWidth, logicalHeight);
     const screenMaskQuad = expandQuad(quad || asset.screen.quad, asset.screen.bleed || 0);
     if (designImage) {
       const recommended = asset.screen.recommendedSize;
@@ -858,7 +775,7 @@
       const renderQuad = hasContentGeometry
         ? frameQuadOnSurface(content.frame, targetAspect, surfaceQuad)
         : surfaceQuad;
-      const apertureMask = screenApertureMask(baseImage, asset);
+      const apertureMask = screenApertureMask(baseImage, asset, renderScale);
       if (apertureMask) {
         const bleedCanvas = hasContentGeometry
           ? createContentCanvas(designImage, targetAspect, fit, adjustments, 0, content)
@@ -867,8 +784,11 @@
         screenLayer.width = canvas.width;
         screenLayer.height = canvas.height;
         const screenContext = screenLayer.getContext("2d");
+        screenContext.setTransform(renderScaleX, 0, 0, renderScaleY, 0, 0);
+        screenContext.imageSmoothingEnabled = true;
+        screenContext.imageSmoothingQuality = "high";
         screenContext.fillStyle = asset.screen.underlay || "#080808";
-        screenContext.fillRect(0, 0, screenLayer.width, screenLayer.height);
+        screenContext.fillRect(0, 0, logicalWidth, logicalHeight);
         // Keep the canonical render quad unchanged for editor alignment, then
         // underpaint its outer edge into the asset's declared bleed. This
         // covers the real pixel aperture without moving handles or content.
@@ -882,8 +802,8 @@
         drawImageToQuad(screenContext, screenCanvas, renderQuad, quality);
         screenContext.restore();
         screenContext.globalCompositeOperation = "destination-in";
-        screenContext.drawImage(apertureMask, 0, 0);
-        context.drawImage(screenLayer, 0, 0);
+        screenContext.drawImage(apertureMask, 0, 0, logicalWidth, logicalHeight);
+        context.drawImage(screenLayer, 0, 0, logicalWidth, logicalHeight);
       } else {
         fillQuad(context, renderQuad, asset.screen.underlay || "#080808");
         context.save();
@@ -897,10 +817,10 @@
       context.save();
       context.globalAlpha = asset.layers.reflectionOpacity ?? 0.42;
       context.globalCompositeOperation = asset.layers.reflectionBlend || "screen";
-      context.drawImage(layerImages.reflection, 0, 0, canvas.width, canvas.height);
+      context.drawImage(layerImages.reflection, 0, 0, logicalWidth, logicalHeight);
       context.restore();
     }
-    if (layerImages.foreground) context.drawImage(layerImages.foreground, 0, 0, canvas.width, canvas.height);
+    if (layerImages.foreground) context.drawImage(layerImages.foreground, 0, 0, logicalWidth, logicalHeight);
     return canvas;
   }
 

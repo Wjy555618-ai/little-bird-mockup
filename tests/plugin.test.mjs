@@ -196,7 +196,11 @@ test("continuous editing uses responsive preview rendering and a final-quality c
   assert.match(uiScript, /requestAnimationFrame/);
   assert.match(uiScript, /scheduleComposite\("preview"\)/);
   assert.match(uiScript, /control\.addEventListener\("change", renderFinalComposite\)/);
-  assert.match(uiScript, /renderFinalComposite\(\);\s*const blob = await canvasBlob\(\)/);
+  assert.match(uiScript, /function renderOutputCanvas\(\)/);
+  assert.match(uiScript, /const blob = await canvasBlob\(outputCanvas\)/);
+  assert.match(uiScript, /renderFinalComposite\(\);\s*elements\.canvasWrap\.classList\.remove\("is-content-blurred"\)/);
+  assert.match(uiScript, /const MAX_PREVIEW_RENDER_SCALE = 2/);
+  assert.match(uiScript, /schedulePreviewResolutionCommit\(\)/);
 });
 
 test("one canonical content frame owns rendering, controls and direct transforms", () => {
@@ -215,8 +219,13 @@ test("one canonical content frame owns rendering, controls and direct transforms
   assert.match(rendererScript, /function transformFrameBetweenFrames/);
   assert.match(rendererScript, /function createContentCanvas/);
   assert.match(rendererScript, /frameQuadOnSurface\(content\.frame, targetAspect, surfaceQuad\)/);
-  assert.match(rendererScript, /function apertureAlpha/);
-  assert.match(rendererScript, /const minimumRun = Math\.max\(3, Math\.floor\(longest \* 0\.15\)\)/);
+  assert.match(rendererScript, /function screenApertureMask/);
+  assert.match(rendererScript, /shapeContext\.roundRect\(0, 0, plane\.width, plane\.height, radius\)/);
+  assert.match(rendererScript, /function chromaSpillAlpha/);
+  assert.match(rendererScript, /const apertureCoverage = aperturePixels\.data\[index \+ 3\] \/ 255/);
+  assert.match(rendererScript, /const keyAlpha = apertureCoverage/);
+  assert.match(rendererScript, /const neutral = Math\.round\(red \* 0\.2126 \+ green \* 0\.7152 \+ blue \* 0\.0722\)/);
+  assert.match(rendererScript, /Math\.min\(nextGreen, Math\.max\(nextRed, nextBlue\) \+ 1\)/);
   assert.match(rendererScript, /const bleedQuad = expandQuad\(renderQuad, asset\.screen\.bleed \|\| 0\)/);
   assert.match(rendererScript, /drawImageToQuad\(screenContext, bleedCanvas, bleedQuad, quality\)/);
   assert.doesNotMatch(rendererScript, /createScreenCanvas\([^\n]+content\);/);
@@ -233,6 +242,22 @@ test("one canonical content frame owns rendering, controls and direct transforms
   assert.doesNotMatch(uiScript, /constrainCoverAdjustments|cropGeometry/);
   assert.match(uiHtml, /id="recommendedSize"/);
   assert.doesNotMatch(uiStyles, /\.canvas-wrap canvas\s*\{[^}]*max-width/s);
+});
+
+test("screen aperture uses canonical vector geometry without raster-edge dilation", () => {
+  const apertureSource = rendererScript.match(/function screenApertureMask[\s\S]*?\n  }\n\n  function preparedBaseImage/)?.[0] || "";
+  assert.match(rendererScript, /function screenApertureMask\(image, asset, renderScale = 1\)/);
+  assert.match(apertureSource, /const plane = screenPlane\(targetAspect\)/);
+  assert.match(apertureSource, /shapeContext\.roundRect/);
+  assert.match(apertureSource, /const apertureQuad = expandQuad\(asset\.screen\.quad, asset\.screen\.bleed \|\| 0\)/);
+  assert.match(apertureSource, /drawImageToQuad\(maskContext, shape, apertureQuad, "final"\)/);
+  assert.doesNotMatch(apertureSource, /getImageData|aperturePixels|dilatedAperture|offsetY = -2|offsetX = -2/);
+  assert.match(rendererScript, /const renderScaleX = canvas\.width \/ logicalWidth/);
+  assert.match(rendererScript, /screenApertureMask\(baseImage, asset, renderScale\)/);
+  assert.match(rendererScript, /context\.transform\(a, b, c, d, e, f\)/);
+  assert.doesNotMatch(rendererScript, /context\.setTransform\(a, b, c, d, e, f\)/);
+  assert.match(uiScript, /canvas\.width = state\.selectedAsset\.canvas\.width/);
+  assert.match(uiScript, /width: outputCanvas\.width/);
 });
 
 test("the design supports direct move, four-corner proportional resize and four-edge resize", () => {

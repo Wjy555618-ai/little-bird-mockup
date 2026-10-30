@@ -9,6 +9,9 @@ const RECENT_KEY = "mockup-studio-recent-v1";
 const CONTENT_BLUR_ENTER_MS = 280;
 const MIN_CONTENT_BLUR_MS = 380;
 const CONTENT_REVEAL_MS = 320;
+const MAX_PREVIEW_RENDER_SCALE = 2;
+const HIGH_RES_PREVIEW_ZOOM = 1.4;
+const PREVIEW_RESOLUTION_SETTLE_MS = 140;
 const memoryStorage = new Map();
 const catalogImageCache = new Map();
 
@@ -782,8 +785,7 @@ async function selectAsset(id) {
       syncAssetSelection();
       renderRecentStrip();
     }
-    elements.previewCanvas.width = asset.canvas.width;
-    elements.previewCanvas.height = asset.canvas.height;
+    resizePreviewSurface(1);
     if (assetChanged) fitStage();
     updatePerspectiveEditor();
     updateDesignEditor();
@@ -803,6 +805,10 @@ async function selectAsset(id) {
         await waitForDuration(remainingBlurTime);
       }
       if (requestSequence !== assetRequestSequence) return;
+      // The low-density mesh is only an in-transition response. Commit the
+      // stable frame before revealing it so a completed switch never remains
+      // at preview quality.
+      renderFinalComposite();
       elements.canvasWrap.classList.remove("is-content-blurred");
       setAnimatedVisibility(elements.renderingBadge, false);
       await waitForNextPaint();
@@ -1300,12 +1306,26 @@ function enableDesignEditing() {
 let scheduledRenderFrame = 0;
 let scheduledRenderQuality = "preview";
 
-function renderComposite(quality = "final") {
+function desiredPreviewRenderScale() {
+  return state.zoom >= HIGH_RES_PREVIEW_ZOOM ? MAX_PREVIEW_RENDER_SCALE : 1;
+}
+
+function resizePreviewSurface(scale = desiredPreviewRenderScale()) {
+  if (!state.selectedAsset) return false;
+  const width = Math.round(state.selectedAsset.canvas.width * scale);
+  const height = Math.round(state.selectedAsset.canvas.height * scale);
+  if (elements.previewCanvas.width === width && elements.previewCanvas.height === height) return false;
+  elements.previewCanvas.width = width;
+  elements.previewCanvas.height = height;
+  return true;
+}
+
+function renderToCanvas(canvas, quality = "final") {
   if (!state.selectedAsset || !state.baseImage) return;
   if (state.designImage) ensureContentGeometry();
   const renderDesign = state.designImage || renderer.createDefaultDesign(state.selectedAsset);
   renderer.renderComposite({
-    canvas: elements.previewCanvas,
+    canvas,
     asset: state.selectedAsset,
     baseImage: state.baseImage,
     designImage: renderDesign,
@@ -1318,6 +1338,12 @@ function renderComposite(quality = "final") {
     layerImages: state.layerImages,
     quality
   });
+}
+
+function renderComposite(quality = "final") {
+  if (!state.selectedAsset || !state.baseImage) return;
+  resizePreviewSurface();
+  renderToCanvas(elements.previewCanvas, quality);
   if (state.designImage) {
     elements.screenCta.classList.add("has-image");
   } else {
@@ -1345,6 +1371,15 @@ function renderFinalComposite() {
   scheduledRenderFrame = 0;
   scheduledRenderQuality = "preview";
   renderComposite("final");
+}
+
+function renderOutputCanvas() {
+  if (!state.selectedAsset || !state.baseImage) return null;
+  const canvas = document.createElement("canvas");
+  canvas.width = state.selectedAsset.canvas.width;
+  canvas.height = state.selectedAsset.canvas.height;
+  renderToCanvas(canvas, "final");
+  return canvas;
 }
 
 function updatePerspectiveEditor() {
@@ -1624,9 +1659,9 @@ function requestSelection() {
   postPluginMessage({ type: "request-selection" });
 }
 
-function canvasBlob() {
+function canvasBlob(canvas = elements.previewCanvas) {
   return new Promise((resolve, reject) => {
-    elements.previewCanvas.toBlob((blob) => {
+    canvas.toBlob((blob) => {
       if (blob) resolve(blob);
       else reject(new Error("无法生成 PNG"));
     }, "image/png");
@@ -1635,8 +1670,9 @@ function canvasBlob() {
 
 async function downloadRender() {
   try {
-    renderFinalComposite();
-    const blob = await canvasBlob();
+    const outputCanvas = renderOutputCanvas();
+    if (!outputCanvas) throw new Error("暂无可导出的样机");
+    const blob = await canvasBlob(outputCanvas);
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
@@ -1655,14 +1691,15 @@ async function pasteRender() {
   try {
     elements.pasteButton.disabled = true;
     elements.pasteButton.textContent = "正在粘贴";
-    renderFinalComposite();
-    const blob = await canvasBlob();
+    const outputCanvas = renderOutputCanvas();
+    if (!outputCanvas) throw new Error("暂无可粘贴的样机");
+    const blob = await canvasBlob(outputCanvas);
     const bytes = new Uint8Array(await blob.arrayBuffer());
     postPluginMessage({
       type: "paste-render",
       bytes,
-      width: elements.previewCanvas.width,
-      height: elements.previewCanvas.height,
+      width: outputCanvas.width,
+      height: outputCanvas.height,
       name: `${state.selectedAsset?.name || "样机"} · 样机工作室`
     });
   } catch (error) {
@@ -1715,9 +1752,22 @@ function setStageZoom(nextZoom, clientX, clientY) {
   state.panY = focusY - contentY * zoom;
   state.zoom = zoom;
   applyStageView();
+  schedulePreviewResolutionCommit();
 }
 
 let stageViewTimer = 0;
+let previewResolutionTimer = 0;
+
+function schedulePreviewResolutionCommit() {
+  if (!state.selectedAsset || !state.baseImage) return;
+  const expectedWidth = Math.round(state.selectedAsset.canvas.width * desiredPreviewRenderScale());
+  if (elements.previewCanvas.width === expectedWidth) return;
+  clearTimeout(previewResolutionTimer);
+  previewResolutionTimer = setTimeout(() => {
+    previewResolutionTimer = 0;
+    renderFinalComposite();
+  }, reducedMotionQuery.matches ? 0 : PREVIEW_RESOLUTION_SETTLE_MS);
+}
 
 function stopStageViewAnimation() {
   clearTimeout(stageViewTimer);
@@ -1749,6 +1799,7 @@ function fitStage(animated = false) {
     state.panX = 0;
     state.panY = 0;
     applyStageView();
+    schedulePreviewResolutionCommit();
   };
   if (animated) animateStageView(change);
   else change();
