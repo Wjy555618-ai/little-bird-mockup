@@ -1,0 +1,30 @@
+name: 功能建议
+description: 说明真实任务、当前阻碍和期望结果
+title: "[Feature] "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 你正在完成什么任务
+      description: 请先描述用户目标与阻碍，不要只写一个按钮或实现方案。
+    validations:
+      required: true
+  - type: textarea
+    id: current-workaround
+    attributes:
+      label: 当前如何处理
+      description: 包括手工步骤、其他工具或无法完成的原因。
+    validations:
+      required: true
+  - type: textarea
+    id: desired-outcome
+    attributes:
+      label: 你希望得到什么结果
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 可公开的例子或证据
+      description: 不要上传客户文件、个人信息或未授权素材。

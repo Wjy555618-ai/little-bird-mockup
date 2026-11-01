@@ -1,0 +1,46 @@
+{
+  "evidenceId": "plugin-regression-user-evidence-2026-10-31",
+  "observedAt": "2026-10-31T16:14:05+08:00",
+  "observer": "Wang Zhentao",
+  "environment": "Figma+EX local plugin build DEV-EE4E61CF1965",
+  "result": "fail",
+  "claim": "The previously accepted build violates stable hover geometry, single-axis crop resizing, one-boundary corner geometry, screen-content provenance, and no-colored-leak invariants in the real Figma host.",
+  "screenshots": [
+    {
+      "file": "2026-10-31-regression-01-purple-corners.png",
+      "sha256": "f81c74dddfa912076bad40e18fab6fb7b6b6d5a25a75483da73524718cb3002d",
+      "finding": "Purple and magenta wedges remain visible beneath the imported phone content."
+    },
+    {
+      "file": "2026-10-31-regression-02-hover-jitter.png",
+      "sha256": "abc5a672010630c1337891e53bc628566775efae80806d78d462e00d341d4391",
+      "finding": "Pointer hover changes the sample-card geometry and produces severe rotation and jitter."
+    },
+    {
+      "file": "2026-10-31-regression-03-axis-resize.png",
+      "sha256": "04fe0cd2c4999d0a0cd74604a4bb58d74af24691fd95bf381577c1ecef1b1315",
+      "finding": "Dragging one crop edge also moves the perpendicular edges."
+    },
+    {
+      "file": "2026-10-31-regression-04-radius-mismatch.png",
+      "sha256": "79a54b609e77914efc3f5f13cbd1868b0ebeadd1833b9614b7040a4d8be03b4d",
+      "finding": "Crop mode displays an unrelated rounded outer canvas boundary that does not match the asset aperture."
+    },
+    {
+      "file": "2026-10-31-regression-05-purple-leak.png",
+      "sha256": "ef7b85d60e9ddfa9afd8a54dcdf6a3e0df1b0719e4bb6962ccef14bb2532095b",
+      "finding": "Colored corner leakage is present in the final visible mockup, so the earlier asset QA gate was incomplete."
+    },
+    {
+      "file": "2026-10-31-regression-06-unauthorized-ui.png",
+      "sha256": "894e6cdb5121576f477cd42eeb00620e61577e652e4686f3fd9e113b50a7e520",
+      "finding": "The plugin injects a synthetic blue-purple default interface that was not supplied or approved by the decision owner."
+    }
+  ],
+  "supersedes": [
+    "Any earlier claim that 99/99 automated checks alone were sufficient for acceptance of DEV-EE4E61CF1965"
+  ],
+  "limits": [
+    "These screenshots prove the observed failures in the named local build; they do not by themselves prove the corrected build passes."
+  ]
+}

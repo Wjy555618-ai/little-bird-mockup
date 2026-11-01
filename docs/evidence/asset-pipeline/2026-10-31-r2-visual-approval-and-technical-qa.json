@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "EVD-AP-008",
+  "createdAt": "2026-10-31T13:42:33+08:00",
+  "buildFingerprint": "sha256:c19896566bfe475753cc3e99b3743a4b88ad4582fbd9d212040966de462102e3",
+  "implementationRevision": "tree:sha256:f4d1258ba5a56643580715c0a7848edc75dfb7ab1f6b3de796a116a80cfc1a39",
+  "result": "pass",
+  "claim": "决定人已对五个准确 r2 候选作出 SHA 绑定的视觉批准；随后五项候选均完成 10/10 自动检查、4/4 测试图和 5/5 人工检查并进入 QA_PASSED。",
+  "decisionMaker": "Wang Zhentao",
+  "environment": "Codex in-app browser, http://127.0.0.1:4173/lab, Renderer 2.4.0",
+  "assets": [
+    {
+      "assetId": "studio-display-front",
+      "revision": 2,
+      "candidateSha256": "6e6271a4893a6c5ca54ab27513dcc71198c9b97e0cbb61e81395374ec3523f3b",
+      "visualApprovalSha256": "6b97bebef1e2985b3cbb85c3a836436d43444e3c3c51d241627dea092a78533e",
+      "itemSha256": "7bf02d442d92b29e225ff957541868eb5eadebfe5c512c291e258c376d92eb95",
+      "qaReportSha256": "05f067f35975359e33d0327675c95f6294c0c538b1e27df22faedac6ee5123d1",
+      "state": "QA_PASSED"
+    },
+    {
+      "assetId": "rock-phone-front",
+      "revision": 2,
+      "candidateSha256": "2044a3d5ee3b5e84cd47ba70d1fbe6f2af08b9a1dbc7ff43bc540835b64e7000",
+      "visualApprovalSha256": "fb5c28776d0e27b084b5bec791074644a3db0be0ecac9a0e12cb7c76e815933a",
+      "itemSha256": "648ed4ba2e72b4a4c27dbc064dc3a0849efe65a45fc9558469ecdbf35e551b47",
+      "qaReportSha256": "fd522405d2ad14975cae11c00825f4cc0849adc25f432fcb689459cc90516ecc",
+      "state": "QA_PASSED"
+    },
+    {
+      "assetId": "rail-phone-angle",
+      "revision": 2,
+      "candidateSha256": "ecbda0cd99076c12005bb7043895a06ce4faca1794c9e9cab9d280a27394f090",
+      "visualApprovalSha256": "9c26aac4342a2fde4db3a91589ef0aeb17a250fa9691b1075b966fe9deb3bcda",
+      "itemSha256": "d664c06eec9f7376e141c7b3e3f03d290815c7a5b58c42263af56afef97d8852",
+      "qaReportSha256": "eb91d21efe41d1d4f7c54813df05c0acf0bc26df378a530f2adfe545032a4c0a",
+      "state": "QA_PASSED"
+    },
+    {
+      "assetId": "graphite-laptop-angle",
+      "revision": 2,
+      "candidateSha256": "2dac4b02e6751378c71580b4158cf0f8d4edd7d4cb7f5316b05059e8b868af51",
+      "visualApprovalSha256": "5d09cb5ddbf9b72d11fa31c3d8e2eead63b03000c4d2c664ee0dae44853d3fd6",
+      "itemSha256": "47202fb1ce4db5b83c9b7ceb162340a1ff5d53fa0f2033f3a8f36a8db79048ca",
+      "qaReportSha256": "b97e47a6470abc94505e7d1c9e543cda775267e44c95aa3f66821de2b50dd752",
+      "state": "QA_PASSED"
+    },
+    {
+      "assetId": "workstation-display-three-quarter",
+      "revision": 2,
+      "candidateSha256": "909b5430c7d07f4634d7550222cd10e2a74b8b405a7abfe71e35b1b0ff8a0497",
+      "visualApprovalSha256": "9cf94736f820a0a0f4ff655a08240cd117f443b89a6f0403fd63d886b7a9f1a2",
+      "itemSha256": "1f7e99bcd3898b244f6457b3576f3bac28daf8f20eb7ee11bd850368b6637386",
+      "qaReportSha256": "32a50f254e757246419f675f6b4c07285d3bbd9a7e34fe03246f2d71d79811d8",
+      "state": "QA_PASSED"
+    }
+  ],
+  "gates": {
+    "automaticChecks": "10/10 for every asset",
+    "requiredPatterns": "4/4 for every asset",
+    "manualChecks": "5/5 for every asset",
+    "workflowValidation": "pnpm asset:check passed with zero issues",
+    "testingCatalogValidation": "pnpm catalog:check:testing passed"
+  },
+  "limitations": [
+    "Technical QA and visual approval do not authorize formal-library promotion.",
+    "Every asset remains blocked until a separate human release approval is bound to its exact itemSha256 and QA report.",
+    "No external deployment was performed."
+  ]
+}

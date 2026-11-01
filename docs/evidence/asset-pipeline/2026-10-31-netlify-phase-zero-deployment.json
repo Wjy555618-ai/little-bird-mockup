@@ -1,0 +1,303 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "NETLIFY-PHASE-ZERO-2026-10-31",
+  "status": "published-real-figma-pilot-verification-complete-with-documented-limitations",
+  "observedAt": "2026-10-31T13:07:21Z",
+  "lastVerifiedAt": "2026-11-01T03:01:36Z",
+  "decisionOwner": "Wang Zhentao",
+  "siteName": "unrivaled-cat-56bfe7",
+  "origin": "https://unrivaled-cat-56bfe7.netlify.app",
+  "manifestUrl": "https://unrivaled-cat-56bfe7.netlify.app/v1/manifest.json",
+  "deployId": "6ae5de9c8a03867857235639",
+  "candidateFingerprint": "sha256:4313d710fef431d7b4ff1dfee4a18306eddf69de2cc14687a1da14d26140c608",
+  "manifestSha256": "32f86945867503e8a7a3c84d32d1e9118daabaa9b554eefdc40a5958c68a2035",
+  "publishedFileCount": 12,
+  "deploymentMethod": "manual-folder-upload-without-git",
+  "pilotBuildFingerprint": "PILOT-84B65130C47F",
+  "public": true,
+  "secondDeployPerformed": false,
+  "secondDeployRequiresNewHumanApproval": true,
+  "verified": [
+    "public-manifest-http-200",
+    "public-manifest-byte-sha256-equals-local",
+    "manifest-json-content-type",
+    "manifest-no-store-cache-control",
+    "cors-wildcard",
+    "x-content-type-options-nosniff",
+    "nine-of-ten-media-head-status-size-type-cache-headers",
+    "remaining-media-path-http-200",
+    "forbidden-lab-path-http-404",
+    "five-active-full-assets-loaded-and-sha256-verified-by-real-plugin-runtime",
+    "real-figma-online-selection-screen-adjustment-perspective-export-and-paste-flow",
+    "real-figma-manifest-fetch-failure-falls-back-to-valid-client-storage-cache",
+    "real-figma-single-asset-fetch-failure-preserves-current-selection-and-preview",
+    "real-figma-expired-cache-is-rejected-with-controlled-empty-error-state",
+    "real-figma-os-wifi-off-restart-valid-cache-and-all-five-base-assets-render",
+    "all-ten-local-deployment-candidate-media-files-match-manifest-sha256",
+    "independent-full-get-sha256-for-all-ten-published-media-files",
+    "netlify-dashboard-free-plan-one-production-deploy-and-credit-balance-snapshot",
+    "temporary-fault-injection-fully-reverted-and-pilot-build-check-passed",
+    "full-local-test-suite-107-of-107-passed-after-all-fault-injection-restoration",
+    "no-second-deploy"
+  ],
+  "pending": [],
+  "figmaValidation": {
+    "host": "/Applications/Figma+EX.app",
+    "catalogItemCount": 5,
+    "loadedAssetIds": [
+      "studio-display-front",
+      "rock-phone-front",
+      "rail-phone-angle",
+      "graphite-laptop-angle",
+      "workstation-display-three-quarter"
+    ],
+    "sourceLayer": "IMG_2613 1",
+    "brightness": 101,
+    "perspectiveStatus": "adjusted",
+    "pastedLayer": {
+      "name": "极简工作站显示器 · 右后三分之二视角 · 样机工作室",
+      "width": 1200,
+      "height": 900
+    },
+    "export": {
+      "path": "/Users/wangzhentao/Downloads/workstation-display-three-quarter.png",
+      "bytes": 818743,
+      "width": 1448,
+      "height": 1086,
+      "sha256": "d7b99479a3606361c8308f685337d116a35ad99d9508344fdfb45ce0f2ca20b6"
+    },
+    "faultInjection": {
+      "manifestFetch": {
+        "mechanism": "same-origin HTTP 404 with previously valid clientStorage cache",
+        "observedResult": "使用离线目录；5 个样机保持可见"
+      },
+      "singleAssetFetch": {
+        "target": "assets/rock-phone-front-r3.png",
+        "mechanism": "same-origin HTTP 404",
+        "observedResult": "素材暂时无法加载，已保留当前样机；studio-display-front preview remained visible"
+      },
+      "expiredCache": {
+        "mechanism": "catalog fetch forced to fail before network access and cached catalog forced past the acceptance boundary",
+        "observedResult": "素材库不可用；0 个样机；请检查网络后重试；no stale catalog was rendered"
+      },
+      "restoredPilotUiSha256": "2159a56e04805a68b32d6ecdd5353f44d72f528145aa43a90f01d737cabe0436"
+    },
+    "operatingSystemOffline": {
+      "mechanism": "macOS Wi-Fi disabled in System Settings before reopening the pilot plugin in Figma+EX",
+      "wifiOffConfirmed": true,
+      "figmaOfflineIndicatorConfirmed": true,
+      "pilotBuildFingerprint": "PILOT-84B65130C47F",
+      "catalogState": "使用离线目录",
+      "catalogItemCount": 5,
+      "baseAssetRenderResults": [
+        {
+          "name": "工作室显示器 · 正面",
+          "passed": true
+        },
+        {
+          "name": "岩石手机 · 正面",
+          "passed": true
+        },
+        {
+          "name": "支架手机 · 倾斜",
+          "passed": true
+        },
+        {
+          "name": "石墨笔记本 · 倾斜",
+          "passed": true
+        },
+        {
+          "name": "极简工作站显示器 · 右后三分之二视角",
+          "passed": true
+        }
+      ],
+      "sourceLayer": "IMG_2613 1",
+      "sourceLayerAdded": false,
+      "sourceCompositionObservation": "not exercised to completion: 添加画面 only opened the source popover and this run did not invoke 读取 Figma 选区",
+      "networkRecovery": {
+        "systemSettings": "Wi-Fi on; 1401 connected",
+        "networksetup": "Wi-Fi Power (en0): On",
+        "defaultRouteInterface": "en0",
+        "scutilReachability": "IPv4 and IPv6 reachable"
+      }
+    }
+  },
+  "localDeploymentCandidateMediaIntegrity": {
+    "checkedAt": "2026-11-01T02:52:39.101Z",
+    "scope": "dist/netlify-catalog/v1 local deployment candidate only",
+    "checkedFileCount": 10,
+    "result": "all-match-manifest-sha256",
+    "files": [
+      {
+        "path": "assets/studio-display-front-r3.png",
+        "bytes": 336700,
+        "sha256": "4ee83fb16051d82bc7eb297b855763389e396d2352e8e56ace904a7c09c78ae4"
+      },
+      {
+        "path": "thumbnails/studio-display-front-r3.png",
+        "bytes": 45887,
+        "sha256": "7b440cf4f424e9e14db0535a3398b83b72cdea0c1b140113dfe457d48de5ac60"
+      },
+      {
+        "path": "assets/rock-phone-front-r3.png",
+        "bytes": 1055199,
+        "sha256": "2313811aa87feb318f14119087c493192049282d693dde1d6dcdda557e4bd377"
+      },
+      {
+        "path": "thumbnails/rock-phone-front-r3.png",
+        "bytes": 175154,
+        "sha256": "e16133994d3726f73a539552f0a7734c147618b43af5b69f21f587f0c0205c42"
+      },
+      {
+        "path": "assets/rail-phone-angle-r3.png",
+        "bytes": 467322,
+        "sha256": "3d757e35224160081c0a7baa4c2899ced21e7fbf417d6dcc5776b77cf00db425"
+      },
+      {
+        "path": "thumbnails/rail-phone-angle-r3.png",
+        "bytes": 65662,
+        "sha256": "af14d395590c457fc06797bc5b803c317bbff8716ed17b4ad1e49518d590638c"
+      },
+      {
+        "path": "assets/graphite-laptop-angle-r3.png",
+        "bytes": 595434,
+        "sha256": "cd1574100fb6e10f8b29c5c26247ed89adc182f0cd6556a9917438897b68d70d"
+      },
+      {
+        "path": "thumbnails/graphite-laptop-angle-r3.png",
+        "bytes": 71070,
+        "sha256": "c5a96a86d83da6e10b363ee35148e14536366a7b8b3be92d73f1fb9eefbfff7e"
+      },
+      {
+        "path": "assets/workstation-display-three-quarter-r3.png",
+        "bytes": 550208,
+        "sha256": "c2683895cdaebd69618376d73d1c2d27d05afd0391a6948d12310e369cff470f"
+      },
+      {
+        "path": "thumbnails/workstation-display-three-quarter-r3.png",
+        "bytes": 79812,
+        "sha256": "5a4f9d588119e887b5f52121380598538ba74f9570dd3b9d62d752f080b03caf"
+      }
+    ]
+  },
+  "publishedMediaIntegrity": {
+    "checkedAt": "2026-11-01T02:59:52.046Z",
+    "method": "independent full-body HTTPS GET from the published Netlify origin",
+    "checkedFileCount": 10,
+    "totalBytes": 3442448,
+    "result": "all-http-200-and-match-manifest-sha256",
+    "expectedContentType": "image/png",
+    "expectedCacheControl": "public,max-age=31536000,immutable",
+    "files": [
+      {
+        "path": "assets/studio-display-front-r3.png",
+        "status": 200,
+        "bytes": 336700,
+        "sha256": "4ee83fb16051d82bc7eb297b855763389e396d2352e8e56ace904a7c09c78ae4"
+      },
+      {
+        "path": "thumbnails/studio-display-front-r3.png",
+        "status": 200,
+        "bytes": 45887,
+        "sha256": "7b440cf4f424e9e14db0535a3398b83b72cdea0c1b140113dfe457d48de5ac60"
+      },
+      {
+        "path": "assets/rock-phone-front-r3.png",
+        "status": 200,
+        "bytes": 1055199,
+        "sha256": "2313811aa87feb318f14119087c493192049282d693dde1d6dcdda557e4bd377"
+      },
+      {
+        "path": "thumbnails/rock-phone-front-r3.png",
+        "status": 200,
+        "bytes": 175154,
+        "sha256": "e16133994d3726f73a539552f0a7734c147618b43af5b69f21f587f0c0205c42"
+      },
+      {
+        "path": "assets/rail-phone-angle-r3.png",
+        "status": 200,
+        "bytes": 467322,
+        "sha256": "3d757e35224160081c0a7baa4c2899ced21e7fbf417d6dcc5776b77cf00db425"
+      },
+      {
+        "path": "thumbnails/rail-phone-angle-r3.png",
+        "status": 200,
+        "bytes": 65662,
+        "sha256": "af14d395590c457fc06797bc5b803c317bbff8716ed17b4ad1e49518d590638c"
+      },
+      {
+        "path": "assets/graphite-laptop-angle-r3.png",
+        "status": 200,
+        "bytes": 595434,
+        "sha256": "cd1574100fb6e10f8b29c5c26247ed89adc182f0cd6556a9917438897b68d70d"
+      },
+      {
+        "path": "thumbnails/graphite-laptop-angle-r3.png",
+        "status": 200,
+        "bytes": 71070,
+        "sha256": "c5a96a86d83da6e10b363ee35148e14536366a7b8b3be92d73f1fb9eefbfff7e"
+      },
+      {
+        "path": "assets/workstation-display-three-quarter-r3.png",
+        "status": 200,
+        "bytes": 550208,
+        "sha256": "c2683895cdaebd69618376d73d1c2d27d05afd0391a6948d12310e369cff470f"
+      },
+      {
+        "path": "thumbnails/workstation-display-three-quarter-r3.png",
+        "status": 200,
+        "bytes": 79812,
+        "sha256": "5a4f9d588119e887b5f52121380598538ba74f9570dd3b9d62d752f080b03caf"
+      }
+    ]
+  },
+  "netlifyBillingSnapshot": {
+    "observedAt": "2026-11-01T03:01:36Z",
+    "source": "Netlify team dashboard for sk60728",
+    "snapshotTiming": "dashboard reloaded after the independent ten-file full-body GET verification",
+    "plan": "Free",
+    "billingPeriod": {
+      "from": "2026-10-31",
+      "to": "2026-11-29"
+    },
+    "monthlyCredits": 300,
+    "remainingCredits": 284.9,
+    "totalCreditsConsumed": 15.1,
+    "breakdown": {
+      "productionDeploys": {
+        "count": 1,
+        "credits": 15
+      },
+      "webRequests": {
+        "count": 112,
+        "credits": "<1"
+      },
+      "bandwidthCredits": 0.1,
+      "aiInferenceCredits": 0,
+      "computeCredits": 0
+    },
+    "concurrentBuilds": {
+      "active": 0,
+      "limit": 1
+    },
+    "paymentMethod": "No credit card info saved",
+    "dashboardCaveat": "Credit consumption may take a few minutes to be reflected."
+  },
+  "finalLocalGate": {
+    "command": "pnpm check && pnpm build:pilot:check",
+    "result": "pass",
+    "tests": {
+      "passed": 107,
+      "failed": 0,
+      "skipped": 0
+    },
+    "productionCatalogVersion": "2026.10.31.5",
+    "candidateFingerprint": "sha256:4313d710fef431d7b4ff1dfee4a18306eddf69de2cc14687a1da14d26140c608",
+    "pilotUiSha256": "2159a56e04805a68b32d6ecdd5353f44d72f528145aa43a90f01d737cabe0436"
+  },
+  "limitations": [
+    "Operating-system-level Wi-Fi-off restart verified the cached catalog and all five base-asset renders; this run stopped after opening the source popover and did not invoke 读取 Figma 选区, so offline user-screen composition is untested rather than failed.",
+    "The Netlify dashboard shows one production deploy and 15.1 total credits consumed, but Netlify warns that credit reporting can take a few minutes to update.",
+    "This is a temporary free-plugin pilot, not Chinese-mainland production SLA, Figma Community approval, or product-success evidence."
+  ]
+}

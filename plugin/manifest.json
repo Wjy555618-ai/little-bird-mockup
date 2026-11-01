@@ -1,13 +1,19 @@
 {
-  "name": "样机工作室 · Mockup Studio",
-  "id": "0000000000000000000",
+  "name": "小鸟样机",
   "api": "1.0.0",
   "main": "code.js",
   "ui": "ui.html",
-  "editorType": ["figma"],
+  "editorType": [
+    "figma"
+  ],
   "documentAccess": "dynamic-page",
+  "id": "0000000000000000000",
   "networkAccess": {
-    "allowedDomains": ["https://assets.mockup-studio.example"],
-    "devAllowedDomains": ["http://localhost:4173"]
+    "allowedDomains": [
+      "https://unrivaled-cat-56bfe7.netlify.app"
+    ],
+    "devAllowedDomains": [
+      "http://localhost:4173"
+    ]
   }
 }

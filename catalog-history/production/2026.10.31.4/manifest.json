@@ -1,0 +1,595 @@
+{
+  "schemaVersion": 5,
+  "catalogVersion": "2026.10.31.4",
+  "publishedAt": "2026-10-31T05:44:47.685Z",
+  "environment": "production",
+  "rendererVersion": "2.4.0",
+  "minimumPluginVersion": "0.1.0",
+  "categories": [
+    {
+      "id": "display",
+      "label": "显示器"
+    },
+    {
+      "id": "phone",
+      "label": "手机"
+    },
+    {
+      "id": "laptop",
+      "label": "笔记本"
+    }
+  ],
+  "items": [
+    {
+      "id": "studio-display-front",
+      "revision": 2,
+      "status": "approved",
+      "name": "工作室显示器 · 正面",
+      "category": "display",
+      "tags": [
+        "显示器",
+        "桌面",
+        "正面",
+        "金属",
+        "monitor"
+      ],
+      "renderer": "static-screen-v5",
+      "canvas": {
+        "width": 1448,
+        "height": 1086
+      },
+      "screen": {
+        "quad": [
+          [
+            260,
+            185
+          ],
+          [
+            1190,
+            185
+          ],
+          [
+            1190,
+            702
+          ],
+          [
+            260,
+            702
+          ]
+        ],
+        "recommendedSize": {
+          "width": 1920,
+          "height": 1080,
+          "label": "16:9"
+        },
+        "aperture": {
+          "quad": [
+            [
+              260,
+              185
+            ],
+            [
+              1190,
+              185
+            ],
+            [
+              1190,
+              702
+            ],
+            [
+              260,
+              702
+            ]
+          ],
+          "cornerRadii": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "compositing": {
+          "mode": "aperture-mask"
+        },
+        "defaultFit": "cover"
+      },
+      "layers": {
+        "base": "assets/studio-display-front-r2.png"
+      },
+      "thumbnail": "thumbnails/studio-display-front-r2.png",
+      "provenance": {
+        "kind": "generated-in-house",
+        "usage": "candidate",
+        "pipelinePolicyId": "MOCKUP-ASSET-PIPELINE-1",
+        "presentationState": "complete",
+        "migrationFrom": {
+          "revision": 1,
+          "baseSha256": "9af4efe18bbbc3a899d57902e71960a4d9f135389da99833a7b0e922764b0eeb"
+        },
+        "generationNote": "Existing project-made scene neutralized and completed with a baked, non-keyed screen design using explicit aperture geometry."
+      },
+      "integrity": {
+        "baseSha256": "6e6271a4893a6c5ca54ab27513dcc71198c9b97e0cbb61e81395374ec3523f3b",
+        "thumbnailSha256": "2c56ee6eaee9185ede5a89b40c2934d40e706d669d1e7757a4e4188c315a9d00"
+      },
+      "qa": {
+        "approvedAt": "2026-10-31T05:41:50.090Z",
+        "rendererVersion": "2.4.0",
+        "sourceItemSha256": "7bf02d442d92b29e225ff957541868eb5eadebfe5c512c291e258c376d92eb95",
+        "reportSha256": "05f067f35975359e33d0327675c95f6294c0c538b1e27df22faedac6ee5123d1",
+        "report": "approvals/studio-display-front-r2.json"
+      },
+      "release": {
+        "decidedAt": "2026-10-31T05:44:38.675Z",
+        "actor": {
+          "type": "human",
+          "identity": "Wang Zhentao",
+          "role": "正式入库决定人"
+        },
+        "sourceItemSha256": "7bf02d442d92b29e225ff957541868eb5eadebfe5c512c291e258c376d92eb95",
+        "qaReportSha256": "05f067f35975359e33d0327675c95f6294c0c538b1e27df22faedac6ee5123d1",
+        "reportSha256": "9b392abb1e376c78e2f1e19ec90239c78a1779cc44a764585ba9336d7867023b",
+        "report": "release-approvals/studio-display-front-r2.json"
+      }
+    },
+    {
+      "id": "rock-phone-front",
+      "revision": 2,
+      "status": "approved",
+      "name": "岩石手机 · 正面",
+      "category": "phone",
+      "tags": [
+        "手机",
+        "岩石",
+        "黑白",
+        "正面",
+        "phone"
+      ],
+      "renderer": "static-screen-v5",
+      "canvas": {
+        "width": 1448,
+        "height": 1086
+      },
+      "screen": {
+        "quad": [
+          [
+            554,
+            154
+          ],
+          [
+            893,
+            154
+          ],
+          [
+            893,
+            886
+          ],
+          [
+            554,
+            886
+          ]
+        ],
+        "recommendedSize": {
+          "width": 1290,
+          "height": 2796,
+          "label": "约 9:19.5"
+        },
+        "aperture": {
+          "quad": [
+            [
+              554,
+              154
+            ],
+            [
+              893,
+              154
+            ],
+            [
+              893,
+              886
+            ],
+            [
+              554,
+              886
+            ]
+          ],
+          "cornerRadii": [
+            0.12,
+            0.12,
+            0.12,
+            0.12
+          ]
+        },
+        "compositing": {
+          "mode": "aperture-mask"
+        },
+        "defaultFit": "cover"
+      },
+      "layers": {
+        "base": "assets/rock-phone-front-r2.png"
+      },
+      "thumbnail": "thumbnails/rock-phone-front-r2.png",
+      "provenance": {
+        "kind": "generated-in-house",
+        "usage": "candidate",
+        "pipelinePolicyId": "MOCKUP-ASSET-PIPELINE-1",
+        "presentationState": "complete",
+        "migrationFrom": {
+          "revision": 1,
+          "baseSha256": "d530217efe71e4169a52e3b2db70237a74b6bcd9ded7d3f730217397177d5993"
+        },
+        "generationNote": "Existing project-made scene neutralized and completed with a baked, non-keyed screen design using explicit aperture geometry."
+      },
+      "integrity": {
+        "baseSha256": "2044a3d5ee3b5e84cd47ba70d1fbe6f2af08b9a1dbc7ff43bc540835b64e7000",
+        "thumbnailSha256": "4a1a8fa4d72f80cfb114cd725f7402ff698eb8c90fe2640acb59104dee5a25df"
+      },
+      "qa": {
+        "approvedAt": "2026-10-31T05:41:53.328Z",
+        "rendererVersion": "2.4.0",
+        "sourceItemSha256": "648ed4ba2e72b4a4c27dbc064dc3a0849efe65a45fc9558469ecdbf35e551b47",
+        "reportSha256": "fd522405d2ad14975cae11c00825f4cc0849adc25f432fcb689459cc90516ecc",
+        "report": "approvals/rock-phone-front-r2.json"
+      },
+      "release": {
+        "decidedAt": "2026-10-31T05:44:39.065Z",
+        "actor": {
+          "type": "human",
+          "identity": "Wang Zhentao",
+          "role": "正式入库决定人"
+        },
+        "sourceItemSha256": "648ed4ba2e72b4a4c27dbc064dc3a0849efe65a45fc9558469ecdbf35e551b47",
+        "qaReportSha256": "fd522405d2ad14975cae11c00825f4cc0849adc25f432fcb689459cc90516ecc",
+        "reportSha256": "6327498568038a0f1f18c15001dfa32ae6eba4841c66f5da2064fa40f4c37f11",
+        "report": "release-approvals/rock-phone-front-r2.json"
+      }
+    },
+    {
+      "id": "rail-phone-angle",
+      "revision": 2,
+      "status": "approved",
+      "name": "支架手机 · 倾斜",
+      "category": "phone",
+      "tags": [
+        "手机",
+        "支架",
+        "倾斜",
+        "透视",
+        "phone"
+      ],
+      "renderer": "static-screen-v5",
+      "canvas": {
+        "width": 1448,
+        "height": 1086
+      },
+      "screen": {
+        "quad": [
+          [
+            644,
+            163
+          ],
+          [
+            862,
+            114
+          ],
+          [
+            862,
+            798
+          ],
+          [
+            644,
+            855
+          ]
+        ],
+        "recommendedSize": {
+          "width": 1290,
+          "height": 2796,
+          "label": "约 9:19.5"
+        },
+        "aperture": {
+          "quad": [
+            [
+              644,
+              163
+            ],
+            [
+              862,
+              114
+            ],
+            [
+              862,
+              798
+            ],
+            [
+              644,
+              855
+            ]
+          ],
+          "cornerRadii": [
+            0.12,
+            0.12,
+            0.12,
+            0.12
+          ]
+        },
+        "compositing": {
+          "mode": "aperture-mask"
+        },
+        "defaultFit": "cover",
+        "occlusions": [
+          {
+            "type": "circle",
+            "cx": 754,
+            "cy": 158,
+            "radius": 10,
+            "fill": "#080808"
+          }
+        ]
+      },
+      "layers": {
+        "base": "assets/rail-phone-angle-r2.png"
+      },
+      "thumbnail": "thumbnails/rail-phone-angle-r2.png",
+      "provenance": {
+        "kind": "generated-in-house",
+        "usage": "candidate",
+        "pipelinePolicyId": "MOCKUP-ASSET-PIPELINE-1",
+        "presentationState": "complete",
+        "migrationFrom": {
+          "revision": 1,
+          "baseSha256": "e09768963cb11b8f7769eae3241deca2add5df0cd23a59ee948aeffda68695c4"
+        },
+        "generationNote": "Existing project-made scene neutralized and completed with a baked, non-keyed screen design using explicit aperture geometry."
+      },
+      "integrity": {
+        "baseSha256": "ecbda0cd99076c12005bb7043895a06ce4faca1794c9e9cab9d280a27394f090",
+        "thumbnailSha256": "c797e339ee8aa13285bcc05af553023ba2e626ecc2fd6551084dc661aaae4ee5"
+      },
+      "qa": {
+        "approvedAt": "2026-10-31T05:41:56.539Z",
+        "rendererVersion": "2.4.0",
+        "sourceItemSha256": "d664c06eec9f7376e141c7b3e3f03d290815c7a5b58c42263af56afef97d8852",
+        "reportSha256": "eb91d21efe41d1d4f7c54813df05c0acf0bc26df378a530f2adfe545032a4c0a",
+        "report": "approvals/rail-phone-angle-r2.json"
+      },
+      "release": {
+        "decidedAt": "2026-10-31T05:44:39.437Z",
+        "actor": {
+          "type": "human",
+          "identity": "Wang Zhentao",
+          "role": "正式入库决定人"
+        },
+        "sourceItemSha256": "d664c06eec9f7376e141c7b3e3f03d290815c7a5b58c42263af56afef97d8852",
+        "qaReportSha256": "eb91d21efe41d1d4f7c54813df05c0acf0bc26df378a530f2adfe545032a4c0a",
+        "reportSha256": "17faaa15a951992269f3e7b91a7c06c3009d785fdfd69aac043d49ff4aec3fc9",
+        "report": "release-approvals/rail-phone-angle-r2.json"
+      }
+    },
+    {
+      "id": "graphite-laptop-angle",
+      "revision": 2,
+      "status": "approved",
+      "name": "石墨笔记本 · 倾斜",
+      "category": "laptop",
+      "tags": [
+        "笔记本",
+        "金属",
+        "倾斜",
+        "透视",
+        "laptop"
+      ],
+      "renderer": "static-screen-v5",
+      "canvas": {
+        "width": 1536,
+        "height": 1024
+      },
+      "screen": {
+        "quad": [
+          [
+            235,
+            164
+          ],
+          [
+            939,
+            140
+          ],
+          [
+            1004,
+            587
+          ],
+          [
+            297,
+            664
+          ]
+        ],
+        "recommendedSize": {
+          "width": 2560,
+          "height": 1600,
+          "label": "16:10"
+        },
+        "aperture": {
+          "quad": [
+            [
+              235,
+              164
+            ],
+            [
+              939,
+              140
+            ],
+            [
+              1004,
+              587
+            ],
+            [
+              297,
+              664
+            ]
+          ],
+          "cornerRadii": [
+            0.008,
+            0.008,
+            0.008,
+            0.008
+          ]
+        },
+        "compositing": {
+          "mode": "aperture-mask"
+        },
+        "defaultFit": "cover"
+      },
+      "layers": {
+        "base": "assets/graphite-laptop-angle-r2.png"
+      },
+      "thumbnail": "thumbnails/graphite-laptop-angle-r2.png",
+      "provenance": {
+        "kind": "generated-in-house",
+        "usage": "candidate",
+        "pipelinePolicyId": "MOCKUP-ASSET-PIPELINE-1",
+        "presentationState": "complete",
+        "migrationFrom": {
+          "revision": 1,
+          "baseSha256": "893687802f9c1b42522cffeb2e1a361ae6dd4962da31114d2f6221c63220c66c"
+        },
+        "generationNote": "Existing project-made scene neutralized and completed with a baked, non-keyed screen design using explicit aperture geometry."
+      },
+      "integrity": {
+        "baseSha256": "2dac4b02e6751378c71580b4158cf0f8d4edd7d4cb7f5316b05059e8b868af51",
+        "thumbnailSha256": "7ae45fba859085f8417255c8d4d143508f7be9f2cd33aba627822938ba46469c"
+      },
+      "qa": {
+        "approvedAt": "2026-10-31T05:41:59.752Z",
+        "rendererVersion": "2.4.0",
+        "sourceItemSha256": "47202fb1ce4db5b83c9b7ceb162340a1ff5d53fa0f2033f3a8f36a8db79048ca",
+        "reportSha256": "b97e47a6470abc94505e7d1c9e543cda775267e44c95aa3f66821de2b50dd752",
+        "report": "approvals/graphite-laptop-angle-r2.json"
+      },
+      "release": {
+        "decidedAt": "2026-10-31T05:44:39.812Z",
+        "actor": {
+          "type": "human",
+          "identity": "Wang Zhentao",
+          "role": "正式入库决定人"
+        },
+        "sourceItemSha256": "47202fb1ce4db5b83c9b7ceb162340a1ff5d53fa0f2033f3a8f36a8db79048ca",
+        "qaReportSha256": "b97e47a6470abc94505e7d1c9e543cda775267e44c95aa3f66821de2b50dd752",
+        "reportSha256": "294d1769dd816a8a6c16566ebe69ae354ad00feef426ab7b41a9151b38d03fa5",
+        "report": "release-approvals/graphite-laptop-angle-r2.json"
+      }
+    },
+    {
+      "id": "workstation-display-three-quarter",
+      "revision": 2,
+      "status": "approved",
+      "name": "极简工作站显示器 · 右后三分之二视角",
+      "category": "display",
+      "tags": [
+        "display",
+        "workstation",
+        "three-quarter",
+        "dark",
+        "metal"
+      ],
+      "renderer": "static-screen-v5",
+      "canvas": {
+        "width": 1448,
+        "height": 1086
+      },
+      "screen": {
+        "quad": [
+          [
+            158,
+            203
+          ],
+          [
+            1053,
+            144
+          ],
+          [
+            1053,
+            708
+          ],
+          [
+            155,
+            715
+          ]
+        ],
+        "recommendedSize": {
+          "width": 2560,
+          "height": 1440,
+          "label": "16:9 显示器"
+        },
+        "aperture": {
+          "quad": [
+            [
+              158,
+              203
+            ],
+            [
+              1053,
+              144
+            ],
+            [
+              1053,
+              708
+            ],
+            [
+              155,
+              715
+            ]
+          ],
+          "cornerRadii": [
+            0.008,
+            0.008,
+            0.008,
+            0.008
+          ]
+        },
+        "compositing": {
+          "mode": "aperture-mask"
+        },
+        "defaultFit": "cover"
+      },
+      "layers": {
+        "base": "assets/workstation-display-three-quarter-r2.png"
+      },
+      "thumbnail": "thumbnails/workstation-display-three-quarter-r2.png",
+      "provenance": {
+        "kind": "generated-in-house",
+        "usage": "candidate",
+        "pipelinePolicyId": "MOCKUP-ASSET-PIPELINE-1",
+        "referenceRightsMode": "owned",
+        "referenceSha256": "c4fe5874e03c7ea5171f3db51aec6d3e0d4f9de46ded32b036439298a5e75724",
+        "generationNote": "Existing project-made scene neutralized and completed with a baked, non-keyed screen design using explicit aperture geometry.",
+        "presentationState": "complete",
+        "migrationFrom": {
+          "revision": 1,
+          "baseSha256": "ac3197135e50c7cf848e5ccc4a93eaff5a0bde0ba9e6b5d6d83b77830db19b14"
+        }
+      },
+      "integrity": {
+        "baseSha256": "909b5430c7d07f4634d7550222cd10e2a74b8b405a7abfe71e35b1b0ff8a0497",
+        "thumbnailSha256": "2c1aca96a02e9a3646f71e5a28a8eea43934be043c54340a5e8b24d622af6017"
+      },
+      "qa": {
+        "approvedAt": "2026-10-31T05:42:02.953Z",
+        "rendererVersion": "2.4.0",
+        "sourceItemSha256": "1f7e99bcd3898b244f6457b3576f3bac28daf8f20eb7ee11bd850368b6637386",
+        "reportSha256": "32a50f254e757246419f675f6b4c07285d3bbd9a7e34fe03246f2d71d79811d8",
+        "report": "approvals/workstation-display-three-quarter-r2.json"
+      },
+      "release": {
+        "decidedAt": "2026-10-31T05:44:40.204Z",
+        "actor": {
+          "type": "human",
+          "identity": "Wang Zhentao",
+          "role": "正式入库决定人"
+        },
+        "sourceItemSha256": "1f7e99bcd3898b244f6457b3576f3bac28daf8f20eb7ee11bd850368b6637386",
+        "qaReportSha256": "32a50f254e757246419f675f6b4c07285d3bbd9a7e34fe03246f2d71d79811d8",
+        "reportSha256": "2a7661fec315b97125c5685358c55c181e1831d5a9185587e76efc46a7374725",
+        "report": "release-approvals/workstation-display-three-quarter-r2.json"
+      }
+    }
+  ]
+}

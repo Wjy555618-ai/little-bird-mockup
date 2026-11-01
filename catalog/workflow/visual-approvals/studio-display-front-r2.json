@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "approvalType": "visual",
+  "decision": "approved",
+  "assetId": "studio-display-front",
+  "revision": 2,
+  "candidateSha256": "6e6271a4893a6c5ca54ab27513dcc71198c9b97e0cbb61e81395374ec3523f3b",
+  "completeBaseConfirmed": true,
+  "actor": {
+    "type": "human",
+    "identity": "Wang Zhentao",
+    "role": "产品与视觉决定人"
+  },
+  "decidedAt": "2026-10-31T05:39:49.221Z",
+  "attestation": {
+    "method": "local",
+    "confirmedByHuman": true
+  }
+}

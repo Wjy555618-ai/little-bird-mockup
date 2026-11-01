@@ -1,0 +1,274 @@
+{
+  "schemaVersion": 1,
+  "contractId": "MOCKUP-STUDIO-PRODUCTION-CONTRACT-1",
+  "objective": "让每一级产品成熟度声明都只能由当前版本的可重复证据产生，禁止以视觉观感、测试数量或人工口头确认替代发布与成功证据。",
+  "claimLevels": {
+    "DEVELOPMENT_READY": ["G-001", "G-010", "G-030", "G-040", "G-050", "G-060", "G-070", "G-080"],
+    "PUBLISH_READY": ["G-001", "G-010", "G-020", "G-030", "G-040", "G-050", "G-060", "G-070", "G-080", "G-100", "G-110", "G-120", "G-130", "G-140"],
+    "MATURE_PRODUCT": ["G-001", "G-010", "G-020", "G-030", "G-040", "G-050", "G-060", "G-070", "G-080", "G-100", "G-110", "G-120", "G-130", "G-140", "G-150"],
+    "SUCCESSFUL_PRODUCT": ["G-001", "G-010", "G-020", "G-030", "G-040", "G-050", "G-060", "G-070", "G-080", "G-100", "G-110", "G-120", "G-130", "G-140", "G-150", "G-200", "G-210"]
+  },
+  "gates": [
+    {
+      "id": "G-001",
+      "stage": "development",
+      "title": "开发合同结构有效",
+      "blocking": true,
+      "ownerRole": "engineering owner",
+      "evidenceType": "automated",
+      "command": "pnpm contract:check",
+      "passCondition": "命令在当前提交退出码为 0，且合同不存在重复、缺失、状态自报或不可执行命令。",
+      "failCondition": "命令非 0，或合同字段不能被严格解析。",
+      "binding": "source-revision",
+      "expires": "on-any-contract-change"
+    },
+    {
+      "id": "G-010",
+      "stage": "development",
+      "title": "开发构建与行为测试通过",
+      "blocking": true,
+      "ownerRole": "engineering owner",
+      "evidenceType": "automated",
+      "command": "pnpm check",
+      "passCondition": "开发构建无陈旧产物，语法、目录、真实像素不变量和全部测试退出码为 0，且跳过数为 0。",
+      "failCondition": "任一检查失败、退出码非 0或出现跳过测试。",
+      "binding": "source-revision",
+      "expires": "on-any-source-config-or-asset-change"
+    },
+    {
+      "id": "G-020",
+      "stage": "release",
+      "title": "生产配置与不可变制品通过",
+      "blocking": true,
+      "ownerRole": "release owner",
+      "evidenceType": "automated",
+      "command": "pnpm release:check",
+      "passCondition": "真实 HTTPS 目录、非占位插件 ID、干净提交及已发布到origin且解析到同一提交的版本标签生成不可覆盖的 REL 发布包；远程目录字节与本地正式manifest一致，provenance绑定标签提交、合同、政策、目录和制品摘要，构建前后Git状态不变，且制品无开发地址、占位符或开发权限。",
+      "failCondition": "任一占位值、开发/保留地址、远程目录不可验证或字节漂移、未提交改动、标签缺失/未发布/提交不一致、缺少有效 origin、构建期间Git漂移、provenance不一致、制品漂移或覆盖既有发布包。",
+      "binding": "release-artifact-and-git-revision",
+      "expires": "on-any-source-config-dependency-or-asset-change"
+    },
+    {
+      "id": "G-030",
+      "stage": "development",
+      "title": "静态无障碍门禁通过",
+      "blocking": true,
+      "ownerRole": "design engineering owner",
+      "evidenceType": "automated",
+      "command": "pnpm accessibility:check",
+      "passCondition": "搜索语义、焦点可见性和声明的正文颜色对比度均通过自动检查。",
+      "failCondition": "控件缺少可访问名称、焦点不可见或正文颜色低于 4.5:1。",
+      "binding": "source-revision",
+      "expires": "on-any-ui-change"
+    },
+    {
+      "id": "G-040",
+      "stage": "development",
+      "title": "高危依赖漏洞为零",
+      "blocking": true,
+      "ownerRole": "security owner",
+      "evidenceType": "automated",
+      "command": "pnpm security:check",
+      "passCondition": "当前锁文件的高危及严重依赖漏洞数量为零。",
+      "failCondition": "审计不可执行或发现 high/critical 漏洞。",
+      "binding": "lockfile-revision",
+      "expires": "on-lockfile-change-or-7-days"
+    },
+    {
+      "id": "G-050",
+      "stage": "development",
+      "title": "500项资源上限行为不变量通过",
+      "blocking": true,
+      "ownerRole": "performance owner",
+      "evidenceType": "automated",
+      "command": "pnpm scale:check",
+      "passCondition": "500个唯一资源连续进入缓存后条目始终不超过8，命中会刷新LRU顺序，失败的旧请求不能删除新请求，且任意位置只预取最近3个素材。",
+      "failCondition": "缓存超过8项、淘汰顺序错误、旧异步请求破坏新缓存、预取超过3项或测试被跳过。",
+      "binding": "source-revision",
+      "expires": "on-any-catalog-cache-prefetch-or-loading-change"
+    },
+    {
+      "id": "G-060",
+      "stage": "development",
+      "title": "正式目录回滚库存有效",
+      "blocking": true,
+      "ownerRole": "operations owner",
+      "evidenceType": "automated",
+      "command": "pnpm catalog:history:check",
+      "passCondition": "当前正式manifest存在逐字一致的版本快照，快照引用的全部不可变素材仍存在且SHA-256匹配。",
+      "failCondition": "当前版本无快照、快照与当前manifest不同、素材缺失或摘要不一致。",
+      "binding": "production-catalog-version-and-assets",
+      "expires": "on-any-production-catalog-or-asset-change"
+    },
+    {
+      "id": "G-070",
+      "stage": "development",
+      "title": "500项目录浏览器性能烟测通过",
+      "blocking": true,
+      "ownerRole": "performance owner",
+      "evidenceType": "automated",
+      "command": "pnpm performance:smoke",
+      "passCondition": "真实Chrome加载500个契约有效的测试素材，完整渲染500张卡片；本地首屏不超过2500ms，30次搜索P95不超过100ms，且测试不得跳过。",
+      "failCondition": "Chrome缺失、卡片不完整、样本不足、首屏或搜索超预算、异常退出或跳过。",
+      "binding": "source-revision-and-local-chrome-environment",
+      "expires": "on-any-catalog-render-filter-style-or-browser-runtime-change"
+    },
+    {
+      "id": "G-080",
+      "stage": "development",
+      "title": "CI供应链与发布制品保留合同有效",
+      "blocking": true,
+      "ownerRole": "release and security owner",
+      "evidenceType": "automated",
+      "command": "pnpm ci:check",
+      "passCondition": "CI使用只读最小权限、所有第三方Action固定到40位提交SHA、PR/main与每周计划执行完整开发和安全门禁、Dependabot每周检查Action与npm依赖、版本标签执行发布封装并保留来源绑定REL制品。",
+      "failCondition": "权限扩大、Action使用可移动标签、缺少每周刷新或依赖更新、阻断命令缺失、发布只检查不保留制品，或上传策略允许缺失文件。",
+      "binding": "workflow-and-action-revisions",
+      "expires": "on-any-ci-workflow-or-action-revision-change"
+    },
+    {
+      "id": "G-100",
+      "stage": "release",
+      "title": "真实 Figma 关键任务闭环",
+      "blocking": true,
+      "ownerRole": "quality owner",
+      "evidenceType": "manual-artifact",
+      "requiredEvidence": {
+        "pathPattern": "docs/release-evidence/<version>/figma-host-e2e.json",
+        "binding": "release-fingerprint",
+        "policyRef": "quality/measurement-policy.json#G-100",
+        "requiredScenarios": ["catalog-online", "catalog-offline-cache", "figma-selection", "local-png", "svg", "pdf", "video-frame", "multi-selection", "download", "paste-back", "error-recovery"]
+      },
+      "passCondition": "每个必测场景在正式候选制品中有时间、平台、宿主版本、构建指纹、输入和输出证据，全部通过。",
+      "failCondition": "缺少场景、使用开发构建、指纹不一致、只看见界面未执行输出，或存在未解释失败。",
+      "binding": "release-artifact",
+      "expires": "on-any-release-artifact-change"
+    },
+    {
+      "id": "G-110",
+      "stage": "release",
+      "title": "支持平台矩阵通过",
+      "blocking": true,
+      "ownerRole": "quality owner",
+      "evidenceType": "manual-artifact",
+      "requiredEvidence": {
+        "pathPattern": "docs/release-evidence/<version>/platform-matrix.json",
+        "binding": "release-fingerprint",
+        "policyRef": "quality/measurement-policy.json#G-110",
+        "requiredScenarios": ["macos-figma-desktop", "windows-figma-desktop"]
+      },
+      "passCondition": "声明支持的每个平台均使用同一发布候选指纹完成核心任务；未测平台不得出现在公开支持声明中。",
+      "failCondition": "平台未测却被声明支持，或不同平台使用不同未绑定制品。",
+      "binding": "release-artifact",
+      "expires": "on-runtime-host-or-release-change"
+    },
+    {
+      "id": "G-120",
+      "stage": "release",
+      "title": "规模、内存与响应预算通过",
+      "blocking": true,
+      "ownerRole": "performance owner",
+      "evidenceType": "manual-artifact",
+      "requiredEvidence": {
+        "pathPattern": "docs/release-evidence/<version>/performance-budget.json",
+        "binding": "release-fingerprint",
+        "policyRef": "quality/measurement-policy.json#G-120",
+        "requiredScenarios": ["cold-start", "500-item-catalog", "rapid-switch-50", "large-image", "large-pdf", "memory-after-50-switches"]
+      },
+      "passCondition": "预先登记的目标设备和预算全部通过，缓存条目保持有界，连续切换后内存可回落且无任务失败。",
+      "failCondition": "测试后补预算、缺少原始测量、缓存无界、内存持续增长或核心任务超预算。",
+      "binding": "release-artifact-and-budget-revision",
+      "expires": "on-rendering-catalog-cache-or-dependency-change"
+    },
+    {
+      "id": "G-130",
+      "stage": "release",
+      "title": "人工无障碍验证通过",
+      "blocking": true,
+      "ownerRole": "accessibility owner",
+      "evidenceType": "manual-artifact",
+      "requiredEvidence": {
+        "pathPattern": "docs/release-evidence/<version>/accessibility-report.json",
+        "binding": "release-fingerprint",
+        "policyRef": "quality/measurement-policy.json#G-130",
+        "requiredScenarios": ["keyboard-only", "screen-reader-names", "focus-order", "zoom-and-scaling", "reduced-motion", "contrast"]
+      },
+      "passCondition": "键盘、读屏名称、焦点顺序、缩放、减少动态和对比度均有当前制品证据且无阻断缺陷。",
+      "failCondition": "仅凭静态源码检查、缺少场景或存在阻断使用的问题。",
+      "binding": "release-artifact",
+      "expires": "on-any-ui-or-interaction-change"
+    },
+    {
+      "id": "G-140",
+      "stage": "release",
+      "title": "隐私、安全与素材权利审查通过",
+      "blocking": true,
+      "ownerRole": "product and security owner",
+      "evidenceType": "manual-artifact",
+      "requiredEvidence": {
+        "pathPattern": "docs/release-evidence/<version>/trust-review.json",
+        "binding": "release-fingerprint-and-catalog-version",
+        "policyRef": "quality/measurement-policy.json#G-140",
+        "requiredScenarios": ["network-destinations", "no-remote-code", "selection-data-boundary", "asset-provenance", "privacy-copy", "support-contact"]
+      },
+      "passCondition": "实际网络目的地、数据边界、远程代码禁令、素材来源、隐私文案和支持渠道均与制品及目录一致。",
+      "failCondition": "仅引用设计意图、存在未声明网络目标、素材权利未知或公开文案与实现不一致。",
+      "binding": "release-artifact-and-catalog",
+      "expires": "on-network-data-catalog-or-copy-change"
+    },
+    {
+      "id": "G-150",
+      "stage": "operations",
+      "title": "监控与回滚演练通过",
+      "blocking": true,
+      "ownerRole": "operations owner",
+      "evidenceType": "manual-artifact",
+      "requiredEvidence": {
+        "pathPattern": "docs/release-evidence/<version>/rollback-drill.json",
+        "binding": "release-fingerprint-and-catalog-version",
+        "policyRef": "quality/measurement-policy.json#G-150",
+        "requiredScenarios": ["bad-manifest", "bad-asset", "catalog-timeout", "rollback-to-previous-version", "user-visible-recovery"]
+      },
+      "passCondition": "在隔离环境注入故障后能发现、阻止错误目录并恢复到上一已知良好版本，记录实际恢复时间。",
+      "failCondition": "没有真实故障注入、只能手工猜测恢复路径或无法恢复用户任务。",
+      "binding": "release-artifact-and-catalog",
+      "expires": "on-release-or-deployment-process-change"
+    },
+    {
+      "id": "G-200",
+      "stage": "market",
+      "title": "外部用户试用证据成立",
+      "blocking": true,
+      "ownerRole": "product owner",
+      "evidenceType": "manual-artifact",
+      "requiredEvidence": {
+        "pathPattern": "docs/product-evidence/<cohort>/external-beta.json",
+        "binding": "released-version-and-cohort-definition",
+        "policyRef": "quality/measurement-policy.json#G-200",
+        "requiredScenarios": ["participant-definition", "first-success", "failure-reasons", "repeat-use", "support-incidents"]
+      },
+      "passCondition": "预先定义的外部目标用户完成真实任务，样本、版本、口径、失败和限制全部可追溯。",
+      "failCondition": "仅内部人员、仅观看演示、样本和口径缺失或把主观好评当成任务成功。",
+      "binding": "released-version-and-cohort",
+      "expires": "on-major-version-or-target-user-change"
+    },
+    {
+      "id": "G-210",
+      "stage": "market",
+      "title": "成功产品声明有持续数据支持",
+      "blocking": true,
+      "ownerRole": "product owner",
+      "evidenceType": "manual-artifact",
+      "requiredEvidence": {
+        "pathPattern": "docs/product-evidence/<period>/success-metrics.json",
+        "binding": "metric-definition-version-and-measurement-period",
+        "policyRef": "quality/measurement-policy.json#G-210",
+        "requiredScenarios": ["activation", "time-to-first-success", "error-free-session", "retention", "repeat-use", "support-rate", "data-quality"]
+      },
+      "passCondition": "指标定义、分母、时间窗、数据质量和预先确定的目标全部成立，且至少覆盖一个完整留存观察窗。",
+      "failCondition": "没有外部使用数据、事后挑选指标、缺少分母或观察窗不足。",
+      "binding": "released-version-and-measurement-period",
+      "expires": "after-next-reporting-period"
+    }
+  ]
+}

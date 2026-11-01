@@ -1,7 +1,9 @@
 import { createHash } from "node:crypto";
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { atomicWriteJson, snapshotCatalog, snapshotCatalogManifest } from "./lib/catalog-history.mjs";
+import { analyzeCompleteBase, assertCompleteBaseMetrics, assertNoChromaSchema } from "./lib/no-chroma.mjs";
 
 const projectRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const args = process.argv.slice(2);
@@ -50,9 +52,9 @@ async function sha256(path) {
 }
 
 const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
-if (manifest.schemaVersion !== 4) fail("只支持 schemaVersion 4");
+if (manifest.schemaVersion !== 5) fail("只支持 schemaVersion 5");
 if (manifest.environment !== library) fail(`清单 environment 必须是 ${library}`);
-if (manifest.rendererVersion !== "2.3.0") fail("rendererVersion 必须是 2.3.0");
+if (manifest.rendererVersion !== "2.4.0") fail("rendererVersion 必须是 2.4.0");
 if (!versionPattern.test(manifest.catalogVersion)) fail("当前 catalogVersion 格式无效");
 if (!Number.isFinite(Date.parse(manifest.publishedAt))) fail("publishedAt 不是有效时间");
 if (!Array.isArray(manifest.categories) || !Array.isArray(manifest.items)) fail("清单缺少 categories 或 items");
@@ -69,7 +71,7 @@ for (const item of manifest.items) {
   itemIds.add(item.id);
   if (!Number.isInteger(item.revision) || item.revision < 1) fail(`${item.id} revision 必须是正整数`);
   if (!item.name || !categoryIds.has(item.category)) fail(`${item.id} 的名称或分类无效`);
-  if (item.renderer !== "static-screen-v4") fail(`${item.id} 使用了未支持的渲染器`);
+  assertNoChromaSchema(item);
   if (item.status !== (library === "testing" ? "testing" : "approved")) fail(`${item.id} 状态不属于 ${library} 库`);
   if (item.provenance?.kind !== "generated-in-house") fail(`${item.id} 缺少项目自制来源标记`);
   if (!Number.isInteger(item.canvas?.width) || !Number.isInteger(item.canvas?.height) || item.canvas.width < 1 || item.canvas.height < 1) {
@@ -84,15 +86,21 @@ for (const item of manifest.items) {
   if (!Array.isArray(item.screen?.aperture?.cornerRadii) || item.screen.aperture.cornerRadii.length !== 4 || item.screen.aperture.cornerRadii.some((radius) => !Number.isFinite(radius) || radius < 0 || radius > 0.49)) {
     fail(`${item.id} 可见孔径必须声明四个有效圆角比例`);
   }
-  if (item.screen?.compositing?.mode !== "chroma-edge" || !item.chromaKey?.enabled || !Number.isInteger(item.screen.compositing.maxEdgeExtension) || item.screen.compositing.maxEdgeExtension < 1 || item.screen.compositing.maxEdgeExtension > 12) fail(`${item.id} 接缝软边配置无效`);
-  if (!Number.isFinite(item.screen?.underlap) || item.screen.underlap < item.screen.compositing.maxEdgeExtension || item.screen.underlap > 24 || Object.hasOwn(item.screen, "bleed")) fail(`${item.id} 隐藏衬底配置无效`);
-
   const basePath = safeCatalogPath(item.layers?.base, `${item.id} base`);
   const thumbnailPath = safeCatalogPath(item.thumbnail, `${item.id} thumbnail`);
   if (!new RegExp(`-r${item.revision}\\.[a-z0-9]+$`, "i").test(item.layers.base)) fail(`${item.id} base 文件名必须包含当前 revision`);
   if (!new RegExp(`-r${item.revision}\\.[a-z0-9]+$`, "i").test(item.thumbnail)) fail(`${item.id} thumbnail 文件名必须包含当前 revision`);
 
   const [baseSha256, thumbnailSha256] = await Promise.all([sha256(basePath), sha256(thumbnailPath)]);
+  const completeBaseMetrics = await analyzeCompleteBase(basePath, item);
+  if (library === "testing") {
+    assertCompleteBaseMetrics(item, completeBaseMetrics, null, { allowPendingFinalDecision: true });
+  } else {
+    const releaseConfirmation = !completeBaseMetrics.pass && item.release?.report
+      ? JSON.parse(await readFile(safeCatalogPath(item.release.report, `${item.id} release approval`), "utf8"))
+      : null;
+    assertCompleteBaseMetrics(item, completeBaseMetrics, releaseConfirmation);
+  }
   item.integrity ||= {};
   if (checkOnly) {
     if (item.integrity.baseSha256 !== baseSha256) fail(`${item.id} baseSha256 与文件不匹配`);
@@ -100,6 +108,17 @@ for (const item of manifest.items) {
   } else {
     item.integrity.baseSha256 = baseSha256;
     item.integrity.thumbnailSha256 = thumbnailSha256;
+  }
+
+  for (const [layerName, relativePath] of Object.entries(item.layers || {})) {
+    const layerPath = safeCatalogPath(relativePath, `${item.id} ${layerName}`);
+    const layerSha256 = await sha256(layerPath);
+    const integrityKey = `${layerName}Sha256`;
+    if (checkOnly) {
+      if (item.integrity[integrityKey] !== layerSha256) fail(`${item.id} ${integrityKey} 与文件不匹配`);
+    } else {
+      item.integrity[integrityKey] = layerSha256;
+    }
   }
 
   if (library === "production") {
@@ -114,8 +133,21 @@ for (const item of manifest.items) {
     if (report.rendererVersion !== manifest.rendererVersion || report.approvedAt !== item.qa.approvedAt) {
       fail(`${item.id} 的质检报告版本或时间不匹配`);
     }
-    if (report.schemaVersion !== 2 || report.seamMetrics?.pass !== true || report.seamMetrics.mode !== item.screen.compositing.mode || report.seamMetrics.edgeExtensionLimit !== item.screen.compositing.maxEdgeExtension || report.seamMetrics.maxEdgeExtension > report.seamMetrics.edgeExtensionLimit || report.seamMetrics.interiorSpillRatio < 0.85 || report.seamMetrics.truncatedSamples !== 0 || report.seamMetrics.truncatedEdgeRatio !== 0) fail(`${item.id} 缺少通过的接缝像素证据`);
+    const completeBasePass = report.completeBaseMetrics?.pass === true || report.completeBaseMetrics?.technicalPass === true;
+    if (report.schemaVersion !== 3 || report.apertureMetrics?.pass !== true || report.apertureMetrics.mode !== "aperture-mask" || report.apertureMetrics.source !== "explicit-geometry" || report.apertureMetrics.exact !== true || !completeBasePass) fail(`${item.id} 缺少通过的显式孔径与完整底图证据`);
     if (report.itemSha256 !== item.qa.sourceItemSha256) fail(`${item.id} 的质检摘要不匹配`);
+    const qaReportSha256 = await sha256(reportPath);
+    if (item.provenance?.pipelinePolicyId) {
+      if (item.qa.reportSha256 !== qaReportSha256) fail(`${item.id} 的技术 QA 文件摘要不匹配`);
+      if (!item.release?.decidedAt || item.release.actor?.type !== "human" || !item.release.actor.identity || item.release.sourceItemSha256 !== item.qa.sourceItemSha256 || item.release.qaReportSha256 !== qaReportSha256 || !/^[a-f0-9]{64}$/.test(item.release.reportSha256 || "")) fail(`${item.id} 缺少绑定当前 QA 的人类正式入库批准`);
+      const releasePath = safeCatalogPath(item.release.report, `${item.id} release approval`);
+      const release = JSON.parse(await readFile(releasePath, "utf8"));
+      const supportedApproval = release.schemaVersion === 1 || (release.schemaVersion === 2
+        && /^sha256:[a-f0-9]{64}$/.test(release.batchFingerprint || "")
+        && /^(?:DEV|REL)-[A-F0-9]{12,64}$/.test(release.buildFingerprint || "")
+        && /^[a-f0-9]{64}$/.test(release.reviewPacketSha256 || ""));
+      if (await sha256(releasePath) !== item.release.reportSha256 || !supportedApproval || release.approvalType !== "release" || release.decision !== "approved" || release.assetId !== item.id || release.revision !== item.revision || release.itemSha256 !== item.qa.sourceItemSha256 || release.qaReportSha256 !== qaReportSha256 || release.actor?.type !== "human" || release.actor.identity !== item.release.actor.identity || release.decidedAt !== item.release.decidedAt || release.attestation?.confirmedByHuman !== true) fail(`${item.id} 的人类正式入库批准无效或已漂移`);
+    }
   }
 }
 
@@ -126,9 +158,11 @@ if (checkOnly) {
     fail("发布必须显式传入 --version YYYY.MM.DD.N");
   }
   if (nextVersion === manifest.catalogVersion) fail("新 catalogVersion 不能与当前版本相同");
+  await snapshotCatalog(projectRoot, library);
   manifest.catalogVersion = nextVersion;
   manifest.publishedAt = new Date().toISOString();
-  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  await snapshotCatalogManifest(projectRoot, library, manifest);
+  await atomicWriteJson(manifestPath, manifest);
   console.log(`${library} catalog released locally: ${manifest.items.length} 个样机，版本 ${nextVersion}`);
   console.log("下一步：运行 npm run check；仅原子部署 catalog/production/ 目录。");
 }

@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "reviewType": "final-local-library-batch",
+  "policyId": "MOCKUP-ASSET-PIPELINE-1",
+  "policyRevision": 4,
+  "buildFingerprint": "DEV-7BCF1C62237C",
+  "hostEvidencePath": "docs/evidence/asset-pipeline/real-host-DEV-7BCF1C62237C.json",
+  "hostEvidenceSha256": "27a7d31973d7acea2068290d95e9f5c48ce9be9510bbd6043960f8b198fecc05",
+  "decisionOptions": [
+    "approve-and-promote-local",
+    "reject"
+  ],
+  "items": [
+    {
+      "assetId": "graphite-laptop-angle",
+      "revision": 3,
+      "name": "石墨笔记本 · 倾斜",
+      "candidateSha256": "cd1574100fb6e10f8b29c5c26247ed89adc182f0cd6556a9917438897b68d70d",
+      "itemSha256": "94642abe7b3500d298f9948520516902f7d56e7fcf70cb5cfd5ad2c2de62dd99",
+      "qaReportSha256": "e660b5847d6fce485dc24c51049305fececfcc13ccc5c7ec081fb29fc6adce16",
+      "qaReportPath": "catalog/testing/v1/approvals/graphite-laptop-angle-r3.json",
+      "basePath": "catalog/testing/v1/assets/graphite-laptop-angle-r3.png",
+      "thumbnailPath": "catalog/testing/v1/thumbnails/graphite-laptop-angle-r3.png"
+    },
+    {
+      "assetId": "rail-phone-angle",
+      "revision": 3,
+      "name": "支架手机 · 倾斜",
+      "candidateSha256": "3d757e35224160081c0a7baa4c2899ced21e7fbf417d6dcc5776b77cf00db425",
+      "itemSha256": "c71250be429e8f416a0b89563f8a47c5563bf66c3c3da2a7a9ae11d8bde29bcf",
+      "qaReportSha256": "8982ba07281c73373d052bd1bce509f68f7b7ccb29681fa0b3ae77eb529a2060",
+      "qaReportPath": "catalog/testing/v1/approvals/rail-phone-angle-r3.json",
+      "basePath": "catalog/testing/v1/assets/rail-phone-angle-r3.png",
+      "thumbnailPath": "catalog/testing/v1/thumbnails/rail-phone-angle-r3.png"
+    },
+    {
+      "assetId": "rock-phone-front",
+      "revision": 3,
+      "name": "岩石手机 · 正面",
+      "candidateSha256": "2313811aa87feb318f14119087c493192049282d693dde1d6dcdda557e4bd377",
+      "itemSha256": "3f26b9b70ddf1f044150ffaefa0dc16164567890eb3e95cef5a6d24a5eaeada1",
+      "qaReportSha256": "3429eb7bd87eaa9beba1bc6152768e30dfdeca0c218ad7c500e00784e00521a6",
+      "qaReportPath": "catalog/testing/v1/approvals/rock-phone-front-r3.json",
+      "basePath": "catalog/testing/v1/assets/rock-phone-front-r3.png",
+      "thumbnailPath": "catalog/testing/v1/thumbnails/rock-phone-front-r3.png"
+    },
+    {
+      "assetId": "studio-display-front",
+      "revision": 3,
+      "name": "工作室显示器 · 正面",
+      "candidateSha256": "4ee83fb16051d82bc7eb297b855763389e396d2352e8e56ace904a7c09c78ae4",
+      "itemSha256": "4acc68c2d69b7d631316cf89450d7c6cc43f0da51d8153a9b2c5c57122b167e8",
+      "qaReportSha256": "f14c8613b3b318aaa1f212a9a68cd697e4da8d06e2d5a0197da4760d8d1f1ff8",
+      "qaReportPath": "catalog/testing/v1/approvals/studio-display-front-r3.json",
+      "basePath": "catalog/testing/v1/assets/studio-display-front-r3.png",
+      "thumbnailPath": "catalog/testing/v1/thumbnails/studio-display-front-r3.png"
+    },
+    {
+      "assetId": "workstation-display-three-quarter",
+      "revision": 3,
+      "name": "极简工作站显示器 · 右后三分之二视角",
+      "candidateSha256": "c2683895cdaebd69618376d73d1c2d27d05afd0391a6948d12310e369cff470f",
+      "itemSha256": "6ccea38e8b33cc1fc55ab5516aa2c9dd019f2848e1c98321deae513ca814ec4b",
+      "qaReportSha256": "331fb99f1c602bdaa26a138c6f374860519c183eb45e123e1a8c99f259a81b38",
+      "qaReportPath": "catalog/testing/v1/approvals/workstation-display-three-quarter-r3.json",
+      "basePath": "catalog/testing/v1/assets/workstation-display-three-quarter-r3.png",
+      "thumbnailPath": "catalog/testing/v1/thumbnails/workstation-display-three-quarter-r3.png"
+    }
+  ],
+  "batchFingerprint": "sha256:fc613401f2563eedc3033ce4ade900084d289f0e9e84de322b6c6ee4bf466c57",
+  "createdAt": "2026-10-31T10:04:14.981Z"
+}

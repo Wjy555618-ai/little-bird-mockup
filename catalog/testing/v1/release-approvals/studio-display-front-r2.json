@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "approvalType": "release",
+  "decision": "approved",
+  "assetId": "studio-display-front",
+  "revision": 2,
+  "itemSha256": "7bf02d442d92b29e225ff957541868eb5eadebfe5c512c291e258c376d92eb95",
+  "qaReportSha256": "05f067f35975359e33d0327675c95f6294c0c538b1e27df22faedac6ee5123d1",
+  "actor": {
+    "type": "human",
+    "identity": "Wang Zhentao",
+    "role": "正式入库决定人"
+  },
+  "decidedAt": "2026-10-31T05:44:38.675Z",
+  "attestation": {
+    "method": "local",
+    "confirmedByHuman": true
+  }
+}

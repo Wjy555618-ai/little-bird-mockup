@@ -1,0 +1,227 @@
+{
+  "schema_version": "3.0.0",
+  "meta": {
+    "pack_id": "MOCKUP-STUDIO-PRODUCTION-001",
+    "analysis_revision": 1,
+    "title": "样机工作室生产级治理决定包",
+    "analysis_mode": "strategize",
+    "target": "mockup-studio-cn Figma plugin",
+    "source_snapshot_at": "2026-10-31",
+    "created_at": "2026-10-31T10:30:00+08:00",
+    "status": "READY_WITH_RISKS",
+    "research_decision": "QUICK",
+    "research_rationale": "当前源码、目录、测试和真实宿主证据足以选择生产治理策略；正式账号、跨平台和外部用户证据在对应门禁中补齐。"
+  },
+  "decision_context": {
+    "decision": "是否以单一环境配置、默认拒绝的发布和目录契约、分层证据门禁作为插件后续开发的唯一主机制。",
+    "decision_stage": "COMMIT",
+    "affected_actors": ["插件使用者", "插件开发与发布责任人", "素材生产与质检责任人"],
+    "contexts": ["开发构建", "生产发布", "远程目录更新", "真实 Figma 任务", "成熟度与成功声明"],
+    "desired_outcomes": ["生产制品不会误用开发资源", "错误目录和素材在影响用户前被拒绝", "每一级产品声明只能由当前证据产生"],
+    "business_goals": ["达到可发布、可维护、可恢复且不夸大成功的产品质量"],
+    "success_signals": ["生产构建门禁能主动拒绝占位配置", "同类回归由自动检查阻断", "发布和成功声明均有版本绑定证据"],
+    "constraints": ["保留用户现有工作区改动", "不把历史或模拟结果冒充当前证据", "正式插件 ID、域名和外部用户数据依赖真实外部输入"],
+    "scope_in": ["构建配置", "运行时目录契约", "资产缓存", "测试与 CI", "无障碍", "发布、运营和成功证据"],
+    "scope_out": ["动态视频样机", "真实 3D 场景", "在没有用户数据时预测市场成功"],
+    "time_window": "从当前开发版本到首次公开发布及首个完整留存观察窗",
+    "decision_owner": "产品与工程责任人"
+  },
+  "evidence": [
+    {
+      "id": "E1",
+      "claim": "2026-10-31 当前开发基线实际执行 36 项测试全部通过且 0 跳过。",
+      "kind": "OBSERVATION",
+      "source_ref": "local-command:pnpm-check",
+      "source_locator": "node --test summary: tests 36, pass 36, fail 0, skipped 0",
+      "source_date": "2026-10-31",
+      "source_content_sha256": "",
+      "supporting_content": "目录检查、语法检查和 36 项测试退出码为 0。",
+      "basis_evidence_ids": [],
+      "limitations": ["本地通过不代表生产构建、跨平台或外部用户成功"]
+    },
+    {
+      "id": "E2",
+      "claim": "原运行时代码把 ACTIVE_CATALOG_URL 固定为 DEVELOPMENT_CATALOG_URL。",
+      "kind": "VERIFIED_FACT",
+      "source_ref": "git-diff:plugin/ui.js",
+      "source_locator": "removed pre-contract constants at original lines 1-5",
+      "source_date": "2026-10-31",
+      "source_content_sha256": "",
+      "supporting_content": "旧实现同时声明开发与生产地址，但活动地址直接等于开发地址。",
+      "basis_evidence_ids": [],
+      "limitations": ["该事实描述合同实施前基线，实施后由差异保留"]
+    },
+    {
+      "id": "E3",
+      "claim": "原测试把占位生产域名作为固定正确值断言。",
+      "kind": "VERIFIED_FACT",
+      "source_ref": "git-diff:tests/plugin.test.mjs",
+      "source_locator": "removed test named plugin uses a fixed production domain and a development-only local catalog",
+      "source_date": "2026-10-31",
+      "source_content_sha256": "",
+      "supporting_content": "测试断言 allowedDomains 为 assets.mockup-studio.example，并未证明真实生产配置。",
+      "basis_evidence_ids": [],
+      "limitations": ["只证明旧门禁方向错误，不证明其他测试无价值"]
+    },
+    {
+      "id": "E4",
+      "claim": "当前正式插件 ID 未提供，生产目录仍使用 .example 占位域名。",
+      "kind": "VERIFIED_FACT",
+      "source_ref": "config/plugin.config.json",
+      "source_locator": "environments.production.pluginId and environments.production.catalogUrl",
+      "source_date": "2026-10-31",
+      "source_content_sha256": "",
+      "supporting_content": "pluginId 为空字符串，catalogUrl 主机名为 assets.mockup-studio.example。",
+      "basis_evidence_ids": [],
+      "limitations": ["外部账号与域名可在后续提供"]
+    },
+    {
+      "id": "E5",
+      "claim": "仓库没有配置 origin 远端，也没有 Windows 真实宿主证据。",
+      "kind": "OBSERVATION",
+      "source_ref": "local-repository-inspection",
+      "source_locator": "git remote -v empty; docs/evidence inventory contains current macOS Figma evidence and no Windows host record",
+      "source_date": "2026-10-31",
+      "source_content_sha256": "",
+      "supporting_content": "远端列表为空；现有证据文件没有 Windows 平台矩阵。",
+      "basis_evidence_ids": [],
+      "limitations": ["仓库外可能存在尚未提供的账号或设备"]
+    }
+  ],
+  "problems": [
+    {
+      "id": "P1",
+      "statement": "当责任人生成或评价发布候选时，开发与生产配置、测试门禁和成熟度证据没有形成同一套默认拒绝契约，导致开发地址泄漏仍可能被测试判为通过，并使产品成熟声明强于证据。",
+      "level": "PRIMARY",
+      "affected_actors": ["插件使用者", "插件开发与发布责任人"],
+      "contexts": ["生产构建", "发布评审", "成熟度声明"],
+      "evidence_links": [
+        {"evidence_id": "E2", "relationship": "SUPPORTS", "reason": "旧活动目录直接绑定开发地址。"},
+        {"evidence_id": "E3", "relationship": "SUPPORTS", "reason": "旧测试把占位域名固化为通过条件。"},
+        {"evidence_id": "E4", "relationship": "SUPPORTS", "reason": "真实生产身份和地址当前仍缺失。"}
+      ],
+      "symptoms": ["36 项测试通过仍不能生成有效生产插件", "本地工程通过容易被误解为可发布或成功"],
+      "cause_hypotheses": [
+        {
+          "id": "C1",
+          "statement": "环境配置、生成物和产品声明缺少一个可机器检查且默认拒绝的共同合同。",
+          "status": "SUPPORTED",
+          "evidence_links": [
+            {"evidence_id": "E2", "relationship": "SUPPORTS", "reason": "活动环境由源码常量而非构建合同决定。"},
+            {"evidence_id": "E3", "relationship": "SUPPORTS", "reason": "测试验证了占位实现而不是生产有效性。"}
+          ],
+          "validation": "注入 localhost、.example、全零 ID、错误环境目录和开发权限；所有生产构建都必须硬失败。"
+        }
+      ],
+      "impacts": {
+        "severity": {"value": "S4", "basis_evidence_ids": ["E2", "E3"]},
+        "reach": {"value": "所有使用该生产制品的用户", "basis_evidence_ids": ["E2"]},
+        "frequency": {"value": "每次使用旧生产构建路径", "basis_evidence_ids": ["E2"]},
+        "persistence": {"value": "直到重新构建并发布", "basis_evidence_ids": ["E2"]},
+        "risk_flags": [],
+        "scope_surfaces": ["构建配置", "插件 manifest", "运行时目录", "测试", "发布声明"]
+      },
+      "priority": {
+        "problem_priority": "CRITICAL",
+        "confidence": "HIGH",
+        "rationale": "错误位于发布主路径，并会使全部下游质量证据失去生产适用性。",
+        "basis_evidence_ids": ["E2", "E3", "E4"],
+        "sequence_dependencies": ["必须先于规模、跨平台和市场验证修复"]
+      }
+    }
+  ],
+  "comparisons": [],
+  "strategies": [
+    {
+      "id": "S1",
+      "name": "单一配置 + 默认拒绝发布 + 分层证据门禁",
+      "problem_ids": ["P1"],
+      "cause_ids": ["C1"],
+      "mechanism": "从唯一配置生成环境制品；运行时拒绝不相容目录；机器合同把开发、发布、成熟和成功声明绑定到递增门禁。",
+      "user_path": "修改唯一事实源 → 生成开发制品 → 自动质量门禁 → 生成隔离生产制品 → 真实宿主与平台门禁 → 发布 → 回滚演练 → 外部用户与留存证据。",
+      "key_states": ["开发配置", "生产配置缺失", "生产构建阻断", "目录不相容", "发布候选", "回滚", "成功证据不足"],
+      "scope_in": ["构建、运行时、测试、发布、运营与声明治理"],
+      "scope_out": ["动态视频样机", "3D 场景", "在无数据时预测市场成功"],
+      "dependencies": ["正式 Figma plugin ID", "真实 HTTPS 目录", "Windows 测试环境", "外部目标用户"],
+      "potential_harms": ["门禁增加发布准备成本", "未准备好的外部依赖会显式阻断发布"],
+      "assumptions": [
+        {"statement": "默认拒绝的生成与门禁能阻止开发配置进入生产制品。", "test": "对每个禁用值进行故障注入并断言生产构建非零退出。"}
+      ],
+      "validation": {
+        "fastest_test": "运行开发检查，并运行预期阻断的 release:check 验证占位域名、缺失 ID、脏工作区、无远端和无标签均被明确拒绝。",
+        "success_signals": ["开发构建继续通过", "生产构建拒绝所有占位和开发输入", "运行时拒绝环境、版本、状态或质检不相容目录"],
+        "guardrail_signals": ["不覆盖用户现有改动", "不降低真实像素测试", "不把工程通过升级为成功产品"],
+        "change_conditions": ["若 Figma 发布模型不允许该生成方式，保留单一事实源并改用等价的不可绕过生成机制"]
+      },
+      "hard_gates": [
+        {
+          "id": "HG1",
+          "type": "FEASIBILITY",
+          "result": "PASS",
+          "rationale": "现有 Node 构建、目录检查和测试体系已在本地实际运行，可承载单一配置和新增门禁。",
+          "evidence_ids": ["E1"],
+          "owner_role": "engineering owner",
+          "unblock_condition": ""
+        }
+      ],
+      "tradeoffs": ["以更严格的外部依赖与证据准备换取生产错误不可静默通过"]
+    }
+  ],
+  "risks": [
+    {
+      "id": "R1",
+      "statement": "真实生产域名和插件 ID 尚未提供，因此工程治理可以继续，但正式发布必然阻断。",
+      "severity": "HIGH",
+      "basis_evidence_ids": ["E4"],
+      "mitigation": "由发布责任人提供真实值，经 catalog:bind 写入唯一配置后重新执行全部生产门禁。",
+      "owner_role": "release owner",
+      "trigger": "尝试生成或声明生产发布候选",
+      "blocking": false
+    },
+    {
+      "id": "R2",
+      "statement": "缺少远端和 Windows 真实宿主证据，当前不能完成跨平台发布闭环。",
+      "severity": "HIGH",
+      "basis_evidence_ids": ["E5"],
+      "mitigation": "建立远端 CI，并在同一发布指纹上完成 Windows Figma Desktop 平台矩阵。",
+      "owner_role": "quality and release owner",
+      "trigger": "进入 PUBLISH_READY 评审",
+      "blocking": false
+    }
+  ],
+  "unknowns": [
+    {
+      "id": "U1",
+      "question": "正式 Figma plugin ID 和生产目录域名是什么？",
+      "decision_impact": "不改变治理策略，但阻止生产制品通过。",
+      "next_action": "发布责任人提供真实 ID 和 HTTPS manifest URL。",
+      "blocking": false
+    },
+    {
+      "id": "U2",
+      "question": "500 项目录和连续切换在目标设备上的预算基线是多少？",
+      "decision_impact": "影响性能预算数值，不改变必须有界加载的方向。",
+      "next_action": "在预算登记后运行 500 项目录、50 次切换和大文件测量。",
+      "blocking": false
+    }
+  ],
+  "recommendation": {
+    "strategy_id": "S1",
+    "reason": "该策略直接修复环境与证据缺少共同合同的最高层原因，同时允许工程工作在外部发布条件缺失时继续推进。",
+    "confidence": "HIGH",
+    "change_conditions": ["若生产发布平台禁止生成 manifest，则必须改用仍保持单一事实源和默认拒绝特性的等价机制"]
+  },
+  "decision_record": {
+    "status": "NOT_LINKED",
+    "outcome": "",
+    "record_ref": "",
+    "actor_ref": "",
+    "actor_role": "",
+    "recorded_at": "",
+    "bound_analysis_sha256": "",
+    "notes": ["用户已在当前对话授权开始实施；本字段未伪造外部组织批准记录。"]
+  },
+  "extensions": {
+    "development_contract_ref": "quality/acceptance-gates.json"
+  }
+}

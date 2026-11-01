@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 3,
+  "assetId": "graphite-laptop-angle",
+  "revision": 3,
+  "status": "approved",
+  "rendererVersion": "2.4.0",
+  "itemSha256": "94642abe7b3500d298f9948520516902f7d56e7fcf70cb5cfd5ad2c2de62dd99",
+  "approvedAt": "2026-10-31T09:56:34.345Z",
+  "patternIds": [
+    "grid",
+    "landscape",
+    "portrait",
+    "edge"
+  ],
+  "automaticChecks": {
+    "schema": true,
+    "renderer": true,
+    "dimensions": true,
+    "recommendedSize": true,
+    "geometry": true,
+    "aperture": true,
+    "completeBase": true,
+    "noChroma": true,
+    "provenance": true,
+    "integrity": true
+  },
+  "apertureMetrics": {
+    "pass": true,
+    "mode": "aperture-mask",
+    "source": "explicit-geometry",
+    "exact": true,
+    "apertureArea": 337261,
+    "canvasArea": 1572864
+  },
+  "completeBaseMetrics": {
+    "pass": true,
+    "mode": "aperture-mask",
+    "detector": "complete-screen-provenance-v2",
+    "sampledPixels": 84316,
+    "greenDominantPixels": 0,
+    "greenDominantRatio": 0,
+    "maximumGreenRatio": 0.85,
+    "presentationMode": "neutral-off",
+    "meanChroma": 4.616300583519142,
+    "maximumNeutralMeanChroma": 20,
+    "presentationPass": true,
+    "resolution": "automatic"
+  },
+  "manualChecks": {
+    "frameFit": true,
+    "perspective": true,
+    "edgeMask": true,
+    "imageQuality": true,
+    "allPatterns": true
+  }
+}

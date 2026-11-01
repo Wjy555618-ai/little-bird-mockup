@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 3,
+  "assetId": "workstation-display-three-quarter",
+  "revision": 2,
+  "status": "approved",
+  "rendererVersion": "2.4.0",
+  "itemSha256": "1f7e99bcd3898b244f6457b3576f3bac28daf8f20eb7ee11bd850368b6637386",
+  "approvedAt": "2026-10-31T05:42:02.953Z",
+  "patternIds": [
+    "grid",
+    "landscape",
+    "portrait",
+    "edge"
+  ],
+  "automaticChecks": {
+    "schema": true,
+    "renderer": true,
+    "dimensions": true,
+    "recommendedSize": true,
+    "geometry": true,
+    "aperture": true,
+    "completeBase": true,
+    "noChroma": true,
+    "provenance": true,
+    "integrity": true
+  },
+  "apertureMetrics": {
+    "pass": true,
+    "mode": "aperture-mask",
+    "source": "explicit-geometry",
+    "exact": true,
+    "apertureArea": 482267.5,
+    "canvasArea": 1572528
+  },
+  "completeBaseMetrics": {
+    "pass": true,
+    "mode": "aperture-mask",
+    "detector": "dominant-green-aperture-v1",
+    "sampledPixels": 120637,
+    "greenDominantPixels": 0,
+    "greenDominantRatio": 0,
+    "maximumGreenRatio": 0.85,
+    "resolution": "automatic"
+  },
+  "manualChecks": {
+    "frameFit": true,
+    "perspective": true,
+    "edgeMask": true,
+    "imageQuality": true,
+    "allPatterns": true
+  }
+}

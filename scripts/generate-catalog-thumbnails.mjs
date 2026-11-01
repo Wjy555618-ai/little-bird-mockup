@@ -34,7 +34,7 @@ function thumbnailPage(environment, assetId) {
     const composite=document.createElement('canvas');
     composite.width=asset.canvas.width;
     composite.height=asset.canvas.height;
-    window.MockupRenderer.renderComposite({canvas:composite,asset,baseImage,designImage:window.MockupRenderer.createDefaultDesign(asset),fit:'cover',adjustments:window.MockupRenderer.DEFAULT_ADJUSTMENTS,quad:asset.screen.quad});
+    window.MockupRenderer.renderComposite({canvas:composite,asset,baseImage,designImage:null,fit:'cover',adjustments:window.MockupRenderer.DEFAULT_ADJUSTMENTS,quad:asset.screen.quad});
     const output=document.getElementById('output');const context=output.getContext('2d');
     context.fillStyle='#181818';context.fillRect(0,0,output.width,output.height);
     const scale=Math.min(output.width/composite.width,output.height/composite.height);

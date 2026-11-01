@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "EVD-AP-015",
+  "capturedAt": "2026-10-31T15:22:14+08:00",
+  "scope": "current-revision recheck of candidate creation, rights enforcement, immutable approvals, recoverable promotion, single-use request enforcement, quarantine preservation, active catalog integrity, and zero-chroma policy",
+  "sealedImplementationRevision": "tree:sha256:6a332b5157beaf93dd2f71a8adcc40816f7fc3c4c88ae19d0ef4df434d026083",
+  "approvedBuildFingerprint": "sha256:7a1f6a433825268457b6786d0494937359a47dd0774e968109d11a8df5dc47b0",
+  "executedChecks": {
+    "workflowTests": {
+      "command": "node --test tests/asset-pipeline.test.mjs tests/asset-pipeline-contract.test.mjs",
+      "passed": 6,
+      "failed": 0,
+      "result": "pass",
+      "coveredBehaviors": [
+        "approved fail-closed local policy",
+        "rejection of external deployment permission and source drift",
+        "atomic classified revisioned candidate import",
+        "human-bound visual and release approvals with atomic recoverable promotion",
+        "human decision required for high-green-ratio candidates",
+        "traceable quarantine of an unauthorized candidate"
+      ]
+    },
+    "assetPipelineInspection": {
+      "command": "node scripts/asset-pipeline.mjs check",
+      "result": "pass",
+      "workflowState": "WAITING_FOR_USER_INPUT",
+      "authorizedRequestCount": 0,
+      "nextAction": "等待决定人提供新参考截图并明确要求制作一个候选",
+      "promotedAssetCount": 5,
+      "rejectedUnauthorizedAsset": "limestone-ultrawide-front r1"
+    },
+    "testingCatalog": {
+      "command": "node scripts/catalog-release.mjs --check --library testing",
+      "result": "pass",
+      "version": "2026.10.31.4",
+      "itemCount": 5,
+      "manifestSha256": "e2770fd4d0cdd20943a64dfa1e82e5b04a90194e7692766beafd0e3be6d51870"
+    },
+    "productionCatalog": {
+      "command": "node scripts/catalog-release.mjs --check --library production",
+      "result": "pass",
+      "version": "2026.10.31.4",
+      "itemCount": 5,
+      "manifestSha256": "c8e53f7730c64398e26f01aeb933502b2b59796971971c31119a5f3af21f6712"
+    },
+    "zeroChroma": {
+      "command": "node scripts/verify-no-chroma.mjs",
+      "result": "pass",
+      "activeItemsChecked": 10,
+      "catalogSchemaVersion": 5,
+      "rendererVersion": "2.4.0"
+    },
+    "rollbackInventory": {
+      "command": "node scripts/verify-catalog-history.mjs",
+      "result": "pass",
+      "currentVersion": "2026.10.31.4"
+    }
+  },
+  "scenarioCoverage": [
+    {
+      "scenarioIds": ["SCN-001", "SCN-002"],
+      "observation": "The real-file fixture records reference digest and rights mode on a valid import; missing or incompatible rights and reference reuse fail before catalog mutation."
+    },
+    {
+      "scenarioIds": ["SCN-003", "SCN-004"],
+      "observation": "The real-file fixture produces deterministic id, revision, dimensions, thumbnail, category, tags and file digests; invalid categories, identifiers and immutable-path conflicts are rejected."
+    },
+    {
+      "scenarioIds": ["SCN-005", "SCN-006"],
+      "observation": "Visual approval is bound to the exact candidate digest and human actor; a changed or mismatched digest cannot advance the state."
+    },
+    {
+      "scenarioIds": ["SCN-007", "SCN-008"],
+      "observation": "Release approval requires current technical QA plus the exact item and QA digests; missing or stale evidence fails without changing production."
+    },
+    {
+      "scenarioIds": ["SCN-009", "SCN-010"],
+      "observation": "Promotion verifies both approvals, snapshots the old catalog, copies immutable files, verifies bytes and atomically updates the manifest; conflict injection leaves the old catalog usable and supports a safe retry."
+    },
+    {
+      "scenarioIds": ["SCN-014", "SCN-015"],
+      "observation": "All ten active catalog entries pass the zero-chroma schema and image gate; a high-green candidate remains blocked for a digest-bound human decision and cannot be treated as approved automatically."
+    },
+    {
+      "scenarioIds": ["SCN-020", "SCN-021", "SCN-022"],
+      "observation": "A single-use human request binds the reference digest and one candidate; missing, consumed or mismatched authorization fails before writes; the historical unauthorized candidate remains rejected in a digest-preserving quarantine."
+    }
+  ],
+  "quarantineIntegrity": {
+    "assetId": "limestone-ultrawide-front",
+    "revision": 1,
+    "activeTestingReferenceRemoved": true,
+    "files": [
+      {
+        "path": "catalog/workflow/quarantine/limestone-ultrawide-front-r1/base-limestone-ultrawide-front-r1.png",
+        "sha256": "d3c83d5694d356d4891117a373a1358f42684b94479ff6a873040ede5d2422a9"
+      },
+      {
+        "path": "catalog/workflow/quarantine/limestone-ultrawide-front-r1/thumbnail-limestone-ultrawide-front-r1.png",
+        "sha256": "d9af1c7fe536b33703d6117c88f35145166f3326549ce008661904e1cad0e5a0"
+      },
+      {
+        "path": "catalog/workflow/quarantine/limestone-ultrawide-front-r1/reference-limestone-ultrawide-front-r1.png",
+        "sha256": "c4fe5874e03c7ea5171f3db51aec6d3e0d4f9de46ded32b036439298a5e75724"
+      }
+    ]
+  },
+  "boundaries": {
+    "newCandidateCreated": false,
+    "activeCatalogModified": false,
+    "productionCatalogModified": false,
+    "externalPublicationPerformed": false,
+    "claim": "This evidence refreshes the L1 machine-verifiable workflow correction against the current sealed implementation. It is not human semantic review, user research, or final product acceptance."
+  }
+}

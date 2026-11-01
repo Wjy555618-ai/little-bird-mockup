@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 5,
+  "catalogVersion": "2026.10.31.3",
+  "publishedAt": "2026-10-31T05:03:00.805Z",
+  "environment": "production",
+  "rendererVersion": "2.4.0",
+  "minimumPluginVersion": "0.1.0",
+  "categories": [
+    {
+      "id": "display",
+      "label": "显示器"
+    },
+    {
+      "id": "phone",
+      "label": "手机"
+    },
+    {
+      "id": "laptop",
+      "label": "笔记本"
+    }
+  ],
+  "items": []
+}

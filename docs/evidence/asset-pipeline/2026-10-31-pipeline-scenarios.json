@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "EVD-AP-002",
+  "createdAt": "2026-10-31T12:20:04+08:00",
+  "producer": "node --test tests/asset-pipeline-contract.test.mjs tests/asset-pipeline.test.mjs",
+  "result": "pass",
+  "implementationRevision": "tree:sha256:66a73f7a7cd49e5fbcffd891023ae0c76bef54905c27fbe41d16339ca3f73411",
+  "approvedBuildFingerprint": "sha256:c17fbbfc01e8b6b42898735458f1ca14c7bd618a7c149b8e5fbcfbfcff85b13a",
+  "tests": { "total": 4, "passed": 4, "failed": 0 },
+  "observedScenarios": [
+    {
+      "scenarioIds": ["SCN-001", "SCN-003"],
+      "result": "pass",
+      "observation": "A real PNG fixture produced a candidate with controlled phone classification, revision 1, measured 320x240 canvas, generated thumbnail, immutable revisioned files and byte-matching SHA-256 values; a changed candidate became revision 2."
+    },
+    {
+      "scenarioIds": ["SCN-002", "SCN-004"],
+      "result": "pass",
+      "observation": "Missing rights, unknown category, reference-only byte reuse, invalid explicit asset ID, damaged PNG and an immutable-path byte conflict were rejected. Testing manifest and workflow state remained byte-identical and the conflicting existing file was not overwritten."
+    },
+    {
+      "scenarioIds": ["SCN-005", "SCN-006", "SCN-007", "SCN-008"],
+      "result": "pass",
+      "observation": "Visual and release approvals rejected missing human confirmation and wrong hashes. Valid records bound the exact asset, revision, candidate or item digest and current QA report digest. A modified item made QA stale and blocked promotion."
+    },
+    {
+      "scenarioIds": ["SCN-009", "SCN-010"],
+      "result": "pass",
+      "observation": "A production immutable-path conflict failed before manifest commit and left the old production manifest byte-identical. After removing the conflict, promotion copied the asset, QA and release records, incremented the catalog version and reported PROMOTED."
+    },
+    {
+      "scenarioIds": ["SCN-012", "SCN-013"],
+      "result": "pass",
+      "observation": "Status inspection detects digest drift as BLOCKED, and contract verification rejects an externally publishable policy or any frozen source digest drift."
+    }
+  ],
+  "limitations": [
+    "Fixtures exercise real local files and catalogs but are not a user-approved final mockup.",
+    "SCN-011 requires a separate new-conversation recovery observation before acceptance."
+  ]
+}

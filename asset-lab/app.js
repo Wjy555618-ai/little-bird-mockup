@@ -19,8 +19,10 @@ const state = {
   pattern: "grid",
   visitedPatterns: new Set(["grid"]),
   automaticChecks: {},
-  seamMetrics: null,
+  apertureMetrics: null,
+  completeBaseMetrics: null,
   approvedIds: new Set(),
+  workflowById: new Map(),
   draggingCorner: null
 };
 
@@ -118,6 +120,59 @@ function quadInside(asset, quad) {
   return Array.isArray(quad) && quad.length === 4 && quad.every(([x, y]) => Number.isFinite(x) && Number.isFinite(y) && x >= 0 && y >= 0 && x <= asset.canvas.width && y <= asset.canvas.height);
 }
 
+function pointInPolygon(x, y, polygon) {
+  let inside = false;
+  for (let index = 0, previous = polygon.length - 1; index < polygon.length; previous = index, index += 1) {
+    const [x1, y1] = polygon[index];
+    const [x2, y2] = polygon[previous];
+    if ((y1 > y) !== (y2 > y) && x < ((x2 - x1) * (y - y1)) / (y2 - y1) + x1) inside = !inside;
+  }
+  return inside;
+}
+
+function analyzeCompleteBase(asset, image) {
+  const canvas = document.createElement("canvas");
+  canvas.width = asset.canvas.width;
+  canvas.height = asset.canvas.height;
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+  const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+  let sampledPixels = 0;
+  let greenDominantPixels = 0;
+  let chromaSum = 0;
+  for (let y = 0; y < canvas.height; y += 2) {
+    for (let x = 0; x < canvas.width; x += 2) {
+      if (!pointInPolygon(x + 0.5, y + 0.5, asset.screen.aperture.quad)) continue;
+      const offset = (y * canvas.width + x) * 4;
+      const red = pixels[offset];
+      const green = pixels[offset + 1];
+      const blue = pixels[offset + 2];
+      sampledPixels += 1;
+      chromaSum += Math.max(red, green, blue) - Math.min(red, green, blue);
+      if (green >= 80 && green - red >= 30 && green - blue >= 30) greenDominantPixels += 1;
+    }
+  }
+  const maximumGreenRatio = 0.85;
+  const maximumNeutralMeanChroma = 20;
+  const greenDominantRatio = sampledPixels ? greenDominantPixels / sampledPixels : 1;
+  const meanChroma = sampledPixels ? chromaSum / sampledPixels : 255;
+  const presentationMode = asset.screen.presentation.mode;
+  const presentationPass = presentationMode === "reference-bound" || meanChroma <= maximumNeutralMeanChroma;
+  return {
+    pass: sampledPixels > 0 && greenDominantRatio < maximumGreenRatio && presentationPass,
+    mode: "aperture-mask",
+    detector: "complete-screen-provenance-v2",
+    sampledPixels,
+    greenDominantPixels,
+    greenDominantRatio,
+    maximumGreenRatio,
+    presentationMode,
+    meanChroma,
+    maximumNeutralMeanChroma,
+    presentationPass
+  };
+}
+
 async function runAutomaticChecks() {
   const asset = state.selected;
   const checks = {
@@ -127,7 +182,8 @@ async function runAutomaticChecks() {
     recommendedSize: false,
     geometry: false,
     aperture: false,
-    seam: false,
+    completeBase: false,
+    noChroma: false,
     provenance: false,
     integrity: false
   };
@@ -141,11 +197,25 @@ async function runAutomaticChecks() {
     && asset.screen.aperture.cornerRadii.length === 4
     && asset.screen.aperture.cornerRadii.every((radius) => Number.isFinite(radius) && radius >= 0 && radius <= 0.49);
   try {
-    state.seamMetrics = renderer.screenCoverageMetrics(state.baseImage, asset);
-    checks.seam = state.seamMetrics.pass === true;
+    state.apertureMetrics = renderer.screenApertureMetrics(asset);
+    checks.aperture = checks.aperture && state.apertureMetrics.pass === true;
+    state.completeBaseMetrics = analyzeCompleteBase(asset, state.baseImage);
+    const pendingFinalNaturalGreenDecision = state.completeBaseMetrics.presentationPass === true;
+    checks.completeBase = state.completeBaseMetrics.pass === true || pendingFinalNaturalGreenDecision;
+    state.completeBaseMetrics.resolution = state.completeBaseMetrics.pass
+      ? "automatic"
+      : pendingFinalNaturalGreenDecision ? "final-batch-decision-required" : "unresolved";
+    checks.noChroma = asset.renderer === "static-screen-v5"
+      && asset.screen?.compositing?.mode === "aperture-mask"
+      && !Object.hasOwn(asset, "chromaKey")
+      && !Object.hasOwn(asset.screen || {}, "underlap")
+      && !Object.hasOwn(asset.screen || {}, "bleed")
+      && !Object.hasOwn(asset.screen?.compositing || {}, "maxEdgeExtension");
   } catch {
-    state.seamMetrics = null;
-    checks.seam = false;
+    state.apertureMetrics = null;
+    state.completeBaseMetrics = null;
+    checks.completeBase = false;
+    checks.noChroma = false;
   }
   checks.provenance = asset.provenance?.kind === "generated-in-house";
   try {
@@ -163,7 +233,8 @@ const checkLabels = {
   recommendedSize: "推荐画面尺寸与比例已填写",
   geometry: "四个屏幕顶点均在画布内",
   aperture: "可见孔径与四角曲率独立且有效",
-  seam: "接缝软边覆盖完整且未越过安全上限",
+  completeBase: "底图是完整样机（自然绿色歧义统一留到最终批次决定）",
+  noChroma: "schema 与运行时均无色键或绿幕兼容字段",
   provenance: "素材来源标记为项目自制",
   integrity: "基础图与缩略图哈希正确"
 };
@@ -176,8 +247,8 @@ function renderChecks() {
   for (const [key, label] of entries) {
     const row = document.createElement("div");
     row.className = `check-row${state.automaticChecks[key] ? " pass" : ""}`;
-    const detail = key === "seam" && state.seamMetrics
-      ? ` · 外延 ${state.seamMetrics.maxEdgeExtension}/${state.seamMetrics.edgeExtensionLimit}px · 截断率 ${(state.seamMetrics.truncatedEdgeRatio * 100).toFixed(2)}%`
+    const detail = key === "completeBase" && state.completeBaseMetrics
+      ? ` · 孔径内优势绿色 ${(state.completeBaseMetrics.greenDominantRatio * 100).toFixed(2)}% / 上限 ${(state.completeBaseMetrics.maximumGreenRatio * 100).toFixed(0)}% · ${state.completeBaseMetrics.resolution === "final-batch-decision-required" ? "最终批次消歧" : state.completeBaseMetrics.resolution === "automatic" ? "自动通过" : "未通过"}`
       : "";
     row.innerHTML = `<i>${state.automaticChecks[key] ? "✓" : "·"}</i><span>${label}${detail}</span>`;
     elements.automaticChecks.appendChild(row);
@@ -204,13 +275,22 @@ function manualValues() {
 
 function updateApprovalState() {
   if (!state.selected) return;
+  const workflow = state.workflowById.get(state.selected.id);
+  const qaAllowed = !workflow || ["TESTING", "QA_PASSED"].includes(workflow.state);
   const automaticPass = Object.keys(checkLabels).every((key) => state.automaticChecks[key]);
   const patternsPass = REQUIRED_PATTERNS.every((id) => state.visitedPatterns.has(id));
   const manualPass = Object.values(manualValues()).every(Boolean);
-  const ready = automaticPass && patternsPass && manualPass;
+  const ready = qaAllowed && automaticPass && patternsPass && manualPass;
   elements.approveButton.disabled = !ready;
-  elements.approvalTitle.textContent = state.approvedIds.has(state.selected.id) ? "当前版本已批准" : ready ? "已达到发布条件" : "尚未达到发布条件";
-  elements.approvalHint.textContent = ready ? "批准后仍需通过发布脚本复制到正式库" : "先完成自动检查、四种测试图和人工验收";
+  if (!qaAllowed) {
+    elements.approvalTitle.textContent = "当前状态不可记录技术 QA";
+    elements.approvalHint.textContent = "请检查候选是否已进入 TESTING，或是否已完成最终决定";
+    return;
+  }
+  elements.approvalTitle.textContent = state.approvedIds.has(state.selected.id) ? "当前版本技术 QA 已通过" : ready ? "已达到技术 QA 条件" : "尚未达到技术 QA 条件";
+  elements.approvalHint.textContent = ready
+    ? "记录后系统会把该样机纳入唯一一次最终审阅批次"
+    : "先完成十项自动检查、四种测试图和五项人工验收";
 }
 
 function updateGeometryEditor() {
@@ -257,7 +337,21 @@ function renderAssetList() {
     button.className = `asset-card${state.selected?.id === asset.id ? " active" : ""}`;
     button.type = "button";
     button.dataset.assetId = asset.id;
-    button.innerHTML = `<img src="${resolveAsset(asset.thumbnail)}" alt=""><div><strong>${asset.name}</strong><span>${asset.canvas.width} × ${asset.canvas.height}</span><em>${state.approvedIds.has(asset.id) ? "已批准" : "待质检"}</em></div>`;
+    const workflow = state.workflowById.get(asset.id);
+    const workflowLabel = workflow?.state === "BLOCKED"
+      ? "状态阻塞"
+      : workflow?.state === "CANDIDATE_READY"
+        ? "正在进入技术 QA"
+      : workflow?.state === "FINAL_APPROVED"
+        ? "最终批次已通过"
+        : workflow?.state === "QA_PASSED"
+          ? "技术 QA 已通过 · 待最终批次"
+          : workflow?.state === "TESTING"
+            ? "待技术 QA"
+            : state.approvedIds.has(asset.id)
+              ? "旧素材技术 QA 已通过"
+              : workflow?.state || "旧素材待回归质检";
+    button.innerHTML = `<img src="${resolveAsset(asset.thumbnail)}" alt=""><div><strong>${asset.name}</strong><span>${asset.canvas.width} × ${asset.canvas.height}</span><em>${workflowLabel}</em></div>`;
     button.addEventListener("click", () => selectAsset(asset.id));
     elements.assetList.appendChild(button);
   }
@@ -271,12 +365,15 @@ async function selectAsset(id) {
   state.apertureQuad = asset.screen.aperture.quad.map((point) => [...point]);
   state.visitedPatterns = new Set([state.pattern]);
   state.automaticChecks = {};
-  state.seamMetrics = null;
+  state.apertureMetrics = null;
+  state.completeBaseMetrics = null;
   for (const input of document.querySelectorAll("[data-manual]")) input.checked = false;
   elements.assetName.textContent = asset.name;
   elements.assetMeta.textContent = `${asset.id} · r${asset.revision} · ${asset.renderer}`;
   elements.previewCanvas.width = asset.canvas.width;
   elements.previewCanvas.height = asset.canvas.height;
+  const workflow = state.workflowById.get(asset.id);
+  elements.saveGeometryButton.disabled = Boolean(workflow && !["TESTING", "QA_PASSED"].includes(workflow.state));
   renderAssetList();
   renderPatternVisits();
   renderChecks();
@@ -295,15 +392,20 @@ async function loadCatalog() {
   elements.libraryState.className = "status-dot";
   elements.libraryState.textContent = "正在连接测试库";
   try {
-    const [manifestResponse, approvalsResponse] = await Promise.all([
+    const [manifestResponse, approvalsResponse, workflowResponse] = await Promise.all([
       fetch(MANIFEST_URL, { cache: "no-store" }),
-      fetch("/api/lab/approvals", { cache: "no-store" })
+      fetch("/api/lab/approvals", { cache: "no-store" }),
+      fetch("/api/lab/workflow", { cache: "no-store" })
     ]);
     if (!manifestResponse.ok) throw new Error(`测试库返回 ${manifestResponse.status}`);
     state.manifest = await manifestResponse.json();
     if (approvalsResponse.ok) {
       const data = await approvalsResponse.json();
       state.approvedIds = new Set(data.approvals.filter((item) => item.current).map((item) => item.assetId));
+    }
+    if (workflowResponse.ok) {
+      const data = await workflowResponse.json();
+      state.workflowById = new Map((data.assets || []).map((item) => [item.assetId, item]));
     }
     elements.catalogVersion.textContent = state.manifest.catalogVersion;
     elements.assetCount.textContent = String(state.manifest.items.length);
@@ -385,7 +487,7 @@ elements.approveButton.addEventListener("click", async () => {
       quad: state.quad,
       apertureQuad: state.apertureQuad,
       automaticChecks: state.automaticChecks,
-      seamMetrics: state.seamMetrics,
+      apertureMetrics: state.apertureMetrics,
       manualChecks: manualValues(),
       patternIds: [...state.visitedPatterns]
     })
@@ -393,9 +495,10 @@ elements.approveButton.addEventListener("click", async () => {
   const data = await response.json().catch(() => ({}));
   if (!response.ok) { toast(data.error || "批准失败"); return; }
   state.approvedIds.add(state.selected.id);
+  if (data.workflow) state.workflowById.set(state.selected.id, data.workflow);
   renderAssetList();
   updateApprovalState();
-  toast("质检通过，可运行发布脚本进入正式库");
+  toast("技术 QA 已记录；系统将纳入唯一一次最终审阅批次");
 });
 
 elements.reloadButton.addEventListener("click", loadCatalog);

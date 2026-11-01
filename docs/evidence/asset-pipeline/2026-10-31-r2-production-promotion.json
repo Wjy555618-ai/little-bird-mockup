@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "EVD-AP-009",
+  "createdAt": "2026-10-31T13:47:39+08:00",
+  "buildFingerprint": "sha256:c19896566bfe475753cc3e99b3743a4b88ad4582fbd9d212040966de462102e3",
+  "implementationRevision": "tree:sha256:dde314c870ba2ff34b230d93e2699750542be1b38f8d83d762fd5fce62e91038",
+  "result": "pass",
+  "claim": "五个零绿幕 r2 在独立人类正式批准后原子提升到本地 production 2026.10.31.4，并通过插件共享目录合同、HTTP 字节完整性、回滚快照和全量门禁。",
+  "decisionMaker": "Wang Zhentao",
+  "catalog": {
+    "environment": "production",
+    "schemaVersion": 5,
+    "rendererVersion": "2.4.0",
+    "catalogVersion": "2026.10.31.4",
+    "itemCount": 5,
+    "manifestSha256": "c8e53f7730c64398e26f01aeb933502b2b59796971971c31119a5f3af21f6712",
+    "rollbackSnapshotSha256": "c8e53f7730c64398e26f01aeb933502b2b59796971971c31119a5f3af21f6712"
+  },
+  "runtimeVerification": {
+    "validator": "shared/catalog-contract.js",
+    "expectedEnvironment": "production",
+    "validatedItems": 5,
+    "requiredStatus": "approved",
+    "releaseActor": "Wang Zhentao",
+    "httpManifestStatus": 200,
+    "httpAssetResponsesChecked": 10,
+    "allHttpAssetDigestsMatch": true
+  },
+  "assets": [
+    {
+      "assetId": "studio-display-front",
+      "revision": 2,
+      "itemSha256": "7bf02d442d92b29e225ff957541868eb5eadebfe5c512c291e258c376d92eb95",
+      "qaReportSha256": "05f067f35975359e33d0327675c95f6294c0c538b1e27df22faedac6ee5123d1",
+      "releaseApprovalSha256": "9b392abb1e376c78e2f1e19ec90239c78a1779cc44a764585ba9336d7867023b",
+      "state": "PROMOTED"
+    },
+    {
+      "assetId": "rock-phone-front",
+      "revision": 2,
+      "itemSha256": "648ed4ba2e72b4a4c27dbc064dc3a0849efe65a45fc9558469ecdbf35e551b47",
+      "qaReportSha256": "fd522405d2ad14975cae11c00825f4cc0849adc25f432fcb689459cc90516ecc",
+      "releaseApprovalSha256": "6327498568038a0f1f18c15001dfa32ae6eba4841c66f5da2064fa40f4c37f11",
+      "state": "PROMOTED"
+    },
+    {
+      "assetId": "rail-phone-angle",
+      "revision": 2,
+      "itemSha256": "d664c06eec9f7376e141c7b3e3f03d290815c7a5b58c42263af56afef97d8852",
+      "qaReportSha256": "eb91d21efe41d1d4f7c54813df05c0acf0bc26df378a530f2adfe545032a4c0a",
+      "releaseApprovalSha256": "17faaa15a951992269f3e7b91a7c06c3009d785fdfd69aac043d49ff4aec3fc9",
+      "state": "PROMOTED"
+    },
+    {
+      "assetId": "graphite-laptop-angle",
+      "revision": 2,
+      "itemSha256": "47202fb1ce4db5b83c9b7ceb162340a1ff5d53fa0f2033f3a8f36a8db79048ca",
+      "qaReportSha256": "b97e47a6470abc94505e7d1c9e543cda775267e44c95aa3f66821de2b50dd752",
+      "releaseApprovalSha256": "294d1769dd816a8a6c16566ebe69ae354ad00feef426ab7b41a9151b38d03fa5",
+      "state": "PROMOTED"
+    },
+    {
+      "assetId": "workstation-display-three-quarter",
+      "revision": 2,
+      "itemSha256": "1f7e99bcd3898b244f6457b3576f3bac28daf8f20eb7ee11bd850368b6637386",
+      "qaReportSha256": "32a50f254e757246419f675f6b4c07285d3bbd9a7e34fe03246f2d71d79811d8",
+      "releaseApprovalSha256": "2a7661fec315b97125c5685358c55c181e1831d5a9185587e76efc46a7374725",
+      "state": "PROMOTED"
+    }
+  ],
+  "commands": [
+    { "command": "pnpm catalog:promote -- --all", "exitCode": 0, "promoted": 5 },
+    { "command": "pnpm asset:check", "exitCode": 0, "issues": 0 },
+    { "command": "pnpm catalog:check", "exitCode": 0, "items": 5 },
+    { "command": "pnpm no-chroma:check", "exitCode": 0, "activeItems": 10 },
+    { "command": "pnpm check", "exitCode": 0, "testsPassed": 96, "testsFailed": 0 }
+  ],
+  "limitations": [
+    "This proves the local production catalog and local plugin catalog contract only.",
+    "The configured production host remains intentionally unset and no public deployment occurred.",
+    "TASK-010 now has one brand-new non-migration candidate at CANDIDATE_READY and still requires human visual approval, QA, release approval and promotion."
+  ]
+}

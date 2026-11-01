@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "EVD-AP-010",
+  "createdAt": "2026-10-31T13:54:00+08:00",
+  "buildFingerprint": "sha256:c19896566bfe475753cc3e99b3743a4b88ad4582fbd9d212040966de462102e3",
+  "implementationRevision": "tree:sha256:dde314c870ba2ff34b230d93e2699750542be1b38f8d83d762fd5fce62e91038",
+  "result": "pass",
+  "claim": "一个全新非迁移完整样机已从 owned 参考记录经 built-in imagegen 制作并由流水线原子导入，自动生成 r1、缩略图、分类、尺寸和摘要，真实质检台显示 10/10 且在视觉批准前锁定技术 QA。",
+  "asset": {
+    "assetId": "limestone-ultrawide-front",
+    "revision": 1,
+    "name": "石灰岩超宽显示器 · 正面",
+    "category": "display",
+    "canvas": { "width": 1536, "height": 1024 },
+    "candidateSha256": "d3c83d5694d356d4891117a373a1358f42684b94479ff6a873040ede5d2422a9",
+    "thumbnailSha256": "d9af1c7fe536b33703d6117c88f35145166f3326549ce008661904e1cad0e5a0",
+    "referenceSha256": "c4fe5874e03c7ea5171f3db51aec6d3e0d4f9de46ded32b036439298a5e75724",
+    "itemSha256": "8756fc1ad13a546b1cc1298584467d3217a4c33eb795c5443a286d5765878eaf",
+    "rightsMode": "owned",
+    "state": "CANDIDATE_READY"
+  },
+  "generation": {
+    "tool": "built-in imagegen",
+    "mode": "reference-guided new generation",
+    "referenceRole": "industrial-quality and material reference only",
+    "output": "brand-new single ultrawide monitor in a bright limestone studio with a fully baked navy, blue, indigo, violet and cyan interface",
+    "forbiddenElements": ["green screen", "chroma key", "placeholder panel", "blank screen", "calibration grid", "screen replacement markers"]
+  },
+  "verification": {
+    "automaticChecks": "10/10",
+    "dominantGreenRatio": 0,
+    "completeBaseResolution": "automatic",
+    "technicalQaLockedBeforeVisualApproval": true,
+    "testingCatalogVersion": "2026.10.31.3",
+    "testingCatalogItems": 6,
+    "productionCatalogVersion": "2026.10.31.4",
+    "productionCatalogItems": 5,
+    "activeItemsNoChromaChecked": 11,
+    "fullTestsPassed": 96,
+    "fullTestsFailed": 0
+  },
+  "limitations": [
+    "This evidence proves candidate creation and deterministic import, not human visual approval.",
+    "The candidate cannot enter technical QA or production until Wang Zhentao approves the exact candidateSha256.",
+    "No external deployment occurred."
+  ]
+}

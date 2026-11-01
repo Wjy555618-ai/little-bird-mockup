@@ -1,17 +1,34 @@
-const PLUGIN_VERSION = "0.1.0";
-const DEVELOPMENT_CATALOG_URL = "http://localhost:4173/catalog/testing/v1/manifest.json";
-const PRODUCTION_CATALOG_URL = "https://assets.mockup-studio.example/v1/manifest.json";
-const ACTIVE_CATALOG_URL = DEVELOPMENT_CATALOG_URL;
+const PLUGIN_VERSION = "__PLUGIN_VERSION__";
+const BUILD_FINGERPRINT = "__BUILD_FINGERPRINT__";
+const BUILD_MODE = "__BUILD_MODE__";
+const ACTIVE_CATALOG_URL = "__CATALOG_URL__";
+const EXPECTED_CATALOG_ENVIRONMENT = "__CATALOG_ENVIRONMENT__";
+const EXPECTED_CATALOG_SCHEMA_VERSION = __CATALOG_SCHEMA_VERSION__;
+const EXPECTED_RENDERER_VERSION = "__RENDERER_VERSION__";
+const MAX_OFFLINE_CATALOG_AGE_MS = __MAX_OFFLINE_AGE_HOURS__ * 60 * 60 * 1000;
+const MAX_CATALOG_ITEMS = __MAX_CATALOG_ITEMS__;
+const MAX_CATALOG_MANIFEST_BYTES = __MAX_CATALOG_MANIFEST_BYTES__;
+const MAX_CATALOG_ASSET_BYTES = __MAX_CATALOG_ASSET_BYTES__;
+const MAX_LOCAL_FILE_BYTES = __MAX_LOCAL_FILE_BYTES__;
+document.documentElement.dataset.buildFingerprint = BUILD_FINGERPRINT;
+document.documentElement.dataset.pluginVersion = PLUGIN_VERSION;
 const renderer = window.MockupRenderer;
+const catalogContract = window.MockupCatalogContract;
+const resourceLimits = window.MockupResourceLimits;
+const boundedResponse = window.MockupBoundedResponse;
+const assetCardHover = window.MockupAssetCardHover;
+const userErrors = window.MockupUserErrors;
+const USER_ERROR_CODES = userErrors.CODES;
 const pdfjs = window.pdfjsLib;
-const CATALOG_CACHE_KEY = "mockup-studio-catalog-v4";
+const CATALOG_CACHE_KEY = "__CATALOG_CACHE_KEY__";
 const RECENT_KEY = "mockup-studio-recent-v1";
-const CONTENT_BLUR_ENTER_MS = 280;
-const MIN_CONTENT_BLUR_MS = 380;
-const CONTENT_REVEAL_MS = 320;
+const CONTENT_TRANSITION_MS = 280;
+const STAGE_VIEW_MOTION_MS = 360;
 const MAX_PREVIEW_RENDER_SCALE = 2;
 const HIGH_RES_PREVIEW_ZOOM = 1.4;
 const PREVIEW_RESOLUTION_SETTLE_MS = 140;
+const CONTENT_DOUBLE_CLICK_MS = 480;
+const CONTENT_DOUBLE_CLICK_DISTANCE = 8;
 const memoryStorage = new Map();
 const catalogImageCache = new Map();
 
@@ -48,7 +65,6 @@ const safeStorage = {
 };
 
 const elements = {
-  versionLabel: document.querySelector("#versionLabel"),
   catalogState: document.querySelector("#catalogState"),
   refreshButton: document.querySelector("#refreshButton"),
   searchInput: document.querySelector("#searchInput"),
@@ -60,6 +76,7 @@ const elements = {
   categoryLabel: document.querySelector("#categoryLabel"),
   categoryMenu: document.querySelector("#categoryMenu"),
   catalogCount: document.querySelector("#catalogCount"),
+  locateCurrentAsset: document.querySelector("#locateCurrentAsset"),
   catalogView: document.querySelector("#catalogView"),
   adjustPanel: document.querySelector("#adjustPanel"),
   adjustControls: document.querySelector("#adjustControls"),
@@ -98,6 +115,7 @@ const elements = {
   stage: document.querySelector("#stage"),
   canvasWrap: document.querySelector("#canvasWrap"),
   previewCanvas: document.querySelector("#previewCanvas"),
+  contentTransitionCanvas: document.querySelector("#contentTransitionCanvas"),
   screenCta: document.querySelector("#screenCta"),
   renderingBadge: document.querySelector("#renderingBadge"),
   assetName: document.querySelector("#assetName"),
@@ -129,6 +147,7 @@ const elements = {
   clearRecent: document.querySelector("#clearRecent"),
   collapseButton: document.querySelector("#collapseButton"),
   expandButton: document.querySelector("#expandButton"),
+  appShell: document.querySelector("#appShell"),
   collapsedBar: document.querySelector("#collapsedBar"),
   resizeGrip: document.querySelector("#resizeGrip"),
   toast: document.querySelector("#toast")
@@ -159,6 +178,7 @@ const state = {
   cropHistoryDepth: 0,
   rendering: false,
   pluginCatalogCache: null,
+  locatedAssetId: null,
   customQuad: null,
   contentFrame: null,
   imageFrame: null,
@@ -184,7 +204,8 @@ function editorSnapshot() {
     designImage: state.designImage,
     designObjectUrl: state.designObjectUrl,
     designName: state.designName,
-    designSource: state.designSource ? { ...state.designSource } : null
+    designSource: state.designSource ? { ...state.designSource } : null,
+    designSelected: state.designSelected
   };
 }
 
@@ -197,7 +218,8 @@ function snapshotSignature(snapshot) {
     imageFrame: snapshot.imageFrame,
     fit: snapshot.fit,
     designName: snapshot.designName,
-    designSource: snapshot.designSource
+    designSource: snapshot.designSource,
+    designSelected: snapshot.designSelected
   });
 }
 
@@ -222,11 +244,11 @@ function restoreEditorSnapshot(snapshot) {
   state.designObjectUrl = snapshot.designObjectUrl;
   state.designName = snapshot.designName;
   state.designSource = snapshot.designSource ? { ...snapshot.designSource } : null;
-  elements.fitMode.value = "cover";
+  elements.fitMode.value = snapshot.fit || "cover";
   state.cropMode = false;
   state.cropSnapshot = null;
   state.cropHistoryDepth = 0;
-  state.designSelected = false;
+  state.designSelected = Boolean(snapshot.designSelected && snapshot.designImage);
   syncAdjustmentControls();
   elements.designSourceLabel.textContent = state.designName || "尚未读取画面";
   elements.clearDesignButton.disabled = !state.designImage;
@@ -238,21 +260,21 @@ function restoreEditorSnapshot(snapshot) {
 
 function undoEditor() {
   const snapshot = state.history.pop();
-  if (!snapshot) return;
+  if (!snapshot) return false;
   state.future.push(editorSnapshot());
   restoreEditorSnapshot(snapshot);
   showToast("已撤回上一步");
+  return true;
 }
 
 function redoEditor() {
   const snapshot = state.future.pop();
-  if (!snapshot) return;
+  if (!snapshot) return false;
   state.history.push(editorSnapshot());
   restoreEditorSnapshot(snapshot);
   showToast("已重做");
+  return true;
 }
-
-elements.versionLabel.textContent = `v${PLUGIN_VERSION}`;
 
 function postPluginMessage(message) {
   if (window.parent === window) {
@@ -294,6 +316,36 @@ async function previewDesignBytes() {
   return new Uint8Array(await blob.arrayBuffer());
 }
 
+let previewWindowCollapseProgress = 0;
+let previewWindowTransitionRevision = 0;
+
+function easeWindowProgress(progress) {
+  return 1 - Math.pow(1 - progress, 3);
+}
+
+function previewWindowTransition(windowState) {
+  const targetState = windowState === "collapsed" ? "collapsed" : "expanded";
+  const targetProgress = targetState === "collapsed" ? 1 : 0;
+  const startProgress = previewWindowCollapseProgress;
+  const revision = ++previewWindowTransitionRevision;
+  const startedAt = performance.now();
+
+  function commitFrame() {
+    if (revision !== previewWindowTransitionRevision) return;
+    const progress = Math.min(1, (performance.now() - startedAt) / 240);
+    previewWindowCollapseProgress = startProgress + (targetProgress - startProgress) * easeWindowProgress(progress);
+    dispatchPreviewMessage({ type: "window-state-progress", state: targetState, progress: previewWindowCollapseProgress });
+    if (progress < 1) {
+      setTimeout(commitFrame, 16);
+      return;
+    }
+    previewWindowCollapseProgress = targetProgress;
+    dispatchPreviewMessage({ type: "window-state-applied", state: targetState });
+  }
+
+  commitFrame();
+}
+
 function handlePreviewBridge(message) {
   if (message.type === "ready") {
     setTimeout(() => dispatchPreviewMessage({
@@ -320,6 +372,9 @@ function handlePreviewBridge(message) {
   }
   if (message.type === "paste-render") {
     setTimeout(() => dispatchPreviewMessage({ type: "paste-complete", nodeId: "preview-node" }), 80);
+  }
+  if (message.type === "set-window-state") {
+    previewWindowTransition(message.state);
   }
 }
 
@@ -412,6 +467,7 @@ function setCategory(value, { render = true, restoreFocus = false } = {}) {
   const option = categoryOptions().find((item) => item.dataset.value === value) || categoryOptions()[0];
   if (!option) return;
   const changed = elements.categorySelect.value !== option.dataset.value;
+  if (changed) state.locatedAssetId = null;
   elements.categorySelect.value = option.dataset.value;
   elements.categoryLabel.textContent = option.textContent;
   for (const item of categoryOptions()) {
@@ -452,12 +508,6 @@ function moveCategoryFocus(direction) {
   options[nextIndex].focus();
 }
 
-function applyRandomHoverTilt(button) {
-  const direction = Math.random() < 0.5 ? -1 : 1;
-  const magnitude = 1.8 + Math.random() * 0.9;
-  button.style.setProperty("--hover-tilt", `${(direction * magnitude).toFixed(2)}deg`);
-}
-
 let toastTimer;
 function showToast(message, duration = 2600) {
   clearTimeout(toastTimer);
@@ -466,25 +516,38 @@ function showToast(message, duration = 2600) {
   toastTimer = setTimeout(() => setAnimatedVisibility(elements.toast, false), duration);
 }
 
+function showFailure(context, error, fallbackCode) {
+  userErrors.report(context, error, fallbackCode);
+  showToast(userErrors.message(error, fallbackCode));
+}
+
 function withTimeout(promise, milliseconds) {
   return Promise.race([
     promise,
-    new Promise((_, reject) => setTimeout(() => reject(new Error("请求超时")), milliseconds))
+    new Promise((_, reject) => setTimeout(() => reject(userErrors.create(USER_ERROR_CODES.REQUEST_TIMEOUT)), milliseconds))
   ]);
 }
 
 function validateManifest(manifest) {
-  if (!manifest || ![1, 2, 3, 4].includes(manifest.schemaVersion)) throw new Error("不支持的素材清单版本");
-  if (!Array.isArray(manifest.items)) throw new Error("素材清单缺少 items");
-  for (const item of manifest.items) {
-    renderer.validateAsset(item);
-    if (!item.thumbnail) throw new Error(`样机缩略图路径无效：${item.id}`);
-  }
-  return manifest;
+  return catalogContract.validateManifest(manifest, {
+    schemaVersion: EXPECTED_CATALOG_SCHEMA_VERSION,
+    environment: EXPECTED_CATALOG_ENVIRONMENT,
+    rendererVersion: EXPECTED_RENDERER_VERSION,
+    pluginVersion: PLUGIN_VERSION,
+    maxItems: MAX_CATALOG_ITEMS
+  }, renderer.validateAsset);
 }
 
 function resolveAssetUrl(relativePath) {
   return new URL(relativePath, state.catalogBaseUrl).href;
+}
+
+function validateCachedCatalog(value) {
+  if (!value || value.catalogBaseUrl !== ACTIVE_CATALOG_URL) throw new Error("离线目录来源与当前构建不匹配");
+  const cachedAt = Date.parse(value.cachedAt);
+  const cacheAge = Date.now() - cachedAt;
+  if (!Number.isFinite(cachedAt) || cacheAge < -300_000 || cacheAge > MAX_OFFLINE_CATALOG_AGE_MS) throw new Error("离线目录已过期");
+  return validateManifest(value.manifest);
 }
 
 async function fetchCatalog() {
@@ -492,7 +555,8 @@ async function fetchCatalog() {
   try {
     const response = await withTimeout(fetch(ACTIVE_CATALOG_URL, { cache: "no-store" }), 4500);
     if (!response.ok) throw new Error(`素材库返回 ${response.status}`);
-    const manifest = validateManifest(await response.json());
+    const manifestBytes = await boundedResponse.readBoundedResponse(response, MAX_CATALOG_MANIFEST_BYTES, "素材目录");
+    const manifest = validateManifest(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(manifestBytes)));
     state.manifest = manifest;
     state.catalogBaseUrl = ACTIVE_CATALOG_URL;
     const cache = {
@@ -510,7 +574,7 @@ async function fetchCatalog() {
     if (cached) {
       try {
         const value = typeof cached === "string" ? JSON.parse(cached) : cached;
-        state.manifest = validateManifest(value.manifest);
+        state.manifest = validateCachedCatalog(value);
         state.catalogBaseUrl = value.catalogBaseUrl;
         setCatalogState("cached", "使用离线目录");
         hydrateCatalog();
@@ -522,9 +586,9 @@ async function fetchCatalog() {
     }
     setCatalogState("error", "素材库不可用");
     elements.catalogEmpty.hidden = false;
-    elements.catalogEmpty.querySelector("strong").textContent = "素材服务尚未启动";
-    elements.catalogEmpty.querySelector("span").textContent = "本地开发请运行 pnpm catalog";
-    showToast(error instanceof Error ? error.message : "素材库加载失败");
+    elements.catalogEmpty.querySelector("strong").textContent = "素材库暂时不可用";
+    elements.catalogEmpty.querySelector("span").textContent = BUILD_MODE === "development" ? "本地开发请运行 pnpm catalog" : "请检查网络后重试";
+    showFailure("catalog-fetch", error, USER_ERROR_CODES.CATALOG_UNAVAILABLE);
   }
 }
 
@@ -559,6 +623,7 @@ function renderRecentStrip() {
     .filter(Boolean)
     .slice(0, 10);
   elements.recentItems.replaceChildren();
+  elements.catalogView.classList.toggle("has-recent", items.length > 0);
   setAnimatedVisibility(elements.recentStrip, items.length > 0);
   for (const item of items) {
     const button = document.createElement("button");
@@ -569,35 +634,44 @@ function renderRecentStrip() {
     image.src = resolveAssetUrl(item.thumbnail);
     image.alt = item.name;
     button.appendChild(image);
-    button.addEventListener("click", () => selectAsset(item.id));
     elements.recentItems.appendChild(button);
   }
 }
 
 function enableRecentScrolling() {
   let drag = null;
+  let suppressClick = false;
   elements.recentItems.addEventListener("pointerdown", (event) => {
     if (event.button !== 0) return;
-    drag = { x: event.clientX, left: elements.recentItems.scrollLeft, moved: false };
-    elements.recentItems.setPointerCapture(event.pointerId);
+    drag = { pointerId: event.pointerId, x: event.clientX, left: elements.recentItems.scrollLeft, moved: false };
+    suppressClick = false;
   });
   elements.recentItems.addEventListener("pointermove", (event) => {
-    if (!drag || !elements.recentItems.hasPointerCapture(event.pointerId)) return;
+    if (!drag || drag.pointerId !== event.pointerId) return;
     const delta = event.clientX - drag.x;
-    if (Math.abs(delta) > 4) drag.moved = true;
+    if (!drag.moved && Math.abs(delta) <= 4) return;
+    if (!drag.moved) {
+      drag.moved = true;
+      suppressClick = true;
+      elements.recentItems.setPointerCapture(event.pointerId);
+    }
     elements.recentItems.scrollLeft = drag.left - delta;
   });
   elements.recentItems.addEventListener("click", (event) => {
-    if (!drag?.moved) return;
+    if (!suppressClick) return;
     event.preventDefault();
     event.stopPropagation();
+    suppressClick = false;
   }, true);
   const finish = (event) => {
     if (elements.recentItems.hasPointerCapture(event.pointerId)) elements.recentItems.releasePointerCapture(event.pointerId);
-    requestAnimationFrame(() => { drag = null; });
+    drag = null;
   };
   elements.recentItems.addEventListener("pointerup", finish);
-  elements.recentItems.addEventListener("pointercancel", finish);
+  elements.recentItems.addEventListener("pointercancel", (event) => {
+    suppressClick = false;
+    finish(event);
+  });
   elements.recentItems.addEventListener("wheel", (event) => {
     if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
     elements.recentItems.scrollLeft += event.deltaY;
@@ -605,21 +679,73 @@ function enableRecentScrolling() {
   }, { passive: false });
 }
 
+const SEARCH_CONCEPTS = Object.freeze([
+  { categories: ["display", "laptop"], terms: ["电脑", "计算机", "computer", "pc"] },
+  { categories: ["display"], terms: ["显示器", "屏幕", "monitor", "display", "台式机", "工作站", "desktop", "workstation"] },
+  { categories: ["laptop"], terms: ["笔记本", "笔电", "手提电脑", "laptop", "notebook", "macbook"] },
+  { categories: ["phone"], terms: ["手机", "智能手机", "移动设备", "phone", "mobile", "iphone", "android"] }
+]);
+
+function normalizeCatalogSearchText(value) {
+  return String(value || "")
+    .normalize("NFKC")
+    .toLocaleLowerCase("zh-CN")
+    .replace(/[·•/,_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function catalogQueryTokens(query) {
+  return [...new Set(normalizeCatalogSearchText(query).split(" ").filter(Boolean))];
+}
+
+function itemMatchesCatalogQuery(item, queryTokens, categoryLabels) {
+  if (!queryTokens.length) return true;
+  const categoryLabel = categoryLabels.get(item.category) || "";
+  const searchIndex = normalizeCatalogSearchText([
+    item.name,
+    item.id,
+    item.category,
+    categoryLabel,
+    ...(item.tags || [])
+  ].join(" "));
+
+  return queryTokens.every((token) => {
+    if (searchIndex.includes(token)) return true;
+    if (token.length < 2) return false;
+    return SEARCH_CONCEPTS.some((concept) => (
+      concept.categories.includes(item.category)
+      && concept.terms.some((term) => normalizeCatalogSearchText(term).includes(token))
+    ));
+  });
+}
+
+function filterCatalogItems({ items, categories, query, category, segment, selectedCategory }) {
+  const categoryLabels = new Map((categories || []).map((entry) => [entry.id, entry.label]));
+  const queryTokens = catalogQueryTokens(query);
+  const explicitCategory = category && category !== "all" ? category : null;
+  const requiredCategory = explicitCategory || (segment === "similar" ? selectedCategory : null);
+
+  return items.filter((item) => {
+    if (requiredCategory && item.category !== requiredCategory) return false;
+    return itemMatchesCatalogQuery(item, queryTokens, categoryLabels);
+  });
+}
+
 function filteredItems() {
   if (!state.manifest) return [];
-  const query = elements.searchInput.value.trim().toLocaleLowerCase("zh-CN");
   const category = elements.categorySelect.value;
-  const similarCategory = category !== "all" ? category : state.selectedAsset?.category;
-
-  return state.manifest.items.filter((item) => {
-    if (state.segment === "similar" && similarCategory && item.category !== similarCategory) return false;
-    if (category !== "all" && item.category !== category) return false;
-    if (query) {
-      const haystack = [item.name, item.category, ...(item.tags || [])].join(" ").toLocaleLowerCase("zh-CN");
-      if (!haystack.includes(query)) return false;
-    }
-    return true;
+  const items = filterCatalogItems({
+    items: state.manifest.items,
+    categories: state.manifest.categories,
+    query: elements.searchInput.value,
+    category,
+    segment: state.segment,
+    selectedCategory: state.selectedAsset?.category
   });
+  const locatedIndex = items.findIndex((item) => item.id === state.locatedAssetId);
+  if (locatedIndex > 0) items.unshift(...items.splice(locatedIndex, 1));
+  return items;
 }
 
 function syncAssetSelection() {
@@ -629,6 +755,7 @@ function syncAssetSelection() {
   for (const button of elements.recentItems.querySelectorAll(".recent-item")) {
     button.classList.toggle("active", button.dataset.assetId === state.selectedAsset?.id);
   }
+  elements.locateCurrentAsset.disabled = !state.selectedAsset;
 }
 
 function renderAssetGrid({ animate = false } = {}) {
@@ -637,19 +764,30 @@ function renderAssetGrid({ animate = false } = {}) {
   elements.catalogCount.textContent = `${items.length} 个样机`;
   setAnimatedVisibility(elements.catalogEmpty, items.length === 0);
   if (!items.length) {
-    elements.catalogEmpty.querySelector("strong").textContent = state.segment === "similar" ? "该分类暂无相似样机" : "没有找到样机";
-    elements.catalogEmpty.querySelector("span").textContent = elements.searchInput.value ? "清空搜索或更换关键词" : "更换分类后再试";
+    const query = elements.searchInput.value.trim();
+    const category = elements.categorySelect.value;
+    const categoryLabel = state.manifest.categories.find((entry) => entry.id === category)?.label;
+    elements.catalogEmpty.querySelector("strong").textContent = query
+      ? (categoryLabel ? `“${categoryLabel}”中没有“${query}”` : `没有找到“${query}”`)
+      : (state.segment === "similar" ? "暂无相似样机" : "该分类暂无样机");
+    elements.catalogEmpty.querySelector("span").textContent = query
+      ? (categoryLabel ? "清空搜索或选择其他分类" : "清空搜索或更换关键词")
+      : "选择其他分类后再试";
   }
 
   for (const [index, item] of items.entries()) {
     const button = document.createElement("button");
     button.className = `asset-card${state.selectedAsset?.id === item.id ? " active" : ""}`;
     button.dataset.assetId = item.id;
+    button.setAttribute("aria-label", item.name);
     if (animate) {
       button.classList.add("is-entering");
       button.style.setProperty("--card-order", String(Math.min(index, 5)));
       button.addEventListener("animationend", () => button.classList.remove("is-entering"), { once: true });
     }
+
+    const visual = document.createElement("span");
+    visual.className = "asset-card-visual";
 
     const image = document.createElement("img");
     image.alt = item.name;
@@ -662,13 +800,77 @@ function renderAssetGrid({ animate = false } = {}) {
     const meta = document.createElement("span");
     meta.textContent = item.status === "testing" ? "测试素材" : "静态样机";
     footer.append(name, meta);
-    button.append(image, footer);
-    button.addEventListener("pointerenter", () => applyRandomHoverTilt(button));
-    button.addEventListener("pointerleave", () => button.style.setProperty("--hover-tilt", "0deg"));
-    button.addEventListener("click", () => selectAsset(item.id));
+    visual.append(image, footer);
+    button.appendChild(visual);
     elements.assetGrid.appendChild(button);
   }
   renderRecentStrip();
+}
+
+function selectAssetFromCatalogEvent(event) {
+  const button = event.target?.closest?.("[data-asset-id]");
+  if (!button || !event.currentTarget.contains(button)) return;
+  selectAsset(button.dataset.assetId);
+}
+
+function setCatalogSegment(filter, { render = true } = {}) {
+  const nextFilter = filter === "similar" ? "similar" : "all";
+  const changed = state.segment !== nextFilter;
+  if (changed) state.locatedAssetId = null;
+  state.segment = nextFilter;
+  elements.catalogSegments.dataset.activeFilter = nextFilter;
+  for (const item of document.querySelectorAll(".segment")) {
+    const active = item.dataset.filter === nextFilter;
+    item.classList.toggle("active", active);
+    item.setAttribute("aria-selected", String(active));
+  }
+  if (render && changed) renderAssetGrid({ animate: true });
+}
+
+function locateSelectedAsset() {
+  if (!state.selectedAsset) return;
+  elements.searchInput.value = "";
+  elements.clearSearch.hidden = true;
+  setCategory("all", { render: false });
+  setCatalogSegment("all", { render: false });
+  state.locatedAssetId = state.selectedAsset.id;
+  renderAssetGrid();
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const card = [...elements.assetGrid.querySelectorAll(".asset-card")]
+      .find((item) => item.dataset.assetId === state.selectedAsset?.id);
+    if (!card) return;
+    elements.assetGrid.scrollTo({ top: 0, behavior: reducedMotionQuery.matches ? "auto" : "smooth" });
+    card.classList.remove("is-located");
+    void card.offsetWidth;
+    card.classList.add("is-located");
+    card.addEventListener("animationend", () => card.classList.remove("is-located"), { once: true });
+  }));
+}
+
+function assetCardForPointerEvent(event) {
+  const card = event.target?.closest?.(".asset-card");
+  return card && elements.assetGrid.contains(card) ? card : null;
+}
+
+function clearAssetCardHovers() {
+  for (const card of elements.assetGrid.querySelectorAll(".asset-card.is-hovered")) assetCardHover.leave(card);
+}
+
+function enableAssetCardHover() {
+  elements.assetGrid.addEventListener("pointerover", (event) => {
+    if (reducedMotionQuery.matches || (event.pointerType && event.pointerType !== "mouse")) return;
+    const card = assetCardForPointerEvent(event);
+    if (!card || !assetCardHover.crossedBoundary(card, event.relatedTarget)) return;
+    assetCardHover.enter(card);
+  });
+  elements.assetGrid.addEventListener("pointerout", (event) => {
+    const card = assetCardForPointerEvent(event);
+    if (!card || !assetCardHover.crossedBoundary(card, event.relatedTarget)) return;
+    assetCardHover.leave(card);
+  });
+  reducedMotionQuery.addEventListener?.("change", (event) => {
+    if (event.matches) clearAssetCardHovers();
+  });
 }
 
 function loadImage(url) {
@@ -688,23 +890,136 @@ function loadImage(url) {
   });
 }
 
-function loadCatalogImage(relativePath) {
-  const url = resolveAssetUrl(relativePath);
-  if (!catalogImageCache.has(url)) {
-    const request = loadImage(url).catch((error) => {
-      catalogImageCache.delete(url);
-      throw error;
-    });
-    catalogImageCache.set(url, request);
+function sha256HexPortable(bytes) {
+  const input = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  const paddedLength = Math.ceil((input.length + 9) / 64) * 64;
+  const padded = new Uint8Array(paddedLength);
+  padded.set(input);
+  padded[input.length] = 0x80;
+
+  const view = new DataView(padded.buffer);
+  const bitLength = input.length * 8;
+  view.setUint32(paddedLength - 8, Math.floor(bitLength / 0x100000000), false);
+  view.setUint32(paddedLength - 4, bitLength >>> 0, false);
+
+  const constants = new Uint32Array([
+    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+  ]);
+  const schedule = new Uint32Array(64);
+  let h0 = 0x6a09e667;
+  let h1 = 0xbb67ae85;
+  let h2 = 0x3c6ef372;
+  let h3 = 0xa54ff53a;
+  let h4 = 0x510e527f;
+  let h5 = 0x9b05688c;
+  let h6 = 0x1f83d9ab;
+  let h7 = 0x5be0cd19;
+  const rotateRight = (value, shift) => (value >>> shift) | (value << (32 - shift));
+
+  for (let offset = 0; offset < paddedLength; offset += 64) {
+    for (let index = 0; index < 16; index += 1) {
+      schedule[index] = view.getUint32(offset + index * 4, false);
+    }
+    for (let index = 16; index < 64; index += 1) {
+      const previous15 = schedule[index - 15];
+      const previous2 = schedule[index - 2];
+      const sigma0 = rotateRight(previous15, 7) ^ rotateRight(previous15, 18) ^ (previous15 >>> 3);
+      const sigma1 = rotateRight(previous2, 17) ^ rotateRight(previous2, 19) ^ (previous2 >>> 10);
+      schedule[index] = (schedule[index - 16] + sigma0 + schedule[index - 7] + sigma1) >>> 0;
+    }
+
+    let a = h0;
+    let b = h1;
+    let c = h2;
+    let d = h3;
+    let e = h4;
+    let f = h5;
+    let g = h6;
+    let h = h7;
+    for (let index = 0; index < 64; index += 1) {
+      const sum1 = rotateRight(e, 6) ^ rotateRight(e, 11) ^ rotateRight(e, 25);
+      const choice = (e & f) ^ (~e & g);
+      const temporary1 = (h + sum1 + choice + constants[index] + schedule[index]) >>> 0;
+      const sum0 = rotateRight(a, 2) ^ rotateRight(a, 13) ^ rotateRight(a, 22);
+      const majority = (a & b) ^ (a & c) ^ (b & c);
+      const temporary2 = (sum0 + majority) >>> 0;
+      h = g;
+      g = f;
+      f = e;
+      e = (d + temporary1) >>> 0;
+      d = c;
+      c = b;
+      b = a;
+      a = (temporary1 + temporary2) >>> 0;
+    }
+
+    h0 = (h0 + a) >>> 0;
+    h1 = (h1 + b) >>> 0;
+    h2 = (h2 + c) >>> 0;
+    h3 = (h3 + d) >>> 0;
+    h4 = (h4 + e) >>> 0;
+    h5 = (h5 + f) >>> 0;
+    h6 = (h6 + g) >>> 0;
+    h7 = (h7 + h) >>> 0;
   }
-  return catalogImageCache.get(url);
+
+  return [h0, h1, h2, h3, h4, h5, h6, h7]
+    .map((value) => value.toString(16).padStart(8, "0"))
+    .join("");
+}
+
+async function sha256Hex(bytes) {
+  if (!globalThis.crypto?.subtle) return sha256HexPortable(bytes);
+  const digest = await globalThis.crypto.subtle.digest("SHA-256", bytes);
+  return [...new Uint8Array(digest)].map((value) => value.toString(16).padStart(2, "0")).join("");
+}
+
+async function loadVerifiedCatalogImage(url, expectedSha256) {
+  if (!/^[a-f0-9]{64}$/.test(expectedSha256 || "")) throw new Error("样机缺少有效素材摘要");
+  const response = await withTimeout(fetch(url, { cache: "force-cache" }), 15_000);
+  if (!response.ok) throw new Error(`样机图片返回 ${response.status}`);
+  const bytes = await boundedResponse.readBoundedResponse(response, MAX_CATALOG_ASSET_BYTES, "样机素材");
+  const actualSha256 = await sha256Hex(bytes);
+  if (actualSha256 !== expectedSha256) throw new Error("样机图片完整性校验失败");
+  const objectUrl = URL.createObjectURL(new Blob([bytes], { type: response.headers.get("content-type") || "image/png" }));
+  try {
+    return await loadImage(objectUrl);
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
+function loadCatalogImage(relativePath, expectedSha256) {
+  const url = resolveAssetUrl(relativePath);
+  const cacheKey = `${url}#${expectedSha256}`;
+  const cached = resourceLimits.readLru(catalogImageCache, cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  const request = loadVerifiedCatalogImage(url, expectedSha256).catch((error) => {
+    resourceLimits.deleteIfSame(catalogImageCache, cacheKey, request);
+    throw error;
+  });
+  resourceLimits.writeLru(catalogImageCache, cacheKey, request);
+  return request;
 }
 
 async function loadAssetImages(asset) {
-  const baseImage = await loadCatalogImage(asset.layers.base);
+  const [baseImage] = await Promise.all([
+    loadCatalogImage(asset.layers.base, asset.integrity.baseSha256),
+    loadCatalogImage(asset.thumbnail, asset.integrity.thumbnailSha256)
+  ]);
   const optionalLayers = await Promise.all(["reflection", "foreground"].map(async (name) => {
     if (!asset.layers[name]) return [name, null];
-    return [name, await loadCatalogImage(asset.layers[name])];
+    return [name, await loadCatalogImage(asset.layers[name], asset.integrity[`${name}Sha256`])];
   }));
   return { baseImage, optionalLayers };
 }
@@ -715,7 +1030,10 @@ function scheduleCatalogPreload() {
   if (catalogPreloadScheduled || !state.manifest) return;
   catalogPreloadScheduled = true;
   const preload = () => {
-    for (const asset of state.manifest.items) {
+    catalogPreloadScheduled = false;
+    const items = state.manifest.items;
+    const nearbyAssets = resourceLimits.nearestAssets(items, state.selectedAsset?.id);
+    for (const asset of nearbyAssets) {
       loadAssetImages(asset).catch(() => {
         // A foreground selection reports failures. Background warming stays silent.
       });
@@ -726,6 +1044,47 @@ function scheduleCatalogPreload() {
 }
 
 let assetRequestSequence = 0;
+
+function resetContentTransition() {
+  elements.stage.classList.remove("is-content-transition-ready", "is-content-transitioning");
+  elements.contentTransitionCanvas.classList.remove("is-active");
+  elements.contentTransitionCanvas.removeAttribute("style");
+  const context = elements.contentTransitionCanvas.getContext("2d");
+  context.clearRect(0, 0, elements.contentTransitionCanvas.width, elements.contentTransitionCanvas.height);
+}
+
+function captureContentTransitionSnapshot() {
+  resetContentTransition();
+  if (!state.baseImage || !elements.previewCanvas.width || !elements.previewCanvas.height) return false;
+  const stageRect = elements.stage.getBoundingClientRect();
+  const canvasRect = elements.canvasWrap.getBoundingClientRect();
+  if (!stageRect.width || !stageRect.height || !canvasRect.width || !canvasRect.height) return false;
+
+  const snapshot = elements.contentTransitionCanvas;
+  snapshot.width = elements.previewCanvas.width;
+  snapshot.height = elements.previewCanvas.height;
+  snapshot.getContext("2d").drawImage(elements.previewCanvas, 0, 0);
+  snapshot.style.left = `${canvasRect.left - stageRect.left}px`;
+  snapshot.style.top = `${canvasRect.top - stageRect.top}px`;
+  snapshot.style.width = `${canvasRect.width}px`;
+  snapshot.style.height = `${canvasRect.height}px`;
+  snapshot.classList.add("is-active");
+  elements.stage.classList.add("is-content-transition-ready");
+  return true;
+}
+
+async function playContentTransition(requestSequence, hasSnapshot) {
+  if (!hasSnapshot || reducedMotionQuery.matches) {
+    resetContentTransition();
+    return;
+  }
+  await waitForNextPaint();
+  if (requestSequence !== assetRequestSequence) return;
+  elements.stage.classList.add("is-content-transitioning");
+  await waitForDuration(CONTENT_TRANSITION_MS);
+  if (requestSequence !== assetRequestSequence) return;
+  resetContentTransition();
+}
 
 async function selectAsset(id) {
   const asset = state.manifest?.items.find((item) => item.id === id);
@@ -738,27 +1097,19 @@ async function selectAsset(id) {
   elements.pasteButton.disabled = true;
   state.rendering = true;
   setAnimatedVisibility(elements.renderingBadge, true);
-  const blurWasActive = elements.canvasWrap.classList.contains("is-content-blurred");
+  const hasTransitionSnapshot = assetChanged && captureContentTransitionSnapshot();
   elements.canvasWrap.classList.add("is-content-switching");
-  if (!blurWasActive) {
-    await waitForNextPaint();
-    if (requestSequence !== assetRequestSequence) return;
-  }
-  elements.canvasWrap.classList.add("is-content-blurred");
-  const blurStartedAt = performance.now();
+  let committed = false;
 
   try {
-    const assetImagesPromise = loadAssetImages(asset);
-    const [{ baseImage, optionalLayers }] = await Promise.all([
-      assetImagesPromise,
-      waitForDuration(reducedMotionQuery.matches ? 0 : CONTENT_BLUR_ENTER_MS)
-    ]);
+    const { baseImage, optionalLayers } = await loadAssetImages(asset);
     if (requestSequence !== assetRequestSequence) return;
 
     // Commit the new asset only after every required image is ready. A failed
     // request therefore cannot leave the card selection ahead of the preview.
     state.selectedAsset = asset;
     if (assetChanged) {
+      state.locatedAssetId = null;
       state.customQuad = asset.screen.quad.map((point) => [...point]);
       state.adjustments = { ...DEFAULT_ADJUSTMENTS };
       state.crop = { ...DEFAULT_CROP };
@@ -789,9 +1140,13 @@ async function selectAsset(id) {
     if (assetChanged) fitStage();
     updatePerspectiveEditor();
     updateDesignEditor();
-    renderComposite("preview");
+    renderFinalComposite();
+    committed = true;
+    setAnimatedVisibility(elements.renderingBadge, false);
+    await playContentTransition(requestSequence, hasTransitionSnapshot);
   } catch (error) {
     if (requestSequence === assetRequestSequence) {
+      if (BUILD_MODE === "development") console.error("样机素材加载失败", error);
       const message = state.selectedAsset
         ? "素材暂时无法加载，已保留当前样机"
         : "素材暂时无法加载，请确认素材服务已启动";
@@ -799,25 +1154,12 @@ async function selectAsset(id) {
     }
   } finally {
     if (requestSequence === assetRequestSequence) {
-      const minimumBlurTime = reducedMotionQuery.matches ? 0 : MIN_CONTENT_BLUR_MS;
-      const remainingBlurTime = Math.max(0, minimumBlurTime - (performance.now() - blurStartedAt));
-      if (remainingBlurTime > 0) {
-        await waitForDuration(remainingBlurTime);
-      }
-      if (requestSequence !== assetRequestSequence) return;
-      // The low-density mesh is only an in-transition response. Commit the
-      // stable frame before revealing it so a completed switch never remains
-      // at preview quality.
-      renderFinalComposite();
-      elements.canvasWrap.classList.remove("is-content-blurred");
+      if (!committed) resetContentTransition();
       setAnimatedVisibility(elements.renderingBadge, false);
-      await waitForNextPaint();
-      if (requestSequence !== assetRequestSequence) return;
-      await waitForDuration(reducedMotionQuery.matches ? 0 : CONTENT_REVEAL_MS);
-      if (requestSequence !== assetRequestSequence) return;
       state.rendering = false;
       elements.canvasWrap.classList.remove("is-content-switching");
       updateOutputAvailability();
+      scheduleCatalogPreload();
     }
   }
 }
@@ -831,8 +1173,10 @@ function updateOutputAvailability() {
 function updateSourceActions() {
   const hasDesign = Boolean(state.designImage);
   const hasSelection = Boolean(state.selection?.available);
-  elements.replaceSourceButton.textContent = hasDesign ? "换画面" : "添加画面";
-  elements.screenCta.querySelector("b").textContent = hasDesign ? "换画面" : "添加画面";
+  const sourceActionLabel = hasDesign ? "换画面" : "添加画面";
+  elements.replaceSourceButton.textContent = sourceActionLabel;
+  elements.screenCta.setAttribute("aria-label", sourceActionLabel);
+  elements.screenCta.querySelector("b").textContent = sourceActionLabel;
   elements.quickClearDesignButton.hidden = !hasDesign;
   elements.quickReadSelectionButton.disabled = !hasSelection;
   elements.quickSelectionLabel.textContent = hasSelection
@@ -842,6 +1186,7 @@ function updateSourceActions() {
 
 function openSourcePopover() {
   updateSourceActions();
+  elements.screenCta.setAttribute("aria-expanded", "true");
   setAnimatedVisibility(elements.sourcePopover, true);
   requestAnimationFrame(() => {
     const target = elements.quickReadSelectionButton.disabled ? elements.quickImportFileButton : elements.quickReadSelectionButton;
@@ -850,6 +1195,7 @@ function openSourcePopover() {
 }
 
 function closeSourcePopover() {
+  elements.screenCta.setAttribute("aria-expanded", "false");
   setAnimatedVisibility(elements.sourcePopover, false);
 }
 
@@ -887,7 +1233,7 @@ function updateSourceGuide() {
   elements.recommendedSize.textContent = `${recommended.width} × ${recommended.height} px`;
   elements.recommendedRatio.textContent = `${recommended.label} · 保持原比例`;
   if (!state.designSource) {
-    elements.sourceMatch.textContent = "导入后默认显示完成效果";
+    elements.sourceMatch.textContent = "尚未添加画面；插件不会代替您生成内容";
     return;
   }
   const expectedAspect = recommended.width / recommended.height;
@@ -905,50 +1251,42 @@ function screenPlane() {
   return renderer.screenPlane(recommended ? recommended.width / recommended.height : 1);
 }
 
-function fixedApertureFrame() {
+function editingBoundsFrame() {
   const plane = screenPlane();
   return { cx: plane.width / 2, cy: plane.height / 2, width: plane.width, height: plane.height, rotation: 0 };
 }
 
 function resetContentGeometry() {
-  const frame = fixedApertureFrame();
+  const frame = editingBoundsFrame();
   state.contentFrame = { ...frame };
   state.imageFrame = state.designImage ? renderer.imageFrameForCover(state.designImage, frame) : { ...frame };
 }
 
 function ensureContentGeometry() {
   if (!state.selectedAsset || !state.designImage) return null;
-  const plane = screenPlane();
-  const aperture = fixedApertureFrame();
-  state.contentFrame = renderer.constrainFrameVisibility(
-    renderer.normalizeFrame(state.contentFrame, plane.width, plane.height),
-    aperture,
-    0.1
+  const recommended = state.selectedAsset.screen.recommendedSize;
+  const geometry = renderer.contentGeometry(
+    state.designImage,
+    recommended.width / recommended.height,
+    activeQuad(),
+    state.contentFrame,
+    state.imageFrame
   );
-  state.imageFrame = renderer.normalizeFrame(state.imageFrame, plane.width, plane.height);
-  return { plane, frame: state.contentFrame, imageFrame: state.imageFrame };
+  state.contentFrame = { ...geometry.frame };
+  state.imageFrame = { ...geometry.imageFrame };
+  return geometry;
 }
 
 function planePointToCanvas(point) {
-  const plane = screenPlane();
-  return renderer.bilinearPoint(activeQuad(), point[0] / plane.width, point[1] / plane.height);
-}
-
-function frameCanvasPoints(frame = state.contentFrame) {
-  if (!frame) return [];
-  const recommended = state.selectedAsset?.screen?.recommendedSize;
-  const targetAspect = recommended ? recommended.width / recommended.height : 1;
-  // This is the same projection used by renderComposite. The editor must not
-  // derive a second rectangle from the hidden, oversized source bitmap.
-  return renderer.frameQuadOnSurface(frame, targetAspect, activeQuad());
+  const geometry = ensureContentGeometry();
+  return geometry ? renderer.planePointToCanvas(point, geometry) : [0, 0];
 }
 
 function designControlPoints() {
-  if (!ensureContentGeometry()) return [];
-  // This frame is also the exact region passed to renderComposite. One region,
-  // one projection and one set of controls prevents visual/editor drift in
-  // ordinary editing, crop and perspective alike.
-  return frameCanvasPoints(state.contentFrame);
+  const geometry = ensureContentGeometry();
+  // Rendering, hit testing, the selection outline and the crop frame all use
+  // this exact projected frame. No second rectangle is derived elsewhere.
+  return geometry ? geometry.overlayQuad.map((point) => [...point]) : [];
 }
 
 function midpoint(first, second) {
@@ -969,37 +1307,9 @@ function designHandlePoints(points) {
   };
 }
 
-function roundedFramePath(frame, radiusRatios = 0) {
-  if (!frame) return "";
-  const values = Array.isArray(radiusRatios) ? radiusRatios : [radiusRatios];
-  const normalized = values.length === 4 ? values : [values[0] || 0, values[0] || 0, values[0] || 0, values[0] || 0];
-  const [topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius] = normalized.map((ratio) => (
-    Math.max(0, Math.min(frame.width, frame.height) * Math.min(0.49, Number(ratio) || 0))
-  ));
-  const localPoint = (x, y) => {
-    const angle = frame.rotation * Math.PI / 180;
-    const cosine = Math.cos(angle);
-    const sine = Math.sin(angle);
-    return planePointToCanvas([frame.cx + x * cosine - y * sine, frame.cy + x * sine + y * cosine]);
-  };
-  const left = -frame.width / 2;
-  const right = frame.width / 2;
-  const top = -frame.height / 2;
-  const bottom = frame.height / 2;
-  const point = (value) => `${value[0]} ${value[1]}`;
-  const p0 = localPoint(left + topLeftRadius, top);
-  const p1 = localPoint(right - topRightRadius, top);
-  const c1 = localPoint(right, top);
-  const p2 = localPoint(right, top + topRightRadius);
-  const p3 = localPoint(right, bottom - bottomRightRadius);
-  const c2 = localPoint(right, bottom);
-  const p4 = localPoint(right - bottomRightRadius, bottom);
-  const p5 = localPoint(left + bottomLeftRadius, bottom);
-  const c3 = localPoint(left, bottom);
-  const p6 = localPoint(left, bottom - bottomLeftRadius);
-  const p7 = localPoint(left, top + topLeftRadius);
-  const c4 = localPoint(left, top);
-  return `M${point(p0)}L${point(p1)}Q${point(c1)} ${point(p2)}L${point(p3)}Q${point(c2)} ${point(p4)}L${point(p5)}Q${point(c3)} ${point(p6)}L${point(p7)}Q${point(c4)} ${point(p0)}Z`;
+function framePath(points) {
+  if (points.length !== 4) return "";
+  return `M${points.map((point) => `${point[0]} ${point[1]}`).join("L")}Z`;
 }
 
 function updateDesignEditor() {
@@ -1014,13 +1324,14 @@ function updateDesignEditor() {
   const pointString = points.map((point) => point.join(",")).join(" ");
   elements.designPolygon.setAttribute("points", pointString);
   elements.designDragTarget.setAttribute("points", pointString);
+  elements.designDragTarget.setAttribute("aria-label", state.cropMode ? "移动裁切框" : "移动画面");
   const svg = elements.designPolygon.ownerSVGElement;
   svg.setAttribute("viewBox", `0 0 ${state.selectedAsset.canvas.width} ${state.selectedAsset.canvas.height}`);
-  const cornerRadii = renderer.screenApertureGeometry(state.selectedAsset).cornerRadii;
-  elements.cropFrame.setAttribute("d", roundedFramePath(state.contentFrame, cornerRadii));
+  const cropPath = framePath(points);
+  elements.cropFrame.setAttribute("d", cropPath);
   elements.cropShade.setAttribute(
     "d",
-    `M0 0H${state.selectedAsset.canvas.width}V${state.selectedAsset.canvas.height}H0Z ${roundedFramePath(state.contentFrame, cornerRadii)}`
+    `M0 0H${state.selectedAsset.canvas.width}V${state.selectedAsset.canvas.height}H0Z ${cropPath}`
   );
   const handlePoints = designHandlePoints(points);
   for (const handle of elements.designEditor.querySelectorAll(".design-scale-handle")) {
@@ -1032,17 +1343,16 @@ function updateDesignEditor() {
 
 function pointOnCanvas(event) {
   const rect = elements.previewCanvas.getBoundingClientRect();
-  return [
-    (event.clientX - rect.left) / rect.width * state.selectedAsset.canvas.width,
-    (event.clientY - rect.top) / rect.height * state.selectedAsset.canvas.height
-  ];
+  return renderer.viewportPointToCanvas(
+    [event.clientX, event.clientY],
+    rect,
+    state.selectedAsset.canvas
+  );
 }
 
 function pointOnScreenPlane(event) {
-  const point = pointOnCanvas(event);
-  const [u, v] = renderer.inverseBilinearPoint(activeQuad(), point);
-  const plane = screenPlane();
-  return [u * plane.width, v * plane.height];
+  const geometry = ensureContentGeometry();
+  return geometry ? renderer.canvasPointToPlane(pointOnCanvas(event), geometry) : [0, 0];
 }
 
 function commitDirectAdjustment() {
@@ -1087,76 +1397,118 @@ function finishCropMode(commit = true) {
 function syncAdjustmentsFromFrame() {
   const geometry = ensureContentGeometry();
   if (!geometry) return;
-  const { plane, frame } = geometry;
-  const aperture = fixedApertureFrame();
-  state.adjustments = {
-    ...state.adjustments,
-    scale: Math.sqrt(frame.width / aperture.width * frame.height / aperture.height),
-    offsetX: (frame.cx - plane.width / 2) / (plane.width * 0.42),
-    offsetY: (frame.cy - plane.height / 2) / (plane.height * 0.42),
-    rotation: frame.rotation
-  };
+  state.adjustments = renderer.adjustmentsFromImageFrame(
+    state.designImage,
+    geometry.imageFrame,
+    geometry.frame,
+    state.adjustments
+  );
 }
 
 let stageSpacePressed = false;
 
-function enableDesignEditing() {
+function enableStageInteractions() {
   let interaction = null;
-  const directPanThreshold = 6;
+  let pendingContentClick = null;
   const warpHandles = { nw: [0], n: [0, 1], ne: [1], e: [1, 2], se: [2], s: [3, 2], sw: [3], w: [0, 3] };
-  const start = (event, type) => {
-    if (!state.designImage || !state.selectedAsset) return;
-    if (event.button !== 0 || stageSpacePressed) return;
+
+  const finishContentClick = (finished, event) => {
+    const click = {
+      time: event.timeStamp || performance.now(),
+      x: finished.startClientX,
+      y: finished.startClientY
+    };
+    const previous = pendingContentClick;
+    const isDoubleClick = previous
+      && click.time - previous.time <= CONTENT_DOUBLE_CLICK_MS
+      && Math.hypot(click.x - previous.x, click.y - previous.y) <= CONTENT_DOUBLE_CLICK_DISTANCE;
+    pendingContentClick = isDoubleClick ? null : click;
+    if (isDoubleClick) enterCropMode();
+  };
+
+  const beginPan = (event) => {
     stopStageViewAnimation();
-    ensureContentGeometry();
-    const handleName = event.currentTarget.dataset.handle;
-    const wasSelected = state.designSelected || state.cropMode;
-    const intent = type === "move" && !wasSelected ? "pending" : "edit";
-    if (intent === "edit") {
-      state.designSelected = true;
-      updateDesignEditor();
-    }
     interaction = {
+      kind: "stage-pan",
       pointerId: event.pointerId,
-      target: event.currentTarget,
-      type,
-      intent,
-      handleName,
-      freeTransform: !state.cropMode && type === "scale" && (state.mode === "perspective" || event.metaKey || event.ctrlKey),
-      startSurfaceQuad: cloneQuad(activeQuad()),
-      startControlQuad: designControlPoints(),
-      startContentFrame: { ...state.contentFrame },
-      startImageFrame: { ...state.imageFrame },
-      startPointerPlane: pointOnScreenPlane(event),
-      startPointerCanvas: pointOnCanvas(event),
       startClientX: event.clientX,
       startClientY: event.clientY,
       startPanX: state.panX,
       startPanY: state.panY,
+      changed: false
+    };
+    elements.stage.classList.add("is-panning");
+    try { elements.stage.setPointerCapture?.(event.pointerId); } catch {}
+    event.preventDefault();
+  };
+
+  const beginContentEdit = (event, type, handleName = "") => {
+    if (!state.designImage || !state.selectedAsset) return;
+    stopStageViewAnimation();
+    ensureContentGeometry();
+    state.designSelected = true;
+    updateDesignEditor();
+    interaction = {
+      kind: type === "move" ? "content-move" : "content-scale",
+      pointerId: event.pointerId,
+      handleName,
+      freeTransform: !state.cropMode && type === "scale" && (state.mode === "perspective" || event.metaKey || event.ctrlKey),
+      startControlQuad: designControlPoints(),
+      startContentFrame: { ...state.contentFrame },
+      startImageFrame: { ...state.imageFrame },
+      startClientX: event.clientX,
+      startClientY: event.clientY,
+      startPointerPlane: pointOnScreenPlane(event),
+      startPointerCanvas: pointOnCanvas(event),
       changed: false,
       historyPushed: false
     };
-    try { event.currentTarget.setPointerCapture?.(event.pointerId); } catch {}
+    try { elements.stage.setPointerCapture?.(event.pointerId); } catch {}
     event.preventDefault();
-    event.stopPropagation();
   };
-  const move = (event) => {
-    if (!interaction || interaction.pointerId !== event.pointerId) return;
-    const clientDx = event.clientX - interaction.startClientX;
-    const clientDy = event.clientY - interaction.startClientY;
-    if (interaction.intent === "pending") {
-      if (Math.hypot(clientDx, clientDy) < directPanThreshold) return;
-      interaction.intent = "pan";
-      interaction.changed = true;
-      elements.stage.classList.add("is-panning");
+
+  elements.stage.addEventListener("pointerdown", (event) => {
+    const scaleHandle = event.target.closest?.(".design-scale-handle");
+    const dragTarget = event.target.closest?.(".design-drag-target");
+    const excludedControl = event.target.closest?.("button, input, select, textarea, .source-popover, .crop-toolbar");
+
+    if (event.button === 1 || stageSpacePressed) {
+      beginPan(event);
+      return;
     }
-    if (interaction.intent === "pan") {
+    if (event.button !== 0) return;
+    if (scaleHandle) {
+      beginContentEdit(event, "scale", scaleHandle.dataset.handle);
+      return;
+    }
+    if (dragTarget) {
+      beginContentEdit(event, "move");
+      return;
+    }
+    if (excludedControl) return;
+
+    if (state.designSelected) {
+      if (state.cropMode) finishCropMode(true);
+      state.designSelected = false;
+      updateDesignEditor();
+    }
+    beginPan(event);
+  });
+
+  window.addEventListener("pointermove", (event) => {
+    if (!interaction || interaction.pointerId !== event.pointerId) return;
+
+    if (interaction.kind === "stage-pan") {
+      const clientDx = event.clientX - interaction.startClientX;
+      const clientDy = event.clientY - interaction.startClientY;
+      interaction.changed ||= Math.hypot(clientDx, clientDy) >= 1;
       state.panX = interaction.startPanX + clientDx;
       state.panY = interaction.startPanY + clientDy;
       applyStageView();
       event.preventDefault();
       return;
     }
+
     const pointerPlane = pointOnScreenPlane(event);
     const pointerCanvas = pointOnCanvas(event);
     const dx = pointerPlane[0] - interaction.startPointerPlane[0];
@@ -1167,96 +1519,105 @@ function enableDesignEditing() {
       pushHistory();
       interaction.historyPushed = true;
     }
-    if (interaction.type === "move") {
-      const movedContent = renderer.constrainFrameVisibility(
-        {
-          ...interaction.startContentFrame,
-          cx: interaction.startContentFrame.cx + dx,
-          cy: interaction.startContentFrame.cy + dy
-        },
-        fixedApertureFrame(),
-        0.1
-      );
+
+    if (interaction.kind === "content-move") {
+      const desiredContent = {
+        ...interaction.startContentFrame,
+        cx: interaction.startContentFrame.cx + dx,
+        cy: interaction.startContentFrame.cy + dy
+      };
+      const movedContent = renderer.constrainFrameToBounds(desiredContent, editingBoundsFrame());
       state.contentFrame = movedContent;
-      if (state.cropMode) state.imageFrame = { ...interaction.startImageFrame };
-      else state.imageFrame = renderer.transformFrameBetweenFrames(
-        interaction.startImageFrame,
-        interaction.startContentFrame,
-        movedContent
-      );
+      if (state.cropMode) {
+        state.imageFrame = { ...interaction.startImageFrame };
+      } else {
+        const movedImage = renderer.transformFrameBetweenFrames(
+          interaction.startImageFrame,
+          interaction.startContentFrame,
+          movedContent
+        );
+        const residualX = desiredContent.cx - movedContent.cx;
+        const residualY = desiredContent.cy - movedContent.cy;
+        state.imageFrame = renderer.constrainImageFrameToCover(
+          state.designImage,
+          { ...movedImage, cx: movedImage.cx + residualX, cy: movedImage.cy + residualY },
+          movedContent
+        );
+      }
     } else if (interaction.freeTransform) {
-      const canvas = state.selectedAsset.canvas;
+      const physicalQuad = screenQuad();
       const nextControlQuad = cloneQuad(interaction.startControlQuad);
       const canvasDx = pointerCanvas[0] - interaction.startPointerCanvas[0];
       const canvasDy = pointerCanvas[1] - interaction.startPointerCanvas[1];
       for (const index of warpHandles[interaction.handleName]) {
-        nextControlQuad[index] = [
-          Math.max(0, Math.min(canvas.width, interaction.startControlQuad[index][0] + canvasDx)),
-          Math.max(0, Math.min(canvas.height, interaction.startControlQuad[index][1] + canvasDy))
+        const candidate = [
+          interaction.startControlQuad[index][0] + canvasDx,
+          interaction.startControlQuad[index][1] + canvasDy
         ];
+        const [u, v] = renderer.inverseBilinearPoint(physicalQuad, candidate);
+        nextControlQuad[index] = renderer.bilinearPoint(
+          physicalQuad,
+          Math.max(0, Math.min(1, u)),
+          Math.max(0, Math.min(1, v))
+        );
       }
       const recommended = state.selectedAsset.screen.recommendedSize;
-      const targetAspect = recommended.width / recommended.height;
       const nextSurfaceQuad = renderer.surfaceQuadForFrameQuad(
         interaction.startContentFrame,
-        targetAspect,
+        recommended.width / recommended.height,
         nextControlQuad
       );
       if (nextSurfaceQuad) state.customQuad = nextSurfaceQuad;
     } else {
-      const resizedContent = renderer.constrainFrameVisibility(
-        renderer.resizeFrameFromHandle(
-          interaction.startContentFrame,
-          interaction.handleName,
-          interaction.startPointerPlane,
-          pointerPlane,
-          true
-        ),
-        fixedApertureFrame(),
-        0.1
+      const resizedContent = renderer.resizeFrameWithinBounds(
+        interaction.startContentFrame,
+        interaction.handleName,
+        interaction.startPointerPlane,
+        pointerPlane,
+        editingBoundsFrame(),
+        true
       );
       state.contentFrame = resizedContent;
-      if (state.cropMode) state.imageFrame = { ...interaction.startImageFrame };
-      else state.imageFrame = renderer.transformFrameBetweenFrames(
-        interaction.startImageFrame,
-        interaction.startContentFrame,
-        resizedContent
-      );
+      state.imageFrame = state.cropMode
+        ? { ...interaction.startImageFrame }
+        : renderer.transformFrameBetweenFrames(
+          interaction.startImageFrame,
+          interaction.startContentFrame,
+          resizedContent
+        );
     }
+
     syncAdjustmentsFromFrame();
     commitDirectAdjustment();
     event.preventDefault();
-  };
-  const end = (event) => {
+  }, { passive: false });
+
+  const finishInteraction = (event) => {
     if (!interaction || interaction.pointerId !== event.pointerId) return;
-    try {
-      if (interaction.target.hasPointerCapture?.(event.pointerId)) interaction.target.releasePointerCapture(event.pointerId);
-    } catch {}
-    const { intent, changed } = interaction;
-    const cancelled = event.type === "pointercancel";
+    const finished = interaction;
     interaction = null;
+    try {
+      if (elements.stage.hasPointerCapture?.(event.pointerId)) elements.stage.releasePointerCapture(event.pointerId);
+    } catch {}
     elements.stage.classList.remove("is-panning");
-    if (intent === "pending") {
-      if (!cancelled) state.designSelected = true;
-      updateDesignEditor();
-    } else if (intent === "pan") {
+    if (finished.kind === "stage-pan") {
       applyStageView();
-    } else if (changed) {
+    } else if (event.type === "pointercancel") {
+      pendingContentClick = null;
+      updateDesignEditor();
+    } else if (finished.changed) {
+      pendingContentClick = null;
       renderFinalComposite();
+    } else if (finished.kind === "content-move") {
+      finishContentClick(finished, event);
+      updateDesignEditor();
     } else {
       updateDesignEditor();
     }
-    event.stopPropagation();
   };
-  elements.designDragTarget.addEventListener("pointerdown", (event) => start(event, "move"));
-  window.addEventListener("pointermove", move, { passive: false });
-  window.addEventListener("pointerup", end);
-  window.addEventListener("pointercancel", end);
-  elements.designDragTarget.addEventListener("dblclick", (event) => {
-    enterCropMode();
-    event.preventDefault();
-    event.stopPropagation();
-  });
+  window.addEventListener("pointerup", finishInteraction);
+  window.addEventListener("pointercancel", finishInteraction);
+
   elements.designDragTarget.addEventListener("keydown", (event) => {
     const step = event.shiftKey ? 10 : 1;
     if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
@@ -1264,39 +1625,52 @@ function enableDesignEditing() {
     const dx = event.key === "ArrowLeft" ? -step : event.key === "ArrowRight" ? step : 0;
     const dy = event.key === "ArrowUp" ? -step : event.key === "ArrowDown" ? step : 0;
     const startContent = { ...state.contentFrame };
-    const nextContent = renderer.constrainFrameVisibility(
+    const nextContent = renderer.constrainFrameToBounds(
       { ...startContent, cx: startContent.cx + dx, cy: startContent.cy + dy },
-      fixedApertureFrame(),
-      0.1
+      editingBoundsFrame()
     );
     state.contentFrame = nextContent;
-    if (!state.cropMode) state.imageFrame = renderer.transformFrameBetweenFrames(state.imageFrame, startContent, nextContent);
+    if (!state.cropMode) {
+      const movedImage = renderer.transformFrameBetweenFrames(state.imageFrame, startContent, nextContent);
+      state.imageFrame = renderer.constrainImageFrameToCover(
+        state.designImage,
+        { ...movedImage, cx: movedImage.cx + (startContent.cx + dx - nextContent.cx), cy: movedImage.cy + (startContent.cy + dy - nextContent.cy) },
+        nextContent
+      );
+    }
     syncAdjustmentsFromFrame();
     commitDirectAdjustment();
     renderFinalComposite();
     event.preventDefault();
   });
   for (const handle of elements.designEditor.querySelectorAll(".design-scale-handle")) {
-    handle.addEventListener("pointerdown", (event) => start(event, "scale"));
     handle.addEventListener("keydown", (event) => {
       if (!["ArrowUp", "ArrowRight", "ArrowDown", "ArrowLeft"].includes(event.key)) return;
+      const handleName = handle.dataset.handle;
+      const horizontalEdge = handleName === "e" || handleName === "w";
+      const verticalEdge = handleName === "n" || handleName === "s";
+      if ((horizontalEdge && ["ArrowUp", "ArrowDown"].includes(event.key))
+        || (verticalEdge && ["ArrowLeft", "ArrowRight"].includes(event.key))) return;
       pushHistory();
-      const direction = ["ArrowUp", "ArrowRight"].includes(event.key) ? 1 : -1;
-      const factor = 1 + direction * (event.shiftKey ? 0.1 : 0.02);
+      const step = event.shiftKey ? 10 : 1;
       const startContent = { ...state.contentFrame };
-      const nextContent = renderer.constrainFrameVisibility({
-        ...startContent,
-        width: Math.max(20, startContent.width * factor),
-        height: Math.max(20, startContent.height * factor)
-      }, fixedApertureFrame(), 0.1);
+      const startPointer = designHandlePoints(renderer.frameCorners(startContent))[handleName];
+      const pointer = [
+        startPointer[0] + (event.key === "ArrowLeft" ? -step : event.key === "ArrowRight" ? step : 0),
+        startPointer[1] + (event.key === "ArrowUp" ? -step : event.key === "ArrowDown" ? step : 0)
+      ];
+      const nextContent = renderer.resizeFrameWithinBounds(
+        startContent,
+        handleName,
+        startPointer,
+        pointer,
+        editingBoundsFrame(),
+        true
+      );
       state.contentFrame = nextContent;
       if (!state.cropMode) {
-        state.imageFrame = renderer.transformFrameBetweenFrames(
-          state.imageFrame,
-          startContent,
-          nextContent
-        );
-      };
+        state.imageFrame = renderer.transformFrameBetweenFrames(state.imageFrame, startContent, nextContent);
+      }
       syncAdjustmentsFromFrame();
       commitDirectAdjustment();
       renderFinalComposite();
@@ -1327,7 +1701,7 @@ function resizePreviewSurface(scale = desiredPreviewRenderScale()) {
 function renderToCanvas(canvas, quality = "final") {
   if (!state.selectedAsset || !state.baseImage) return;
   if (state.designImage) ensureContentGeometry();
-  const renderDesign = state.designImage || renderer.createDefaultDesign(state.selectedAsset);
+  const renderDesign = state.designImage;
   renderer.renderComposite({
     canvas,
     asset: state.selectedAsset,
@@ -1448,29 +1822,31 @@ function updateAdjustmentsFromControls() {
     saturation: Number(elements.designSaturation.value) / 100
   };
   if (state.designImage && ensureContentGeometry()) {
-    const plane = screenPlane();
-    const startContent = { ...state.contentFrame };
-    const aperture = fixedApertureFrame();
-    const nextContent = renderer.constrainFrameVisibility({
-      cx: plane.width / 2 + nextAdjustments.offsetX * plane.width * 0.42,
-      cy: plane.height / 2 + nextAdjustments.offsetY * plane.height * 0.42,
-      width: Math.max(20, aperture.width * nextAdjustments.scale),
-      height: Math.max(20, aperture.height * nextAdjustments.scale),
-      rotation: nextAdjustments.rotation
-    }, aperture, 0.1);
-    state.contentFrame = nextContent;
-    state.imageFrame = renderer.transformFrameBetweenFrames(state.imageFrame, startContent, nextContent);
+    state.imageFrame = renderer.imageFrameFromAdjustments(
+      state.designImage,
+      state.contentFrame,
+      nextAdjustments
+    );
   }
   state.adjustments = nextAdjustments;
+  if (state.designImage) syncAdjustmentsFromFrame();
   syncAdjustmentControls();
   updateDesignEditor();
   scheduleComposite("preview");
 }
 
 async function setDesignBytes(bytes, name, mimeType = "image/png", metadata = {}) {
+  const nextObjectUrl = URL.createObjectURL(new Blob([bytes], { type: mimeType }));
+  let nextImage;
+  try {
+    nextImage = await loadImage(nextObjectUrl);
+  } catch (error) {
+    URL.revokeObjectURL(nextObjectUrl);
+    throw error;
+  }
   pushHistory();
-  state.designObjectUrl = URL.createObjectURL(new Blob([bytes], { type: mimeType }));
-  state.designImage = await loadImage(state.designObjectUrl);
+  state.designObjectUrl = nextObjectUrl;
+  state.designImage = nextImage;
   state.designName = name;
   state.designSource = {
     width: Math.round(metadata.width || state.designImage.naturalWidth || state.designImage.width),
@@ -1494,17 +1870,14 @@ async function setDesignBytes(bytes, name, mimeType = "image/png", metadata = {}
   updateOutputAvailability();
 }
 
-function clearDesign() {
-  if (state.designImage) pushHistory();
+function removeDesign() {
+  if (!state.designImage) return false;
+  pushHistory();
   state.designObjectUrl = null;
   state.designImage = null;
   state.designName = "";
   state.designSource = null;
-  state.designSelected = false;
-  state.cropMode = false;
-  state.cropSnapshot = null;
-  state.contentFrame = null;
-  state.imageFrame = null;
+  restoreDefaultMockupState({ clearContentGeometry: true });
   elements.designSourceLabel.textContent = "尚未读取画面";
   elements.clearDesignButton.disabled = true;
   elements.imageInput.value = "";
@@ -1514,6 +1887,34 @@ function clearDesign() {
   updateOutputAvailability();
   renderFinalComposite();
   showToast("已移除画面");
+  return true;
+}
+
+const EDITOR_COMMANDS = Object.freeze({
+  removeContent: "remove-content",
+  undo: "undo",
+  redo: "redo"
+});
+
+function executeEditorCommand(command) {
+  if (command === EDITOR_COMMANDS.removeContent) return removeDesign();
+  if (command === EDITOR_COMMANDS.undo) return undoEditor();
+  if (command === EDITOR_COMMANDS.redo) return redoEditor();
+  return false;
+}
+
+function keyboardEditorCommand(event) {
+  if (event.isComposing) return null;
+  const editable = document.activeElement?.closest?.("input, select, textarea, [contenteditable]:not([contenteditable='false'])");
+  if (editable) return null;
+  const key = event.key.toLowerCase();
+  const commandModifier = event.metaKey || event.ctrlKey;
+  if (commandModifier && key === "z") return event.shiftKey ? EDITOR_COMMANDS.redo : EDITOR_COMMANDS.undo;
+  if (commandModifier && key === "y") return EDITOR_COMMANDS.redo;
+  if (!event.metaKey && !event.ctrlKey && !event.altKey && (event.key === "Backspace" || event.key === "Delete")) {
+    return state.designImage && state.designSelected ? EDITOR_COMMANDS.removeContent : null;
+  }
+  return null;
 }
 
 function canvasToBlob(canvas) {
@@ -1594,8 +1995,8 @@ async function importDesignFile(file) {
     elements.imageInput.value = "";
     return;
   }
-  if (file.size > 80 * 1024 * 1024) {
-    showToast("文件不能超过 80 MB");
+  if (file.size > MAX_LOCAL_FILE_BYTES) {
+    showToast(`文件不能超过 ${Math.floor(MAX_LOCAL_FILE_BYTES / (1024 * 1024))} MB`);
     elements.imageInput.value = "";
     return;
   }
@@ -1605,7 +2006,7 @@ async function importDesignFile(file) {
     else await setDesignBytes(new Uint8Array(await file.arrayBuffer()), file.name, file.type || "image/svg+xml", { type: extension === "svg" ? "SVG" : "图片" });
     showToast(`已导入：${file.name}`);
   } catch (error) {
-    showToast(error instanceof Error ? error.message : "文件读取失败，请换一个文件重试");
+    showFailure("file-import", error, USER_ERROR_CODES.FILE_READ_FAILED);
   } finally {
     elements.imageInput.value = "";
   }
@@ -1631,21 +2032,28 @@ function resetPerspective() {
   showToast("样机透视已恢复默认");
 }
 
-function resetCurrentMockup() {
-  if (!state.selectedAsset) return;
-  pushHistory();
+function restoreDefaultMockupState({ clearContentGeometry = false } = {}) {
   state.adjustments = { ...DEFAULT_ADJUSTMENTS };
   state.crop = { ...DEFAULT_CROP };
-  state.customQuad = state.selectedAsset.screen.quad.map((point) => [...point]);
-  // A global reset must restore the content geometry as well as colour and
-  // perspective settings. Leaving the edited crop frame in place made the
-  // source appear as a small or offset rectangle even after “复位”.
-  if (state.designImage) resetContentGeometry();
+  if (state.selectedAsset) state.customQuad = state.selectedAsset.screen.quad.map((point) => [...point]);
+  if (clearContentGeometry) {
+    state.contentFrame = null;
+    state.imageFrame = null;
+  } else if (state.designImage) {
+    resetContentGeometry();
+  }
   elements.fitMode.value = "cover";
   state.designSelected = false;
   state.cropMode = false;
   state.cropSnapshot = null;
+  state.cropHistoryDepth = 0;
   syncAdjustmentControls();
+}
+
+function resetCurrentMockup() {
+  if (!state.selectedAsset) return;
+  pushHistory();
+  restoreDefaultMockupState();
   fitStage(true);
   renderFinalComposite();
   showToast("已恢复默认画面");
@@ -1687,7 +2095,7 @@ async function downloadRender() {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     showToast("PNG 已导出");
   } catch (error) {
-    showToast(error instanceof Error ? error.message : "导出失败");
+    showFailure("download-render", error, USER_ERROR_CODES.EXPORT_FAILED);
   }
 }
 
@@ -1704,12 +2112,12 @@ async function pasteRender() {
       bytes,
       width: outputCanvas.width,
       height: outputCanvas.height,
-      name: `${state.selectedAsset?.name || "样机"} · 样机工作室`
+      name: `${state.selectedAsset?.name || "样机"} · 小鸟样机`
     });
   } catch (error) {
     elements.pasteButton.disabled = false;
     elements.pasteButton.textContent = "粘贴到画布";
-    showToast(error instanceof Error ? error.message : "粘贴失败");
+    showFailure("paste-render", error, USER_ERROR_CODES.PASTE_FAILED);
   }
 }
 
@@ -1780,14 +2188,18 @@ function stopStageViewAnimation() {
 }
 
 function animateStageView(change) {
-  stopStageViewAnimation();
+  clearTimeout(stageViewTimer);
+  stageViewTimer = 0;
   if (reducedMotionQuery.matches) {
+    elements.canvasWrap.classList.remove("is-view-animating");
     change();
     return;
   }
+  const wasAnimating = elements.canvasWrap.classList.contains("is-view-animating");
   elements.canvasWrap.classList.add("is-view-animating");
+  if (!wasAnimating) void elements.canvasWrap.offsetWidth;
   change();
-  stageViewTimer = setTimeout(stopStageViewAnimation, 260);
+  stageViewTimer = setTimeout(stopStageViewAnimation, STAGE_VIEW_MOTION_MS);
 }
 
 function updateZoom(delta, animated = false) {
@@ -1810,16 +2222,14 @@ function fitStage(animated = false) {
 }
 
 function enableStageNavigation() {
-  let interaction = null;
-
   window.addEventListener("keydown", (event) => {
-    const editable = /INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName || "");
-    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "z" && !editable) {
-      if (event.shiftKey) redoEditor();
-      else undoEditor();
+    const editorCommand = keyboardEditorCommand(event);
+    if (editorCommand) {
+      executeEditorCommand(editorCommand);
       event.preventDefault();
       return;
     }
+    const editable = /INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName || "");
     if (event.code === "Space" && !/INPUT|SELECT|TEXTAREA|BUTTON/.test(document.activeElement?.tagName || "")) {
       stageSpacePressed = true;
       event.preventDefault();
@@ -1838,6 +2248,10 @@ function enableStageNavigation() {
   window.addEventListener("keyup", (event) => {
     if (event.code === "Space") stageSpacePressed = false;
   });
+  window.addEventListener("blur", () => {
+    stageSpacePressed = false;
+    elements.stage.classList.remove("is-panning");
+  });
 
   elements.stage.addEventListener("wheel", (event) => {
     event.preventDefault();
@@ -1852,50 +2266,35 @@ function enableStageNavigation() {
     }
   }, { passive: false });
 
-  elements.stage.addEventListener("pointerdown", (event) => {
-    const overInteractive = event.target.closest("button, .design-drag-target, .design-scale-handle, .source-popover, .crop-toolbar");
-    const canPan = event.button === 1 || stageSpacePressed || (!overInteractive && event.button === 0);
-    if (!canPan) return;
-    stopStageViewAnimation();
-    if (!overInteractive && state.designSelected) {
-      if (state.cropMode) finishCropMode(true);
-      state.designSelected = false;
-      updateDesignEditor();
-    }
-    interaction = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, panX: state.panX, panY: state.panY };
-    elements.stage.classList.add("is-panning");
-    event.preventDefault();
-  });
-
-  // Figma's plugin webview can drop element-level pointer capture when the
-  // pointer crosses the transformed canvas. Window-level listeners keep pan
-  // continuous in both the browser harness and the real host.
-  window.addEventListener("pointermove", (event) => {
-    if (!interaction || interaction.pointerId !== event.pointerId) return;
-    state.panX = interaction.panX + event.clientX - interaction.x;
-    state.panY = interaction.panY + event.clientY - interaction.y;
-    applyStageView();
-    event.preventDefault();
-  }, { passive: false });
-
-  const finishPan = (event) => {
-    if (!interaction || interaction.pointerId !== event.pointerId) return;
-    interaction = null;
-    elements.stage.classList.remove("is-panning");
-  };
-  window.addEventListener("pointerup", finishPan);
-  window.addEventListener("pointercancel", finishPan);
   window.addEventListener("resize", () => {
     sizeCanvasWrap();
     applyStageView();
   });
 }
 
-function setWindowState(windowState) {
+let appliedWindowState = "expanded";
+let pendingWindowState = null;
+
+function applyWindowTransitionProgress(progress) {
+  const normalizedProgress = Math.max(0, Math.min(1, Number(progress) || 0));
+  document.documentElement.style.setProperty("--window-collapse-progress", String(normalizedProgress));
+}
+
+function applyWindowVisualState(windowState) {
   const collapsed = windowState === "collapsed";
+  applyWindowTransitionProgress(collapsed ? 1 : 0);
   document.documentElement.classList.toggle("is-collapsed", collapsed);
+  elements.appShell.setAttribute("aria-hidden", String(collapsed));
   elements.collapsedBar.setAttribute("aria-hidden", String(!collapsed));
-  postPluginMessage({ type: "set-window-state", state: windowState });
+  (collapsed ? elements.expandButton : elements.collapseButton).focus({ preventScroll: true });
+}
+
+function setWindowState(windowState) {
+  const targetState = windowState === "collapsed" ? "collapsed" : "expanded";
+  if (pendingWindowState === targetState || (!pendingWindowState && appliedWindowState === targetState)) return;
+  pendingWindowState = targetState;
+  document.documentElement.setAttribute("data-window-transition", targetState);
+  postPluginMessage({ type: "set-window-state", state: targetState });
 }
 
 function enableWindowResize() {
@@ -1938,15 +2337,7 @@ for (const tab of document.querySelectorAll(".mode-tab")) {
 
 for (const segment of document.querySelectorAll(".segment")) {
   segment.addEventListener("click", () => {
-    if (state.segment === segment.dataset.filter) return;
-    state.segment = segment.dataset.filter;
-    elements.catalogSegments.dataset.activeFilter = state.segment;
-    document.querySelectorAll(".segment").forEach((item) => {
-      const active = item === segment;
-      item.classList.toggle("active", active);
-      item.setAttribute("aria-selected", String(active));
-    });
-    renderAssetGrid({ animate: true });
+    setCatalogSegment(segment.dataset.filter);
   });
   segment.addEventListener("keydown", (event) => {
     if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
@@ -1960,11 +2351,16 @@ for (const segment of document.querySelectorAll(".segment")) {
 }
 
 elements.refreshButton.addEventListener("click", fetchCatalog);
+elements.locateCurrentAsset.addEventListener("click", locateSelectedAsset);
+elements.assetGrid.addEventListener("click", selectAssetFromCatalogEvent);
+elements.recentItems.addEventListener("click", selectAssetFromCatalogEvent);
 elements.searchInput.addEventListener("input", () => {
+  state.locatedAssetId = null;
   elements.clearSearch.hidden = !elements.searchInput.value;
   renderAssetGrid();
 });
 elements.clearSearch.addEventListener("click", () => {
+  state.locatedAssetId = null;
   elements.searchInput.value = "";
   elements.clearSearch.hidden = true;
   elements.searchInput.focus();
@@ -2008,7 +2404,7 @@ document.addEventListener("focusin", (event) => {
 elements.readSelectionButton.addEventListener("click", requestSelection);
 elements.importFileButton.addEventListener("click", () => elements.imageInput.click());
 elements.imageInput.addEventListener("change", () => importDesignFile(elements.imageInput.files?.[0]));
-elements.clearDesignButton.addEventListener("click", clearDesign);
+elements.clearDesignButton.addEventListener("click", () => executeEditorCommand(EDITOR_COMMANDS.removeContent));
 for (const control of [
   elements.designScale,
   elements.designOffsetX,
@@ -2035,7 +2431,7 @@ elements.quickImportFileButton.addEventListener("click", () => {
   closeSourcePopover();
   elements.imageInput.click();
 });
-elements.quickClearDesignButton.addEventListener("click", clearDesign);
+elements.quickClearDesignButton.addEventListener("click", () => executeEditorCommand(EDITOR_COMMANDS.removeContent));
 document.addEventListener("pointerdown", (event) => {
   if (elements.sourcePopover.hidden) return;
   if (elements.sourcePopover.contains(event.target) || elements.replaceSourceButton.contains(event.target) || elements.screenCta.contains(event.target)) return;
@@ -2054,8 +2450,9 @@ elements.collapseButton.addEventListener("click", () => setWindowState("collapse
 elements.expandButton.addEventListener("click", () => setWindowState("expanded"));
 syncAdjustmentControls();
 updateSourceActions();
-enableDesignEditing();
+enableStageInteractions();
 enableStageNavigation();
+enableAssetCardHover();
 enableRecentScrolling();
 enableWindowResize();
 
@@ -2072,11 +2469,28 @@ window.onmessage = async (event) => {
     return;
   }
 
+  if (message.type === "window-state-applied") {
+    const appliedState = message.state === "collapsed" ? "collapsed" : "expanded";
+    if (pendingWindowState && pendingWindowState !== appliedState) return;
+    applyWindowVisualState(appliedState);
+    appliedWindowState = appliedState;
+    pendingWindowState = null;
+    document.documentElement.removeAttribute("data-window-transition");
+    return;
+  }
+
+  if (message.type === "window-state-progress") {
+    const progressState = message.state === "collapsed" ? "collapsed" : "expanded";
+    if (pendingWindowState && pendingWindowState !== progressState) return;
+    if (!reducedMotionQuery.matches) applyWindowTransitionProgress(message.progress);
+    return;
+  }
+
   if (message.type === "catalog-cache") {
     state.pluginCatalogCache = message.cache;
     if (!state.manifest && message.cache) {
       try {
-        state.manifest = validateManifest(message.cache.manifest);
+        state.manifest = validateCachedCatalog(message.cache);
         state.catalogBaseUrl = message.cache.catalogBaseUrl;
         setCatalogState("cached", "使用离线目录");
         hydrateCatalog();
@@ -2109,7 +2523,7 @@ window.onmessage = async (event) => {
     elements.readSelectionButton.disabled = false;
     updateSourceActions();
     elements.readSelectionButton.textContent = "读取选区";
-    showToast(message.message);
+    showToast(userErrors.messageFromPayload(message, USER_ERROR_CODES.SELECTION_READ_FAILED));
     return;
   }
 
@@ -2123,7 +2537,7 @@ window.onmessage = async (event) => {
   if (message.type === "paste-error") {
     elements.pasteButton.disabled = false;
     elements.pasteButton.textContent = "粘贴到画布";
-    showToast(message.message);
+    showToast(userErrors.messageFromPayload(message, USER_ERROR_CODES.PASTE_FAILED));
   }
 };
 
@@ -2136,5 +2550,3 @@ window.addEventListener("beforeunload", () => {
   if (pdfWorkerUrl) URL.revokeObjectURL(pdfWorkerUrl);
   if (state.designObjectUrl) URL.revokeObjectURL(state.designObjectUrl);
 });
-
-void PRODUCTION_CATALOG_URL;

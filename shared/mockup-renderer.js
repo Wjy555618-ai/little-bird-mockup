@@ -1,43 +1,10 @@
 (function attachMockupRenderer(global) {
   "use strict";
 
-  const VERSION = "2.3.0";
+  const VERSION = "2.4.0";
   const DEFAULT_ADJUSTMENTS = Object.freeze({ scale: 1, offsetX: 0, offsetY: 0, rotation: 0, brightness: 1, contrast: 1, saturation: 1 });
   const DEFAULT_CROP = Object.freeze({ zoom: 1, offsetX: 0, offsetY: 0 });
-  const baseCanvasCache = new WeakMap();
-  const apertureMaskCache = new WeakMap();
-  const coverageMaskCache = new WeakMap();
-  const EDGE_MATTE_MIN_ALPHA = 12;
-
-  function createDefaultDesign(asset) {
-    validateAsset(asset);
-    const canvas = document.createElement("canvas");
-    canvas.width = asset.screen.recommendedSize.width;
-    canvas.height = asset.screen.recommendedSize.height;
-    const context = canvas.getContext("2d");
-    const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
-    gradient.addColorStop(0, "#111827");
-    gradient.addColorStop(0.48, "#38446f");
-    gradient.addColorStop(1, "#8393c7");
-    context.fillStyle = gradient;
-    context.fillRect(0, 0, canvas.width, canvas.height);
-
-    const size = Math.max(22, Math.round(Math.min(canvas.width, canvas.height) / 12));
-    context.strokeStyle = "rgba(255,255,255,.16)";
-    context.lineWidth = Math.max(2, size * 0.06);
-    for (let x = -canvas.height; x < canvas.width + canvas.height; x += size) {
-      context.beginPath();
-      context.moveTo(x, 0);
-      context.lineTo(x - canvas.height, canvas.height);
-      context.stroke();
-    }
-
-    context.fillStyle = "rgba(255,255,255,.92)";
-    context.fillRect(canvas.width * 0.09, canvas.height * 0.1, canvas.width * 0.3, Math.max(8, canvas.height * 0.018));
-    context.fillStyle = "rgba(255,255,255,.35)";
-    context.fillRect(canvas.width * 0.09, canvas.height * 0.145, canvas.width * 0.18, Math.max(5, canvas.height * 0.01));
-    return canvas;
-  }
+  const apertureMaskCache = new Map();
 
   function assertQuad(quad, asset, label) {
     if (!Array.isArray(quad) || quad.length !== 4) throw new Error(`${asset.id} ${label}必须有四个顶点`);
@@ -66,8 +33,7 @@
   function screenCompositing(asset) {
     const value = asset.screen?.compositing;
     return {
-      mode: value?.mode,
-      maxEdgeExtension: Number(value?.maxEdgeExtension)
+      mode: value?.mode
     };
   }
 
@@ -77,7 +43,7 @@
 
   function validateAsset(asset) {
     if (!asset || !asset.id || !asset.name) throw new Error("样机缺少 id 或名称");
-    if (asset.renderer !== "static-screen-v4") throw new Error(`${asset.id} 渲染器不受支持`);
+    if (asset.renderer !== "static-screen-v5") throw new Error(`${asset.id} 渲染器不受支持`);
     if (!Number.isFinite(asset.canvas?.width) || !Number.isFinite(asset.canvas?.height)) throw new Error(`${asset.id} 画布尺寸无效`);
     assertQuad(asset.screen?.quad, asset, "内容映射面");
     if (!asset.screen?.aperture || !Array.isArray(asset.screen.aperture.quad) || !Array.isArray(asset.screen.aperture.cornerRadii)) {
@@ -91,58 +57,33 @@
     }
     if (!asset.screen.recommendedSize.label) throw new Error(`${asset.id} 缺少推荐画面比例说明`);
     const compositing = screenCompositing(asset);
-    if (!asset.screen?.compositing || compositing.mode !== "chroma-edge") throw new Error(`${asset.id} v4 只接收可验证的绿幕边缘合成`);
-    if (!asset.chromaKey?.enabled) throw new Error(`${asset.id} 绿幕软边模式缺少 chromaKey`);
-    if (!Number.isInteger(compositing.maxEdgeExtension) || compositing.maxEdgeExtension < 0 || compositing.maxEdgeExtension > 12) throw new Error(`${asset.id} 接缝软边上限无效`);
-    if (!Number.isFinite(asset.screen?.underlap) || asset.screen.underlap < compositing.maxEdgeExtension || asset.screen.underlap > 24) throw new Error(`${asset.id} 隐藏衬底必须覆盖接缝软边`);
-    if (Object.hasOwn(asset.screen, "bleed")) throw new Error(`${asset.id} v4 禁止继续使用含义混乱的 bleed`);
+    if (!asset.screen?.compositing || compositing.mode !== "aperture-mask") throw new Error(`${asset.id} v5 只接收显式孔径遮罩合成`);
+    const presentation = asset.screen?.presentation;
+    if (!presentation || !["neutral-off", "reference-bound"].includes(presentation.mode)) throw new Error(`${asset.id} 缺少可信屏幕展示来源`);
+    if (presentation.mode === "reference-bound" && (!/^[a-f0-9]{64}$/.test(presentation.referenceSha256 || "") || presentation.referenceSha256 !== asset.provenance?.referenceSha256)) {
+      throw new Error(`${asset.id} 的屏幕画面没有绑定准确参考图摘要`);
+    }
+    if (Object.hasOwn(asset, "chromaKey")) throw new Error(`${asset.id} 禁止包含色键配置`);
+    if (Object.hasOwn(asset.screen, "underlap") || Object.hasOwn(asset.screen, "bleed") || Object.hasOwn(asset.screen.compositing, "maxEdgeExtension")) {
+      throw new Error(`${asset.id} 包含已废弃的色键接缝字段`);
+    }
     return asset;
   }
 
-  function chromaAlpha(red, green, blue, asset) {
-    if (!asset.chromaKey?.enabled) return 0;
-    const configuredMinimum = asset.chromaKey.minimumGreen || 65;
-    const configuredDominance = asset.chromaKey.dominance || 1.18;
-    if (green < configuredMinimum || green <= red * configuredDominance || green <= blue * configuredDominance) return 0;
-    return 255;
-  }
-
-  function chromaSpillAlpha(red, green, blue, asset) {
-    const configuredMinimum = asset.chromaKey?.minimumGreen || 65;
-    const configuredDominance = asset.chromaKey?.dominance || 1.18;
-    const minimumGreen = Math.max(4, configuredMinimum * 0.08);
-    const fullGreen = Math.max(10, configuredMinimum * 0.42);
-    const dominance = Math.max(1.01, 1 + (configuredDominance - 1) * 0.06);
-    if (green < minimumGreen || green <= red * dominance || green <= blue * dominance) return 0;
-    return Math.round(Math.max(0, Math.min(1, (green - minimumGreen) / Math.max(1, fullGreen - minimumGreen))) * 255);
-  }
-
-  function screenApertureMask(image, asset, renderScale = 1) {
-    let imageCache = apertureMaskCache.get(image);
-    if (!imageCache) {
-      imageCache = new Map();
-      apertureMaskCache.set(image, imageCache);
-    }
-    const scale = Math.max(1, Math.min(2, Number(renderScale) || 1));
+  function screenApertureMask(asset, outputWidth = asset.canvas.width, outputHeight = asset.canvas.height) {
+    validateAsset(asset);
     const aperture = screenApertureGeometry(asset);
-    const cacheKey = `${asset.id}:${asset.revision || asset.updatedAt || "current"}:aperture-${scale.toFixed(2)}:${JSON.stringify(aperture)}`;
-    if (imageCache.has(cacheKey)) return imageCache.get(cacheKey);
-
-    const width = Math.round(asset.canvas.width * scale);
-    const height = Math.round(asset.canvas.height * scale);
-    const scaleX = width / asset.canvas.width;
-    const scaleY = height / asset.canvas.height;
+    const width = Math.max(1, Math.round(outputWidth));
+    const height = Math.max(1, Math.round(outputHeight));
+    const cacheKey = `${asset.id}:${asset.revision || asset.updatedAt || "current"}:${width}x${height}:${JSON.stringify(aperture)}`;
+    if (apertureMaskCache.has(cacheKey)) return apertureMaskCache.get(cacheKey);
     const mask = document.createElement("canvas");
     mask.width = width;
     mask.height = height;
     const maskContext = mask.getContext("2d");
-    maskContext.setTransform(scaleX, 0, 0, scaleY, 0, 0);
+    maskContext.setTransform(width / asset.canvas.width, 0, 0, height / asset.canvas.height, 0, 0);
     maskContext.imageSmoothingEnabled = true;
     maskContext.imageSmoothingQuality = "high";
-
-    // The catalog geometry is the single source of truth for the aperture.
-    // Chroma keying removes the green plate from the photographic base, but a
-    // sampled raster edge must never redefine a mathematically rounded screen.
     const targetAspect = asset.screen.recommendedSize.width / asset.screen.recommendedSize.height;
     const plane = screenPlane(targetAspect);
     const shape = document.createElement("canvas");
@@ -154,233 +95,26 @@
     shapeContext.beginPath();
     shapeContext.roundRect(0, 0, plane.width, plane.height, radii);
     shapeContext.fill();
-
-    // The physical aperture stays exact. Raster-fringe coverage is built as a
-    // separate vector geometry below; neither layer rewrites the other.
     drawImageToQuad(maskContext, shape, aperture.quad, "final");
-    imageCache.set(cacheKey, mask);
+    apertureMaskCache.set(cacheKey, mask);
     return mask;
   }
 
-  function lineIntersection(firstStart, firstEnd, secondStart, secondEnd) {
-    const firstX = firstEnd[0] - firstStart[0];
-    const firstY = firstEnd[1] - firstStart[1];
-    const secondX = secondEnd[0] - secondStart[0];
-    const secondY = secondEnd[1] - secondStart[1];
-    const denominator = firstX * secondY - firstY * secondX;
-    if (Math.abs(denominator) < 0.00001) return [(firstEnd[0] + secondStart[0]) / 2, (firstEnd[1] + secondStart[1]) / 2];
-    const deltaX = secondStart[0] - firstStart[0];
-    const deltaY = secondStart[1] - firstStart[1];
-    const amount = (deltaX * secondY - deltaY * secondX) / denominator;
-    return [firstStart[0] + firstX * amount, firstStart[1] + firstY * amount];
-  }
-
-  function outwardEdgeNormal(quad, edgeIndex) {
-    const center = quad.reduce((sum, point) => [sum[0] + point[0] / 4, sum[1] + point[1] / 4], [0, 0]);
-    const start = quad[edgeIndex];
-    const end = quad[(edgeIndex + 1) % 4];
-    const dx = end[0] - start[0];
-    const dy = end[1] - start[1];
-    const length = Math.hypot(dx, dy) || 1;
-    let normal = [-dy / length, dx / length];
-    const midpoint = [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2];
-    if ((center[0] - midpoint[0]) * normal[0] + (center[1] - midpoint[1]) * normal[1] > 0) normal = [-normal[0], -normal[1]];
-    return normal;
-  }
-
-  function offsetQuadEdges(quad, edgeExtensions) {
-    const lines = quad.map((start, index) => {
-      const end = quad[(index + 1) % 4];
-      const normal = outwardEdgeNormal(quad, index);
-      const amount = edgeExtensions[index] || 0;
-      return [
-        [start[0] + normal[0] * amount, start[1] + normal[1] * amount],
-        [end[0] + normal[0] * amount, end[1] + normal[1] * amount]
-      ];
-    });
-    return lines.map((line, index) => {
-      const previous = lines[(index + 3) % 4];
-      return lineIntersection(previous[0], previous[1], line[0], line[1]);
-    });
-  }
-
-  function sourceCoverageGeometry(image, asset) {
-    let imageCache = coverageMaskCache.get(image);
-    if (!imageCache) {
-      imageCache = new Map();
-      coverageMaskCache.set(image, imageCache);
-    }
-    const compositing = screenCompositing(asset);
+  function screenApertureMetrics(asset) {
+    validateAsset(asset);
     const aperture = screenApertureGeometry(asset);
-    const cacheKey = `${asset.id}:${asset.revision || asset.updatedAt || "current"}:coverage-geometry:${JSON.stringify(aperture)}:${JSON.stringify(compositing)}`;
-    if (imageCache.has(cacheKey)) return imageCache.get(cacheKey);
-
-    const width = asset.canvas.width;
-    const height = asset.canvas.height;
-    const exactMask = screenApertureMask(image, asset, 1);
-    const exactContext = exactMask.getContext("2d", { willReadFrequently: true });
-    const exactPixels = exactContext.getImageData(0, 0, width, height);
-    const source = document.createElement("canvas");
-    source.width = width;
-    source.height = height;
-    const sourceContext = source.getContext("2d", { willReadFrequently: true });
-    sourceContext.drawImage(image, 0, 0, width, height);
-    const sourcePixels = sourceContext.getImageData(0, 0, width, height);
-    const pixelCount = width * height;
-    let exactPixelCount = 0;
-    let interiorSpillPixels = 0;
-    for (let pixel = 0; pixel < pixelCount; pixel += 1) {
-      const index = pixel * 4;
-      const exactAlpha = exactPixels.data[index + 3];
-      if (exactAlpha >= 128) {
-        exactPixelCount += 1;
-        const spill = chromaSpillAlpha(sourcePixels.data[index], sourcePixels.data[index + 1], sourcePixels.data[index + 2], asset);
-        if (spill > EDGE_MATTE_MIN_ALPHA) interiorSpillPixels += 1;
-      }
-    }
-    const getSpill = (x, y) => {
-      const safeX = Math.max(0, Math.min(width - 1, Math.round(x)));
-      const safeY = Math.max(0, Math.min(height - 1, Math.round(y)));
-      const index = (safeY * width + safeX) * 4;
-      return chromaSpillAlpha(sourcePixels.data[index], sourcePixels.data[index + 1], sourcePixels.data[index + 2], asset);
+    const area = Math.abs(aperture.quad.reduce((sum, point, index) => {
+      const next = aperture.quad[(index + 1) % aperture.quad.length];
+      return sum + point[0] * next[1] - next[0] * point[1];
+    }, 0) / 2);
+    return {
+      pass: area >= asset.canvas.width * asset.canvas.height * 0.005,
+      mode: "aperture-mask",
+      source: "explicit-geometry",
+      exact: true,
+      apertureArea: area,
+      canvasArea: asset.canvas.width * asset.canvas.height
     };
-    let truncatedSamples = 0;
-    let sampleCount = 0;
-    const edgeExtensions = aperture.quad.map((start, edgeIndex) => {
-      if (compositing.maxEdgeExtension === 0) return 0;
-      const end = aperture.quad[(edgeIndex + 1) % 4];
-      const normal = outwardEdgeNormal(aperture.quad, edgeIndex);
-      const distances = [];
-      for (let sample = 8; sample <= 92; sample += 1) {
-        const amount = sample / 100;
-        const point = [start[0] + (end[0] - start[0]) * amount, start[1] + (end[1] - start[1]) * amount];
-        let distance = 0;
-        for (let offset = 1; offset <= compositing.maxEdgeExtension + 1; offset += 1) {
-          if (getSpill(point[0] + normal[0] * offset, point[1] + normal[1] * offset) <= EDGE_MATTE_MIN_ALPHA) break;
-          if (offset <= compositing.maxEdgeExtension) distance = offset;
-          else truncatedSamples += 1;
-        }
-        distances.push(distance);
-        sampleCount += 1;
-      }
-      // A single uncovered contiguous sample is still a visible seam at high
-      // zoom. Use the measured maximum for the whole edge, then keep the final
-      // matte vector-smooth; do not trade correctness for a percentile shortcut.
-      return Math.max(...distances);
-    });
-    const coverageQuad = offsetQuadEdges(aperture.quad, edgeExtensions);
-    const maxExtension = Math.max(...edgeExtensions);
-    const truncatedEdgeRatio = truncatedSamples / Math.max(1, sampleCount);
-    const interiorSpillRatio = exactPixelCount ? interiorSpillPixels / exactPixelCount : 0;
-    const result = {
-      geometry: { quad: coverageQuad, cornerRadii: aperture.cornerRadii },
-      metrics: {
-        mode: compositing.mode,
-        maxEdgeExtension: maxExtension,
-        edgeExtensionLimit: compositing.maxEdgeExtension,
-        edgeExtensions,
-        truncatedSamples,
-        truncatedEdgeRatio,
-        interiorSpillRatio,
-        pass: exactPixelCount > 0
-          && interiorSpillRatio >= 0.85
-          && truncatedSamples === 0
-      }
-    };
-    imageCache.set(cacheKey, result);
-    return result;
-  }
-
-  function screenCoverageMask(image, asset, renderScale = 1) {
-    const scale = Math.max(1, Math.min(2, Number(renderScale) || 1));
-    const source = sourceCoverageGeometry(image, asset);
-    let imageCache = coverageMaskCache.get(image);
-    const cacheKey = `${asset.id}:${asset.revision || asset.updatedAt || "current"}:coverage-${scale.toFixed(2)}:${JSON.stringify(source.geometry)}`;
-    if (imageCache.has(cacheKey)) return imageCache.get(cacheKey);
-    const width = Math.round(asset.canvas.width * scale);
-    const height = Math.round(asset.canvas.height * scale);
-    const mask = document.createElement("canvas");
-    mask.width = width;
-    mask.height = height;
-    const context = mask.getContext("2d");
-    context.setTransform(width / asset.canvas.width, 0, 0, height / asset.canvas.height, 0, 0);
-    context.imageSmoothingEnabled = true;
-    context.imageSmoothingQuality = "high";
-    const targetAspect = asset.screen.recommendedSize.width / asset.screen.recommendedSize.height;
-    const plane = screenPlane(targetAspect);
-    const shape = document.createElement("canvas");
-    shape.width = plane.width;
-    shape.height = plane.height;
-    const shapeContext = shape.getContext("2d");
-    const radii = cornerRadiiPixels(source.geometry.cornerRadii, Math.min(plane.width, plane.height));
-    shapeContext.fillStyle = "#fff";
-    shapeContext.beginPath();
-    shapeContext.roundRect(0, 0, plane.width, plane.height, radii);
-    shapeContext.fill();
-    drawImageToQuad(context, shape, source.geometry.quad, "final");
-    imageCache.set(cacheKey, mask);
-    return mask;
-  }
-
-  function screenCoverageMetrics(image, asset) {
-    return { ...sourceCoverageGeometry(image, asset).metrics };
-  }
-
-  function preparedBaseImage(image, asset) {
-    if (!asset.chromaKey?.enabled) return image;
-    let imageCache = baseCanvasCache.get(image);
-    if (!imageCache) {
-      imageCache = new Map();
-      baseCanvasCache.set(image, imageCache);
-    }
-    const cacheKey = `${asset.id}:${asset.revision || asset.updatedAt || "current"}:${JSON.stringify(screenApertureGeometry(asset))}:${JSON.stringify(screenCompositing(asset))}`;
-    if (imageCache.has(cacheKey)) return imageCache.get(cacheKey);
-    const canvas = document.createElement("canvas");
-    canvas.width = asset.canvas.width;
-    canvas.height = asset.canvas.height;
-    const context = canvas.getContext("2d", { willReadFrequently: true });
-    context.drawImage(image, 0, 0, canvas.width, canvas.height);
-    const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
-    const coverageMask = screenCoverageMask(image, asset, 1);
-    const coverageContext = coverageMask.getContext("2d", { willReadFrequently: true });
-    const coveragePixels = coverageContext.getImageData(0, 0, canvas.width, canvas.height);
-    const replacement = asset.chromaKey.replacement || [12, 12, 12];
-    for (let index = 0; index < pixels.data.length; index += 4) {
-      const red = pixels.data[index];
-      const green = pixels.data[index + 1];
-      const blue = pixels.data[index + 2];
-      const screenCoverage = coveragePixels.data[index + 3] / 255;
-      // Green reflections can fall well outside the authored screen quad. A
-      // chroma-enabled asset treats that hue as synthetic everywhere: neutralize
-      // it globally, but reserve underlay replacement for the seam-safe screen matte.
-      const spillAlpha = chromaSpillAlpha(red, green, blue, asset);
-      const keyAlpha = screenCoverage
-        ? Math.max(chromaAlpha(red, green, blue, asset), spillAlpha)
-        : 0;
-      const alpha = Math.round(keyAlpha);
-      if (alpha) {
-        const shade = Math.max(0.35, Math.min(1, green / 255));
-        const mix = alpha / 255;
-        const nextRed = Math.round(red * (1 - mix) + replacement[0] * shade * mix);
-        const nextGreen = Math.round(green * (1 - mix) + replacement[1] * shade * mix);
-        const nextBlue = Math.round(blue * (1 - mix) + replacement[2] * shade * mix);
-        pixels.data[index] = nextRed;
-        pixels.data[index + 1] = Math.min(nextGreen, Math.max(nextRed, nextBlue) + 1);
-        pixels.data[index + 2] = nextBlue;
-      } else if (spillAlpha) {
-        // A reflected green plate outside the authored aperture is scene light,
-        // not a hole. Preserve its luminance and texture while removing only
-        // the key hue; replacing it with the underlay created a jagged black
-        // patch on reflective stands.
-        const neutral = Math.round(red * 0.2126 + green * 0.7152 + blue * 0.0722);
-        pixels.data[index] = neutral;
-        pixels.data[index + 1] = neutral;
-        pixels.data[index + 2] = neutral;
-      }
-    }
-    context.putImageData(pixels, 0, 0);
-    imageCache.set(cacheKey, canvas);
-    return canvas;
   }
 
   function quadSize(quad) {
@@ -496,6 +230,62 @@
     return solvedX.map((x, index) => [x, solvedY[index]]);
   }
 
+  function baselineFrameForAspect(targetAspect) {
+    const plane = screenPlane(targetAspect);
+    return { cx: plane.width / 2, cy: plane.height / 2, width: plane.width, height: plane.height, rotation: 0 };
+  }
+
+  function viewportPointToCanvas(point, rect, logicalSize) {
+    return [
+      (point[0] - rect.left) / Math.max(1, rect.width) * logicalSize.width,
+      (point[1] - rect.top) / Math.max(1, rect.height) * logicalSize.height
+    ];
+  }
+
+  function logicalPointToBackingStore(point, logicalSize, backingStoreSize) {
+    return [
+      point[0] * backingStoreSize.width / logicalSize.width,
+      point[1] * backingStoreSize.height / logicalSize.height
+    ];
+  }
+
+  function contentGeometry(image, targetAspect, surfaceQuad, frame, imageFrame) {
+    const plane = screenPlane(targetAspect);
+    const baselineFrame = baselineFrameForAspect(targetAspect);
+    const normalizedFrame = constrainFrameToBounds(
+      normalizeFrame(frame, plane.width, plane.height),
+      baselineFrame
+    );
+    const normalizedImageFrame = normalizeFrame(
+      imageFrame || imageFrameForCover(image, normalizedFrame),
+      plane.width,
+      plane.height
+    );
+    const renderQuad = frameQuadOnSurface(normalizedFrame, targetAspect, surfaceQuad);
+    return {
+      plane,
+      surfaceQuad: surfaceQuad.map((point) => [...point]),
+      baselineFrame,
+      frame: normalizedFrame,
+      imageFrame: normalizedImageFrame,
+      renderQuad,
+      overlayQuad: renderQuad.map((point) => [...point])
+    };
+  }
+
+  function planePointToCanvas(point, geometry) {
+    return bilinearPoint(
+      geometry.surfaceQuad,
+      point[0] / geometry.plane.width,
+      point[1] / geometry.plane.height
+    );
+  }
+
+  function canvasPointToPlane(point, geometry) {
+    const [u, v] = inverseBilinearPoint(geometry.surfaceQuad, point);
+    return [u * geometry.plane.width, v * geometry.plane.height];
+  }
+
   function imageFrameForCover(image, frame) {
     const sourceWidth = Math.max(1, image?.naturalWidth || image?.width || 1);
     const sourceHeight = Math.max(1, image?.naturalHeight || image?.height || 1);
@@ -516,10 +306,10 @@
     const normalizedFrame = normalizeFrame(frame, frame.width, frame.height);
     const normalizedImage = normalizeFrame(imageFrame, normalizedFrame.width, normalizedFrame.height);
 
-    // The mockup aperture is fixed. Only the source rectangle is transformed.
+    // This helper constrains a source rectangle against the target frame it is
+    // given. It does not define the plugin's physical aperture or crop model.
     // Work in source-local axes so a rotated or deliberately edge-stretched
-    // source still covers every corner of the aperture without exposing the
-    // base mockup underneath.
+    // source still covers every corner of that target.
     const frameAngle = normalizedFrame.rotation * Math.PI / 180;
     const relativeAngle = (normalizedImage.rotation - normalizedFrame.rotation) * Math.PI / 180;
     const cosine = Math.cos(relativeAngle);
@@ -564,6 +354,64 @@
     };
   }
 
+  // The visible content frame and the source image transform are deliberately
+  // separate. Adjustment controls zoom, pan and rotate the source *inside* the
+  // content frame; they must never resize the physical aperture itself.
+  function imageFrameFromAdjustments(image, frame, adjustments) {
+    const normalizedFrame = normalizeFrame(frame, frame?.width, frame?.height);
+    const values = { ...DEFAULT_ADJUSTMENTS, ...(adjustments || {}) };
+    const rotation = normalizedFrame.rotation + Math.max(-30, Math.min(30, Number(values.rotation) || 0));
+    const cover = imageFrameForCover(image, normalizedFrame);
+    const minimum = constrainImageFrameToCover(
+      image,
+      { ...cover, rotation },
+      normalizedFrame
+    );
+    const scale = Math.max(1, Math.min(4, Number(values.scale) || 1));
+    const offsetX = Math.max(-1, Math.min(1, Number(values.offsetX) || 0));
+    const offsetY = Math.max(-1, Math.min(1, Number(values.offsetY) || 0));
+    return constrainImageFrameToCover(image, {
+      cx: normalizedFrame.cx + offsetX * normalizedFrame.width * 0.42,
+      cy: normalizedFrame.cy + offsetY * normalizedFrame.height * 0.42,
+      width: minimum.width * scale,
+      height: minimum.height * scale,
+      rotation
+    }, normalizedFrame);
+  }
+
+  function adjustmentsFromImageFrame(image, imageFrame, frame, adjustments) {
+    const normalizedFrame = normalizeFrame(frame, frame?.width, frame?.height);
+    const normalizedImage = normalizeFrame(imageFrame, normalizedFrame.width, normalizedFrame.height);
+    let rotation = normalizedImage.rotation - normalizedFrame.rotation;
+    while (rotation > 180) rotation -= 360;
+    while (rotation < -180) rotation += 360;
+    rotation = Math.max(-30, Math.min(30, rotation));
+    const cover = imageFrameForCover(image, normalizedFrame);
+    const minimum = constrainImageFrameToCover(
+      image,
+      { ...cover, rotation: normalizedFrame.rotation + rotation },
+      normalizedFrame
+    );
+    const scale = Math.max(1, Math.min(4, Math.max(
+      normalizedImage.width / minimum.width,
+      normalizedImage.height / minimum.height
+    )));
+    const offsetDenominatorX = normalizedFrame.width * 0.42;
+    const offsetDenominatorY = normalizedFrame.height * 0.42;
+    return {
+      ...DEFAULT_ADJUSTMENTS,
+      ...(adjustments || {}),
+      scale,
+      offsetX: offsetDenominatorX
+        ? Math.max(-1, Math.min(1, (normalizedImage.cx - normalizedFrame.cx) / offsetDenominatorX))
+        : 0,
+      offsetY: offsetDenominatorY
+        ? Math.max(-1, Math.min(1, (normalizedImage.cy - normalizedFrame.cy) / offsetDenominatorY))
+        : 0,
+      rotation
+    };
+  }
+
   function pointInFrameAxes(point, frame) {
     const angle = -frame.rotation * Math.PI / 180;
     const cosine = Math.cos(angle);
@@ -583,29 +431,37 @@
     ];
   }
 
-  // Keep an edited file reachable without snapping it back to the aperture.
-  // The old cover constraint made a full-size file mathematically immovable:
-  // every drag was immediately clamped to its starting position.
-  function constrainFrameVisibility(frame, bounds, minimumVisible = 0.1) {
+  // The editable/crop frame is a visible region, not the hidden source image.
+  // Keep every rotated corner inside the physical screen bounds so the final
+  // aperture clip can never make pixels and controls describe different areas.
+  function constrainFrameToBounds(frame, bounds) {
     const normalizedFrame = normalizeFrame(frame, bounds.width, bounds.height);
     const normalizedBounds = normalizeFrame(bounds, bounds.width, bounds.height);
     const relativeAngle = (normalizedFrame.rotation - normalizedBounds.rotation) * Math.PI / 180;
-    const halfWidth = Math.abs(Math.cos(relativeAngle)) * normalizedFrame.width / 2
-      + Math.abs(Math.sin(relativeAngle)) * normalizedFrame.height / 2;
-    const halfHeight = Math.abs(Math.sin(relativeAngle)) * normalizedFrame.width / 2
-      + Math.abs(Math.cos(relativeAngle)) * normalizedFrame.height / 2;
-    const requiredX = Math.min(normalizedBounds.width, halfWidth * 2) * Math.max(0, Math.min(1, minimumVisible));
-    const requiredY = Math.min(normalizedBounds.height, halfHeight * 2) * Math.max(0, Math.min(1, minimumVisible));
+    const cosine = Math.abs(Math.cos(relativeAngle));
+    const sine = Math.abs(Math.sin(relativeAngle));
+    const projectedWidth = cosine * normalizedFrame.width + sine * normalizedFrame.height;
+    const projectedHeight = sine * normalizedFrame.width + cosine * normalizedFrame.height;
+    const scale = Math.min(
+      1,
+      normalizedBounds.width / Math.max(1, projectedWidth),
+      normalizedBounds.height / Math.max(1, projectedHeight)
+    );
+    const constrainedFrame = scale < 1
+      ? { ...normalizedFrame, width: normalizedFrame.width * scale, height: normalizedFrame.height * scale }
+      : normalizedFrame;
+    const halfWidth = (cosine * constrainedFrame.width + sine * constrainedFrame.height) / 2;
+    const halfHeight = (sine * constrainedFrame.width + cosine * constrainedFrame.height) / 2;
     const local = pointInFrameAxes([normalizedFrame.cx, normalizedFrame.cy], normalizedBounds);
-    const minimumX = -normalizedBounds.width / 2 - halfWidth + requiredX;
-    const maximumX = normalizedBounds.width / 2 + halfWidth - requiredX;
-    const minimumY = -normalizedBounds.height / 2 - halfHeight + requiredY;
-    const maximumY = normalizedBounds.height / 2 + halfHeight - requiredY;
+    const minimumX = -normalizedBounds.width / 2 + halfWidth;
+    const maximumX = normalizedBounds.width / 2 - halfWidth;
+    const minimumY = -normalizedBounds.height / 2 + halfHeight;
+    const maximumY = normalizedBounds.height / 2 - halfHeight;
     const center = pointFromFrameAxes([
       Math.max(minimumX, Math.min(maximumX, local[0])),
       Math.max(minimumY, Math.min(maximumY, local[1]))
     ], normalizedBounds);
-    return { ...normalizedFrame, cx: center[0], cy: center[1] };
+    return { ...constrainedFrame, cx: center[0], cy: center[1] };
   }
 
   // Resize from the grabbed edge or corner while the opposite edge remains
@@ -661,6 +517,46 @@
     };
   }
 
+  function frameFitsWithinBounds(frame, bounds, tolerance = 0.0001) {
+    const normalizedBounds = normalizeFrame(bounds, bounds.width, bounds.height);
+    return frameCorners(frame).every((point) => {
+      const [x, y] = pointInFrameAxes(point, normalizedBounds);
+      return Math.abs(x) <= normalizedBounds.width / 2 + tolerance
+        && Math.abs(y) <= normalizedBounds.height / 2 + tolerance;
+    });
+  }
+
+  // Resize and boundary clamping are one operation. Interpolating the grabbed
+  // pointer back to the last valid position preserves the defining invariant:
+  // an edge handle changes one axis only, while a corner keeps aspect ratio.
+  // A generic "scale the result back into bounds" step is deliberately not
+  // used because it changes the untouched axis and makes direct manipulation
+  // disagree with the handle the user grabbed.
+  function resizeFrameWithinBounds(frame, handleName, startPointer, pointer, bounds, preserveAspect = true) {
+    const candidate = resizeFrameFromHandle(frame, handleName, startPointer, pointer, preserveAspect);
+    if (frameFitsWithinBounds(candidate, bounds)) return candidate;
+    if (!frameFitsWithinBounds(frame, bounds)) throw new Error("缩放起始框必须位于编辑边界内");
+
+    let low = 0;
+    let high = 1;
+    let result = { ...frame };
+    for (let index = 0; index < 32; index += 1) {
+      const ratio = (low + high) / 2;
+      const interpolatedPointer = [
+        startPointer[0] + (pointer[0] - startPointer[0]) * ratio,
+        startPointer[1] + (pointer[1] - startPointer[1]) * ratio
+      ];
+      const next = resizeFrameFromHandle(frame, handleName, startPointer, interpolatedPointer, preserveAspect);
+      if (frameFitsWithinBounds(next, bounds)) {
+        low = ratio;
+        result = next;
+      } else {
+        high = ratio;
+      }
+    }
+    return result;
+  }
+
   // Apply the exact same local transform to the uploaded content when the
   // ordinary selection box moves or resizes. Crop mode deliberately skips this
   // helper so the crop window can move over a stationary source image.
@@ -678,17 +574,6 @@
       height: Math.max(12, subject.height * to.height / from.height),
       rotation: subject.rotation + to.rotation - from.rotation
     };
-  }
-
-  function expandQuad(quad, amount = 0) {
-    if (!amount) return quad;
-    const center = quad.reduce((sum, point) => [sum[0] + point[0] / quad.length, sum[1] + point[1] / quad.length], [0, 0]);
-    return quad.map((point) => {
-      const dx = point[0] - center[0];
-      const dy = point[1] - center[1];
-      const length = Math.hypot(dx, dy) || 1;
-      return [point[0] + dx / length * amount, point[1] + dy / length * amount];
-    });
   }
 
   function drawMappedTriangle(context, image, source, destination) {
@@ -856,7 +741,7 @@
     return canvas;
   }
 
-  function createContentCanvas(image, targetAspect, fit, adjustments, cornerRadii = 0, content) {
+  function createContentCanvas(image, targetAspect, fit, adjustments, content) {
     const plane = screenPlane(targetAspect);
     const frame = normalizeFrame(content?.frame, plane.width, plane.height);
     const imageFrame = normalizeFrame(content?.imageFrame, plane.width, plane.height);
@@ -866,7 +751,6 @@
     const context = canvas.getContext("2d");
     const scaleX = canvas.width / frame.width;
     const scaleY = canvas.height / frame.height;
-    const radii = cornerRadiiPixels(cornerRadii, Math.min(frame.width, frame.height));
 
     // Work only in frame-local coordinates. Both this bitmap and the editor
     // boundary are projected through frameQuadOnSurface, so render, hit target
@@ -874,7 +758,7 @@
     context.scale(scaleX, scaleY);
     context.save();
     context.beginPath();
-    context.roundRect(0, 0, frame.width, frame.height, radii);
+    context.rect(0, 0, frame.width, frame.height);
     context.clip();
 
     const frameAngle = frame.rotation * Math.PI / 180;
@@ -958,7 +842,6 @@
     const logicalHeight = asset.canvas.height;
     const renderScaleX = canvas.width / logicalWidth;
     const renderScaleY = canvas.height / logicalHeight;
-    const renderScale = Math.max(1, Math.min(2, Math.min(renderScaleX, renderScaleY)));
     const context = canvas.getContext("2d", { alpha: false });
     context.setTransform(1, 0, 0, 1, 0, 0);
     context.globalAlpha = 1;
@@ -967,63 +850,44 @@
     context.setTransform(renderScaleX, 0, 0, renderScaleY, 0, 0);
     context.imageSmoothingEnabled = true;
     context.imageSmoothingQuality = "high";
-    const preparedBase = preparedBaseImage(baseImage, asset);
-    context.drawImage(preparedBase, 0, 0, logicalWidth, logicalHeight);
+    context.drawImage(baseImage, 0, 0, logicalWidth, logicalHeight);
     if (designImage) {
       const recommended = asset.screen.recommendedSize;
       const targetAspect = recommended.width / recommended.height;
-      // Content/editing geometry, physical aperture and seam-safe coverage are
-      // deliberately separate. Only the first controls projection.
+      // Content/editing geometry and the physical aperture are separate. Pixel
+      // colors never define either boundary.
       const surfaceQuad = designQuad || quad || asset.screen.quad;
       const aperture = screenApertureGeometry(asset);
       const hasContentGeometry = Boolean(content?.frame || content?.imageFrame);
+      const geometry = hasContentGeometry
+        ? contentGeometry(designImage, targetAspect, surfaceQuad, content.frame, content.imageFrame)
+        : null;
+      const contentModel = geometry
+        ? { frame: geometry.frame, imageFrame: geometry.imageFrame }
+        : null;
       const screenCanvas = hasContentGeometry
-        ? createContentCanvas(designImage, targetAspect, fit, adjustments, aperture.cornerRadii, content)
+        ? createContentCanvas(designImage, targetAspect, fit, adjustments, contentModel)
         : createScreenCanvas(designImage, targetAspect, fit, adjustments, aperture.cornerRadii, true, crop, null);
-      // Rendering and editing deliberately derive from one frame quad. Mapping
-      // the whole transparent screen plane here used to apply geometry twice,
-      // which made pixels drift away from their handles after crop or zoom.
-      const renderQuad = hasContentGeometry
-        ? frameQuadOnSurface(content.frame, targetAspect, surfaceQuad)
-        : surfaceQuad;
-      const coverageMask = screenCoverageMask(baseImage, asset, renderScale);
-      if (coverageMask) {
-        const underlapCanvas = hasContentGeometry
-          ? createContentCanvas(designImage, targetAspect, fit, adjustments, 0, content)
-          : createScreenCanvas(designImage, targetAspect, fit, adjustments, 0, true, crop, null);
-        const screenLayer = document.createElement("canvas");
-        screenLayer.width = canvas.width;
-        screenLayer.height = canvas.height;
-        const screenContext = screenLayer.getContext("2d");
-        screenContext.setTransform(renderScaleX, 0, 0, renderScaleY, 0, 0);
-        screenContext.imageSmoothingEnabled = true;
-        screenContext.imageSmoothingQuality = "high";
-        screenContext.fillStyle = asset.screen.underlay || "#080808";
-        screenContext.fillRect(0, 0, logicalWidth, logicalHeight);
-        // Keep the canonical render quad unchanged for editor alignment. The
-        // hidden underlap covers the measured raster fringe without changing
-        // the physical aperture, handles or content geometry.
-        const underlap = asset.screen.underlap;
-        const underlapQuad = expandQuad(renderQuad, underlap);
-        screenContext.save();
-        clipQuad(screenContext, underlapQuad);
-        drawImageToQuad(screenContext, underlapCanvas, underlapQuad, quality);
-        screenContext.restore();
-        screenContext.save();
-        clipQuad(screenContext, renderQuad);
-        drawImageToQuad(screenContext, screenCanvas, renderQuad, quality);
-        screenContext.restore();
-        screenContext.globalCompositeOperation = "destination-in";
-        screenContext.drawImage(coverageMask, 0, 0, logicalWidth, logicalHeight);
-        context.drawImage(screenLayer, 0, 0, logicalWidth, logicalHeight);
-      } else {
-        fillQuad(context, renderQuad, asset.screen.underlay || "#080808");
-        context.save();
-        clipQuad(context, renderQuad);
-        drawImageToQuad(context, screenCanvas, renderQuad, quality);
-        context.restore();
-      }
-      restoreOcclusions(context, preparedBase, asset);
+      // The same projected frame drives pixels, hit testing, selection and crop.
+      const renderQuad = geometry?.renderQuad || surfaceQuad;
+      const screenLayer = document.createElement("canvas");
+      screenLayer.width = canvas.width;
+      screenLayer.height = canvas.height;
+      const screenContext = screenLayer.getContext("2d");
+      screenContext.setTransform(renderScaleX, 0, 0, renderScaleY, 0, 0);
+      screenContext.imageSmoothingEnabled = true;
+      screenContext.imageSmoothingQuality = "high";
+      screenContext.fillStyle = asset.screen.underlay || "#080808";
+      screenContext.fillRect(0, 0, logicalWidth, logicalHeight);
+      screenContext.save();
+      clipQuad(screenContext, renderQuad);
+      drawImageToQuad(screenContext, screenCanvas, renderQuad, quality);
+      screenContext.restore();
+      screenContext.setTransform(1, 0, 0, 1, 0, 0);
+      screenContext.globalCompositeOperation = "destination-in";
+      screenContext.drawImage(screenApertureMask(asset, canvas.width, canvas.height), 0, 0);
+      context.drawImage(screenLayer, 0, 0, logicalWidth, logicalHeight);
+      restoreOcclusions(context, baseImage, asset);
     }
     if (layerImages.reflection) {
       context.save();
@@ -1036,5 +900,5 @@
     return canvas;
   }
 
-  global.MockupRenderer = Object.freeze({ VERSION, DEFAULT_ADJUSTMENTS, DEFAULT_CROP, createDefaultDesign, validateAsset, screenApertureGeometry, screenCompositing, screenCoverageMask, screenCoverageMetrics, quadSize, bilinearPoint, inverseBilinearPoint, screenPlane, normalizeFrame, frameCorners, frameQuadOnSurface, surfaceQuadForFrameQuad, imageFrameForCover, constrainImageFrameToCover, constrainFrameVisibility, resizeFrameFromHandle, transformFrameBetweenFrames, expandQuad, cropGeometry, constrainCoverAdjustments, createScreenCanvas, createContentCanvas, drawImageToQuad, renderComposite });
+  global.MockupRenderer = Object.freeze({ VERSION, DEFAULT_ADJUSTMENTS, DEFAULT_CROP, validateAsset, screenApertureGeometry, screenCompositing, screenApertureMask, screenApertureMetrics, quadSize, bilinearPoint, inverseBilinearPoint, screenPlane, baselineFrameForAspect, normalizeFrame, frameCorners, frameQuadOnSurface, surfaceQuadForFrameQuad, contentGeometry, planePointToCanvas, canvasPointToPlane, viewportPointToCanvas, logicalPointToBackingStore, imageFrameForCover, constrainImageFrameToCover, imageFrameFromAdjustments, adjustmentsFromImageFrame, constrainFrameToBounds, resizeFrameFromHandle, frameFitsWithinBounds, resizeFrameWithinBounds, transformFrameBetweenFrames, cropGeometry, constrainCoverAdjustments, createScreenCanvas, createContentCanvas, drawImageToQuad, renderComposite });
 })(window);

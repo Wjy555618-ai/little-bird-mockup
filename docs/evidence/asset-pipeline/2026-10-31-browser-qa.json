@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "EVD-AP-003",
+  "createdAt": "2026-10-31T12:20:04+08:00",
+  "runtime": "Google Chrome controlled through Playwright against http://127.0.0.1:4173/lab",
+  "result": "pass",
+  "implementationRevision": "tree:sha256:66a73f7a7cd49e5fbcffd891023ae0c76bef54905c27fbe41d16339ca3f73411",
+  "approvedBuildFingerprint": "sha256:c17fbbfc01e8b6b42898735458f1ca14c7bd618a7c149b8e5fbcfbfcff85b13a",
+  "functionalObservations": {
+    "catalog": "Connected to testing catalog 2026.10.30.1 with 4 legacy regression assets.",
+    "automaticChecks": "9/9 checks visibly passed on loaded legacy assets.",
+    "controls": "Selected a second asset, visited grid/landscape/portrait/edge patterns, checked all five manual checks, verified the technical-QA button enabled, used reset geometry, and reloaded the catalog.",
+    "semantics": "The primary action reads '记录技术 QA 通过' and the ready-state hint says a separate decision-maker approval is still required before production promotion.",
+    "workflowApi": "GET /api/lab/workflow returned HTTP 200 and policy MOCKUP-ASSET-PIPELINE-1; GET /api/lab/approvals returned HTTP 200 with 4 current legacy technical-QA records.",
+    "mutationExclusion": "Save geometry and record technical QA were not submitted against the repository catalog during browser QA because those controls mutate durable asset records; their state transitions are covered by isolated automated fixtures."
+  },
+  "viewportObservations": [
+    {
+      "viewport": "1440x900",
+      "result": "pass",
+      "observation": "Asset list, preview, all QA regions and primary action fit the fixed workspace without document scrolling."
+    },
+    {
+      "viewport": "1100x760",
+      "result": "pass_after_fix",
+      "observation": "Initial QA found the primary button clipped by 9px. The approval card was made sticky; retest measured button top 696 and bottom 732 inside the panel bottom 760. Scrolling to the panel end measured the pattern region bottom 612.43 and approval card top 636.43, proving no overlap in the review state."
+    }
+  ],
+  "screenshots": [
+    {
+      "path": "docs/evidence/asset-pipeline/lab-1440x900.png",
+      "sha256": "a558a79bea9743fc38b563290e4d5ebc3889243ca39e7eacc403864769a4bba9"
+    },
+    {
+      "path": "docs/evidence/asset-pipeline/lab-1100x760.png",
+      "sha256": "b86cbdca5bb8e63cfe37f97af746a093ca1d2f078c4545d165af51acdfcc0bb4"
+    }
+  ],
+  "visualNegativeChecks": [
+    "No horizontal page overflow.",
+    "No clipped primary action after the responsive fix.",
+    "No misleading 'approve into production' label in the QA console.",
+    "No broken catalog thumbnails or preview canvas.",
+    "No overlap between pattern coverage and the sticky approval card in the scrolled small-window state."
+  ]
+}

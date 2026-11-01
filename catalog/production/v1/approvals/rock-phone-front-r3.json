@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 3,
+  "assetId": "rock-phone-front",
+  "revision": 3,
+  "status": "approved",
+  "rendererVersion": "2.4.0",
+  "itemSha256": "3f26b9b70ddf1f044150ffaefa0dc16164567890eb3e95cef5a6d24a5eaeada1",
+  "approvedAt": "2026-10-31T09:55:34.257Z",
+  "patternIds": [
+    "grid",
+    "landscape",
+    "portrait",
+    "edge"
+  ],
+  "automaticChecks": {
+    "schema": true,
+    "renderer": true,
+    "dimensions": true,
+    "recommendedSize": true,
+    "geometry": true,
+    "aperture": true,
+    "completeBase": true,
+    "noChroma": true,
+    "provenance": true,
+    "integrity": true
+  },
+  "apertureMetrics": {
+    "pass": true,
+    "mode": "aperture-mask",
+    "source": "explicit-geometry",
+    "exact": true,
+    "apertureArea": 248148,
+    "canvasArea": 1572528
+  },
+  "completeBaseMetrics": {
+    "pass": true,
+    "mode": "aperture-mask",
+    "detector": "complete-screen-provenance-v2",
+    "sampledPixels": 62220,
+    "greenDominantPixels": 0,
+    "greenDominantRatio": 0,
+    "maximumGreenRatio": 0.85,
+    "presentationMode": "neutral-off",
+    "meanChroma": 4.5,
+    "maximumNeutralMeanChroma": 20,
+    "presentationPass": true,
+    "resolution": "automatic"
+  },
+  "manualChecks": {
+    "frameFit": true,
+    "perspective": true,
+    "edgeMask": true,
+    "imageQuality": true,
+    "allPatterns": true
+  }
+}

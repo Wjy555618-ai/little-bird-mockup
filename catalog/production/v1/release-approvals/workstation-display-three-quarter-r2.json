@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "approvalType": "release",
+  "decision": "approved",
+  "assetId": "workstation-display-three-quarter",
+  "revision": 2,
+  "itemSha256": "1f7e99bcd3898b244f6457b3576f3bac28daf8f20eb7ee11bd850368b6637386",
+  "qaReportSha256": "32a50f254e757246419f675f6b4c07285d3bbd9a7e34fe03246f2d71d79811d8",
+  "actor": {
+    "type": "human",
+    "identity": "Wang Zhentao",
+    "role": "正式入库决定人"
+  },
+  "decidedAt": "2026-10-31T05:44:40.204Z",
+  "attestation": {
+    "method": "local",
+    "confirmedByHuman": true
+  }
+}

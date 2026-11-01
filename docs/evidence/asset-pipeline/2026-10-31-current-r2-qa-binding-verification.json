@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "EVD-AP-018",
+  "verifiedAt": "2026-10-31T15:27:41+08:00",
+  "approvedBuildFingerprint": "sha256:7a1f6a433825268457b6786d0494937359a47dd0774e968109d11a8df5dc47b0",
+  "sealedImplementationRevision": "tree:sha256:6a332b5157beaf93dd2f71a8adcc40816f7fc3c4c88ae19d0ef4df434d026083",
+  "result": "pass",
+  "catalog": {
+    "testingVersion": "2026.10.31.4",
+    "productionVersion": "2026.10.31.4",
+    "rendererVersion": "2.4.0",
+    "activeR2Count": 5,
+    "zeroChromaGate": "10/10 active testing and production entries pass"
+  },
+  "verificationRule": "A prior human visual decision and technical QA remain applicable only when the current testing base bytes, candidateSha256, exact visual-approval file, QA file digest, itemSha256, renderer version and production promotion record still match. No approval is renewed or inferred after a byte mismatch.",
+  "assets": [
+    {
+      "assetId": "studio-display-front",
+      "revision": 2,
+      "candidateSha256": "6e6271a4893a6c5ca54ab27513dcc71198c9b97e0cbb61e81395374ec3523f3b",
+      "visualApprovalSha256": "6b97bebef1e2985b3cbb85c3a836436d43444e3c3c51d241627dea092a78533e",
+      "itemSha256": "7bf02d442d92b29e225ff957541868eb5eadebfe5c512c291e258c376d92eb95",
+      "qaReportSha256": "05f067f35975359e33d0327675c95f6294c0c538b1e27df22faedac6ee5123d1",
+      "automaticChecks": "10/10",
+      "testPatterns": "4/4",
+      "manualChecks": "5/5",
+      "completeBaseConfirmedByHuman": true,
+      "state": "PROMOTED"
+    },
+    {
+      "assetId": "rock-phone-front",
+      "revision": 2,
+      "candidateSha256": "2044a3d5ee3b5e84cd47ba70d1fbe6f2af08b9a1dbc7ff43bc540835b64e7000",
+      "visualApprovalSha256": "fb5c28776d0e27b084b5bec791074644a3db0be0ecac9a0e12cb7c76e815933a",
+      "itemSha256": "648ed4ba2e72b4a4c27dbc064dc3a0849efe65a45fc9558469ecdbf35e551b47",
+      "qaReportSha256": "fd522405d2ad14975cae11c00825f4cc0849adc25f432fcb689459cc90516ecc",
+      "automaticChecks": "10/10",
+      "testPatterns": "4/4",
+      "manualChecks": "5/5",
+      "completeBaseConfirmedByHuman": true,
+      "state": "PROMOTED"
+    },
+    {
+      "assetId": "rail-phone-angle",
+      "revision": 2,
+      "candidateSha256": "ecbda0cd99076c12005bb7043895a06ce4faca1794c9e9cab9d280a27394f090",
+      "visualApprovalSha256": "9c26aac4342a2fde4db3a91589ef0aeb17a250fa9691b1075b966fe9deb3bcda",
+      "itemSha256": "d664c06eec9f7376e141c7b3e3f03d290815c7a5b58c42263af56afef97d8852",
+      "qaReportSha256": "eb91d21efe41d1d4f7c54813df05c0acf0bc26df378a530f2adfe545032a4c0a",
+      "automaticChecks": "10/10",
+      "testPatterns": "4/4",
+      "manualChecks": "5/5",
+      "completeBaseConfirmedByHuman": true,
+      "state": "PROMOTED"
+    },
+    {
+      "assetId": "graphite-laptop-angle",
+      "revision": 2,
+      "candidateSha256": "2dac4b02e6751378c71580b4158cf0f8d4edd7d4cb7f5316b05059e8b868af51",
+      "visualApprovalSha256": "5d09cb5ddbf9b72d11fa31c3d8e2eead63b03000c4d2c664ee0dae44853d3fd6",
+      "itemSha256": "47202fb1ce4db5b83c9b7ceb162340a1ff5d53fa0f2033f3a8f36a8db79048ca",
+      "qaReportSha256": "b97e47a6470abc94505e7d1c9e543cda775267e44c95aa3f66821de2b50dd752",
+      "automaticChecks": "10/10",
+      "testPatterns": "4/4",
+      "manualChecks": "5/5",
+      "completeBaseConfirmedByHuman": true,
+      "state": "PROMOTED"
+    },
+    {
+      "assetId": "workstation-display-three-quarter",
+      "revision": 2,
+      "candidateSha256": "909b5430c7d07f4634d7550222cd10e2a74b8b405a7abfe71e35b1b0ff8a0497",
+      "visualApprovalSha256": "9cf94736f820a0a0f4ff655a08240cd117f443b89a6f0403fd63d886b7a9f1a2",
+      "itemSha256": "1f7e99bcd3898b244f6457b3576f3bac28daf8f20eb7ee11bd850368b6637386",
+      "qaReportSha256": "32a50f254e757246419f675f6b4c07285d3bbd9a7e34fe03246f2d71d79811d8",
+      "automaticChecks": "10/10",
+      "testPatterns": "4/4",
+      "manualChecks": "5/5",
+      "completeBaseConfirmedByHuman": true,
+      "state": "PROMOTED"
+    }
+  ],
+  "limitations": [
+    "This verification checks that the exact previously reviewed bytes and QA records remain current; it does not invent a new human visual decision.",
+    "The full Figma host flow in EVD-AP-014 used rock-phone-front; the other four assets are bound through their unchanged exact bytes and stored QA records."
+  ]
+}

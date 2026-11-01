@@ -1,5 +1,6 @@
 [build]
-  publish = "catalog/production"
+  command = "pnpm netlify:catalog:prepare"
+  publish = "dist/netlify-catalog"
 
 [[headers]]
   for = "/*"

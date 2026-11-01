@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "approvalType": "release",
+  "decision": "approved",
+  "assetId": "rail-phone-angle",
+  "revision": 2,
+  "itemSha256": "d664c06eec9f7376e141c7b3e3f03d290815c7a5b58c42263af56afef97d8852",
+  "qaReportSha256": "eb91d21efe41d1d4f7c54813df05c0acf0bc26df378a530f2adfe545032a4c0a",
+  "actor": {
+    "type": "human",
+    "identity": "Wang Zhentao",
+    "role": "正式入库决定人"
+  },
+  "decidedAt": "2026-10-31T05:44:39.437Z",
+  "attestation": {
+    "method": "local",
+    "confirmedByHuman": true
+  }
+}

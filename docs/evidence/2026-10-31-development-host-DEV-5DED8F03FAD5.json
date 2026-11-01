@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "DEV-HOST-2026-10-31-5DED8F03FAD5",
+  "observedAt": "2026-10-31T10:43:10+08:00",
+  "sourceRevision": "d9e53b462209a828a4d129991f913a307eec9a7d",
+  "worktreeState": "dirty",
+  "buildFingerprint": "DEV-5DED8F03FAD5",
+  "host": {
+    "application": "/Applications/Figma+EX.app",
+    "version": "126.8.16",
+    "platform": "macOS"
+  },
+  "observation": {
+    "method": "macOS accessibility tree",
+    "visibleBuildFingerprint": "DEV-5DED8F03FAD5",
+    "catalogStatus": "素材库已同步",
+    "catalogItemCount": 4,
+    "searchAccessibleName": "搜索样机"
+  },
+  "result": "PASS_WITH_LIMITATIONS",
+  "limitations": [
+    "该证据属于脏工作区中的开发构建，不是REL发布候选。",
+    "只证明插件在当前macOS Figma+EX中加载、目录同步和搜索框可访问名称；没有执行G-100要求的全部真实任务。",
+    "不得用于PUBLISH_READY、MATURE_PRODUCT或SUCCESSFUL_PRODUCT声明。"
+  ]
+}

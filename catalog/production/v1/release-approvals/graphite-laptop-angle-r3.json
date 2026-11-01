@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 2,
+  "approvalType": "release",
+  "decision": "approved",
+  "assetId": "graphite-laptop-angle",
+  "revision": 3,
+  "itemSha256": "94642abe7b3500d298f9948520516902f7d56e7fcf70cb5cfd5ad2c2de62dd99",
+  "qaReportSha256": "e660b5847d6fce485dc24c51049305fececfcc13ccc5c7ec081fb29fc6adce16",
+  "candidateSha256": "cd1574100fb6e10f8b29c5c26247ed89adc182f0cd6556a9917438897b68d70d",
+  "completeBaseConfirmed": true,
+  "batchFingerprint": "sha256:83ed6a2f35380af2da821cf5722aaccc06a9bc2820eb9398d6a7fbc355b1e75f",
+  "reviewPacketPath": "catalog/workflow/final-review-packets/83ed6a2f35380af2da821cf5722aaccc06a9bc2820eb9398d6a7fbc355b1e75f.json",
+  "reviewPacketSha256": "be77b5bcbd306f0c83546a8b4e21384cdf8e571e84d2a530ad3c3df04cd8898f",
+  "buildFingerprint": "DEV-10A37155360B",
+  "hostEvidencePath": "docs/evidence/asset-pipeline/real-host-DEV-10A37155360B.json",
+  "hostEvidenceSha256": "1efe18a62096c368711972f18396c526655172036829340d8c84611796ba2c4c",
+  "actor": {
+    "type": "human",
+    "identity": "Wang Zhentao",
+    "role": "最终视觉与本地入库决定人"
+  },
+  "decidedAt": "2026-10-31T10:56:36.958Z",
+  "attestation": {
+    "method": "local",
+    "confirmedByHuman": true,
+    "batchDecisionPath": "catalog/workflow/final-approvals/83ed6a2f35380af2da821cf5722aaccc06a9bc2820eb9398d6a7fbc355b1e75f.json"
+  }
+}

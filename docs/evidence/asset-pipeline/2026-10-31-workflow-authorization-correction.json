@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "EVD-AP-011",
+  "capturedAt": "2026-10-31T14:23:59+08:00",
+  "scope": "candidate creation authorization, request consumption, reference reuse prevention, unauthorized candidate quarantine, and production preservation",
+  "rootCause": {
+    "authorityConflation": "The former workflow treated reference rights as if they also authorized creation of a new candidate.",
+    "contractDrift": "The former completion rule and TASK-010 promoted an internal end-to-end validation idea into a real user-facing asset-production task.",
+    "missingMachineGate": "The former createCandidate path had no immutable, human-bound, single-use candidate request."
+  },
+  "correctiveMechanisms": [
+    "An immutable candidate-creation request is required before candidate import.",
+    "Each request binds one reference SHA-256, assetId, category, rights mode, human actor, timestamp, and maximumCandidates=1.",
+    "A successful import consumes the request; repeat consumption is rejected.",
+    "Reusing a reference already present in workflow history requires explicit per-request reuse authorization.",
+    "No authorized request produces the stable WAITING_FOR_USER_INPUT state.",
+    "Unauthorized historical candidates can be removed from the active testing manifest while preserving immutable quarantine evidence."
+  ],
+  "executedChecks": {
+    "command": "node --check scripts/lib/asset-pipeline.mjs && node --check scripts/asset-pipeline.mjs && node --test tests/asset-pipeline.test.mjs tests/catalog-migration.test.mjs tests/catalog-history.test.mjs tests/no-chroma.test.mjs tests/catalog.test.mjs && node scripts/verify-no-chroma.mjs && node scripts/catalog-release.mjs --check --library testing && node scripts/catalog-release.mjs --check --library production && node scripts/asset-pipeline.mjs status",
+    "tests": {
+      "passed": 16,
+      "failed": 0
+    },
+    "testingCatalog": {
+      "version": "2026.10.31.4",
+      "itemCount": 5,
+      "manifestSha256": "e2770fd4d0cdd20943a64dfa1e82e5b04a90194e7692766beafd0e3be6d51870",
+      "snapshotMatchesByteForByte": true
+    },
+    "productionCatalog": {
+      "version": "2026.10.31.4",
+      "itemCount": 5,
+      "manifestSha256": "c8e53f7730c64398e26f01aeb933502b2b59796971971c31119a5f3af21f6712",
+      "unchangedByCorrection": true,
+      "assetIds": [
+        "studio-display-front",
+        "rock-phone-front",
+        "rail-phone-angle",
+        "graphite-laptop-angle",
+        "workstation-display-three-quarter"
+      ]
+    },
+    "workflow": {
+      "state": "WAITING_FOR_USER_INPUT",
+      "authorizedRequestCount": 0,
+      "nextAction": "Wait for the decision owner to provide a new reference image and explicitly request one candidate."
+    },
+    "zeroChroma": {
+      "activeItemsChecked": 10,
+      "result": "pass"
+    }
+  },
+  "quarantine": {
+    "assetId": "limestone-ultrawide-front",
+    "revision": 1,
+    "workflowState": "REJECTED",
+    "activeTestingReferenceRemoved": true,
+    "visualApproval": false,
+    "technicalQa": false,
+    "releaseApproval": false,
+    "productionPromotion": false,
+    "files": [
+      {
+        "path": "catalog/workflow/quarantine/limestone-ultrawide-front-r1/base-limestone-ultrawide-front-r1.png",
+        "sha256": "d3c83d5694d356d4891117a373a1358f42684b94479ff6a873040ede5d2422a9"
+      },
+      {
+        "path": "catalog/workflow/quarantine/limestone-ultrawide-front-r1/thumbnail-limestone-ultrawide-front-r1.png",
+        "sha256": "d9af1c7fe536b33703d6117c88f35145166f3326549ce008661904e1cad0e5a0"
+      },
+      {
+        "path": "catalog/workflow/quarantine/limestone-ultrawide-front-r1/reference-limestone-ultrawide-front-r1.png",
+        "sha256": "c4fe5874e03c7ea5171f3db51aec6d3e0d4f9de46ded32b036439298a5e75724"
+      }
+    ]
+  },
+  "limits": [
+    "Local confirmed-by-human records are traceable attestations, not cryptographic identity verification.",
+    "The canonical Spec-to-Demo baseline and build approvals are superseded by this scope correction and must be renewed against the new exact fingerprints before the corrected contract can be activated and sealed.",
+    "No GitHub, Netlify, Figma Community, or other external deployment was performed."
+  ]
+}

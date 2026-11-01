@@ -1,0 +1,3434 @@
+{
+  "schema_version": "3.0.0",
+  "handoff_id": "S2D-836f9e36f083",
+  "profile": "standard",
+  "contract_version": 5,
+  "implementation_revision": "tree:sha256:6a332b5157beaf93dd2f71a8adcc40816f7fc3c4c88ae19d0ef4df434d026083",
+  "stage": "awaiting_baseline_approval",
+  "updated_at": "2026-10-31T07:27:41+00:00",
+  "source_material": [
+    {
+      "id": "SRC-001",
+      "kind": "user_statement",
+      "summary": "决定人批准截图输入、AI执行、双重门禁、本地优先和仓库交接的样机生产方案。",
+      "locator": "docs/ASSET_PIPELINE_AUTHORITY_2026-10-31.md",
+      "content_digest": "sha256:03593fdd588d053d2d1e8c608c713c00f77728b5fc2d188048f44650bcf67d75",
+      "verified": true
+    },
+    {
+      "id": "SRC-002",
+      "kind": "repository_evidence",
+      "summary": "当前人类可读资产流水线合同。",
+      "locator": "docs/ASSET_PIPELINE_DEVELOPMENT_CONTRACT.md",
+      "content_digest": "sha256:6fb219fcca1d4365a451e27de0f762f89422ad28bf26ad4e1a2cbf0b3591f7a7",
+      "verified": true
+    },
+    {
+      "id": "SRC-003",
+      "kind": "repository_evidence",
+      "summary": "零绿幕迁移前机器政策的冻结基线，证明旧 schema v4、renderer 2.3.0 与接缝门禁依赖色键机制。",
+      "locator": "docs/ASSET_PIPELINE_POLICY_PRE_V5_BASELINE_2026-10-31.md",
+      "content_digest": "sha256:c77db9e2e86a3fe159a32b62fbeb2f8f586e8a377b0a190de692908cf3e68259",
+      "verified": true
+    },
+    {
+      "id": "SRC-004",
+      "kind": "repository_evidence",
+      "summary": "实施前 README 证明当前流程从手工放置测试素材开始，四个素材均为临时测试内容。",
+      "locator": "docs/ASSET_PIPELINE_REPOSITORY_BASELINE_2026-10-31.md",
+      "content_digest": "sha256:b06539b388693106743cceef156fc99530788c47201559c269c99863bf104a00",
+      "verified": true
+    },
+    {
+      "id": "SRC-005",
+      "kind": "repository_evidence",
+      "summary": "实施前质检服务只有几何保存和 QA 批准写入接口，没有新增样机入口。",
+      "locator": "docs/ASSET_PIPELINE_REPOSITORY_BASELINE_2026-10-31.md",
+      "content_digest": "sha256:b06539b388693106743cceef156fc99530788c47201559c269c99863bf104a00",
+      "verified": true
+    },
+    {
+      "id": "SRC-006",
+      "kind": "repository_evidence",
+      "summary": "实施前提升脚本校验技术 QA 摘要并复制到正式库，但没有独立人类 release approval。",
+      "locator": "docs/ASSET_PIPELINE_REPOSITORY_BASELINE_2026-10-31.md",
+      "content_digest": "sha256:b06539b388693106743cceef156fc99530788c47201559c269c99863bf104a00",
+      "verified": true
+    },
+    {
+      "id": "SRC-007",
+      "kind": "repository_evidence",
+      "summary": "实施前目录合同强制分类、revision、项目自制来源、摘要和正式 QA 元数据。",
+      "locator": "docs/ASSET_PIPELINE_REPOSITORY_BASELINE_2026-10-31.md",
+      "content_digest": "sha256:b06539b388693106743cceef156fc99530788c47201559c269c99863bf104a00",
+      "verified": true
+    },
+    {
+      "id": "SRC-008",
+      "kind": "user_statement",
+      "summary": "决定人明确要求所有样机绝对禁止绿幕效果，候选、底图、缩略图和最终结果都必须是完整样机。",
+      "locator": "docs/ASSET_PIPELINE_NO_GREENSCREEN_DECISION_2026-10-31.md",
+      "content_digest": "sha256:fb53594c26cce1bbd1cb3251e93d60a91ab611e86741a48a89f5a1d6d8dcf52d",
+      "verified": true
+    },
+    {
+      "id": "SRC-009",
+      "kind": "repository_evidence",
+      "summary": "只读审计确认四个正式底图、新候选底图和共享渲染链均依赖绿幕色键，问题需要 schema、renderer、目录和素材 revision 的统一迁移。",
+      "locator": "docs/ASSET_PIPELINE_NO_GREENSCREEN_DECISION_2026-10-31.md",
+      "content_digest": "sha256:fb53594c26cce1bbd1cb3251e93d60a91ab611e86741a48a89f5a1d6d8dcf52d",
+      "verified": true
+    },
+    {
+      "id": "SRC-010",
+      "kind": "user_statement",
+      "summary": "决定人纠正了将权利声明和内部验收任务当成新候选创作授权的工作流程错误，要求彻底修正合同、状态机和程序门禁。",
+      "locator": "docs/ASSET_PIPELINE_WORKFLOW_CORRECTION_2026-10-31.md",
+      "content_digest": "sha256:388709f840ac6e05475f111feb0291edbbd0e891ede5ce421878b37226ab26ce",
+      "verified": true
+    },
+    {
+      "id": "SRC-011",
+      "kind": "user_statement",
+      "summary": "决定人在真实 Figma 插件中提交六项回归证据，要求从全局结构纠正悬停抖动、裁切轴向、圆角边界、彩色角块、默认画面来源和 QA 漏洞。",
+      "locator": "docs/PLUGIN_REGRESSION_CORRECTION_2026-10-31.md",
+      "content_digest": "sha256:c4c538dc82d8ff91f35b095950df0ac7b0ee8502185774213bf34242c7148554",
+      "verified": true
+    }
+  ],
+  "product_baseline": {
+    "problem_statement": {
+      "text": "现有样机系统曾把创作授权、素材内容、渲染孔径、裁切几何和交互反馈分散在多套局部机制中：它不仅曾允许未经委托的候选进入测试库，还在已声称通过自动门禁后，于真实 Figma 宿主再现悬停抖动、单边拖拽变成双轴缩放、平行圆角边界、彩色角块泄漏和未经授权的默认界面，证明旧验收未覆盖真实交互不变量和最终像素来源。",
+      "source_ids": [
+        "SRC-001",
+        "SRC-004",
+        "SRC-005",
+        "SRC-006",
+        "SRC-010",
+        "SRC-011"
+      ]
+    },
+    "target_users": [
+      {
+        "id": "USR-001",
+        "description": "只提供参考截图、权利声明和审核决定的产品/视觉决定人。",
+        "source_ids": [
+          "SRC-001"
+        ]
+      },
+      {
+        "id": "USR-002",
+        "description": "在拥有项目文件和必要本地工具的会话中执行制作、导入、质检和提升的 AI/工程执行代理。",
+        "source_ids": [
+          "SRC-001"
+        ]
+      }
+    ],
+    "desired_outcomes": [
+      {
+        "id": "OUT-001",
+        "statement": "决定人只承担单次创作委托、参考权利、视觉方向和正式入库决定，其他确定性步骤由代理和系统完成。",
+        "success_signal": "任何新候选都能回溯到决定人对准确参考图发起的单次委托；没有委托时系统停在 WAITING_FOR_USER_INPUT。",
+        "source_ids": [
+          "SRC-001",
+          "SRC-002",
+          "SRC-010"
+        ]
+      },
+      {
+        "id": "OUT-002",
+        "statement": "只有技术 QA 与准确版本的人类批准同时有效时，样机才能进入正式库。",
+        "success_signal": "缺失、过期、摘要不匹配或针对其他 revision 的任一批准都会被提升脚本拒绝，正式库保持不变。",
+        "source_ids": [
+          "SRC-001",
+          "SRC-002",
+          "SRC-006"
+        ]
+      },
+      {
+        "id": "OUT-003",
+        "statement": "新对话可仅依靠仓库内权威和状态继续工作，不依赖旧聊天记忆。",
+        "success_signal": "无旧对话上下文的执行者能识别当前资产状态、阻塞原因和唯一下一动作。",
+        "source_ids": [
+          "SRC-001",
+          "SRC-002"
+        ]
+      },
+      {
+        "id": "OUT-004",
+        "statement": "所有活动样机从候选底图开始就是完整可展示的样机，制作与运行链路完全不使用绿幕或色键替换。",
+        "success_signal": "testing 与 production 的每个当前底图、缩略图和质检结果均无绿幕占位；schema、renderer、插件构建和服务路径均不存在色键字段、代码或回退分支。",
+        "source_ids": [
+          "SRC-008",
+          "SRC-009"
+        ]
+    },
+    {
+      "id": "OUT-005",
+      "statement": "真实插件中的悬停、裁切、孔径遮罩和屏幕内容使用同一组可执行不变量，不再依赖局部视觉补丁。",
+      "success_signal": "真实 Figma+EX 宿主中反复悬停无几何抖动；右边拖拽只改变水平轴、下边拖拽只改变垂直轴；默认屏幕没有未授权界面或彩色角块；缺失来源、摘要错配或色度超限均失败关闭。",
+      "source_ids": [
+        "SRC-011"
+      ]
+      }
+    ],
+    "decisions": [
+      {
+        "id": "PD-001",
+        "statement": "先实现并验证本地完整流水线，再讨论 GitHub、Netlify、云后台或 Figma 社区发布。",
+        "rationale": "避免把尚未稳定的流程搬到线上并扩大数据、权限和恢复风险。",
+        "status": "confirmed",
+        "source_ids": [
+          "SRC-001"
+        ]
+      },
+      {
+        "id": "PD-002",
+        "statement": "采用机器技术门禁与人类准确版本批准的双重入库机制，任何一方都不能替代另一方。",
+        "rationale": "审美决定不能证明文件完整和技术正确，自动检查也不能替代人类产品决定。",
+        "status": "confirmed",
+        "source_ids": [
+          "SRC-001"
+        ]
+      },
+      {
+        "id": "PD-003",
+        "statement": "参考图必须由人类声明 owned、authorized 或 reference-only，系统不得自行推定权利。",
+        "rationale": "AI和代码不能验证法律权利；没有声明时必须失败关闭。",
+        "status": "confirmed",
+        "source_ids": [
+          "SRC-001"
+        ]
+      },
+      {
+        "id": "PD-004",
+        "statement": "自动分类只能映射到受控 taxonomy；未知分类阻塞流转而不是自动创建同义分类。",
+        "rationale": "保持插件筛选、搜索和长期资产治理一致。",
+        "status": "confirmed",
+        "source_ids": [
+          "SRC-001"
+        ]
+      },
+      {
+        "id": "PD-005",
+        "statement": "批准和提升绑定稳定 assetId、正整数 revision 和当前 itemSha256；任何内容变化使旧批准失效。",
+        "rationale": "防止批准一个版本却发布另一个版本。",
+        "status": "confirmed",
+        "source_ids": [
+          "SRC-001"
+        ]
+      },
+      {
+        "id": "PD-006",
+        "statement": "用仓库内合同、政策、运行手册、工作状态和确定性命令完成新对话交接。",
+        "rationale": "对话记忆不是可靠的工程状态或批准记录。",
+        "status": "confirmed",
+        "source_ids": [
+          "SRC-001"
+        ]
+      },
+      {
+        "id": "PD-007",
+        "statement": "所有活动样机绝对禁止绿幕和任何色键替换；统一采用完整样机底图、显式屏幕孔径几何/遮罩及可选前景与反射层，且不保留旧色键兼容路径。",
+        "rationale": "完整样机必须在任何预览入口都可信，屏幕边界必须来自稳定的显式数据而不是容易产生色溢、接缝和错误缩略图的像素颜色。",
+        "status": "confirmed",
+        "source_ids": [
+          "SRC-008",
+          "SRC-009"
+        ]
+      },
+      {
+        "id": "PD-008",
+        "statement": "参考图权利声明与候选创作委托必须分离；每个候选必须绑定一份单次、最多一个候选、精确参考摘要的人类委托，没有委托时必须停在 WAITING_FOR_USER_INPUT。",
+        "rationale": "“可以使用这张图”不能推导出“现在要基于它再创建一个候选”；程序必须阻止内部验收任务越权生产真实素材。",
+        "status": "confirmed",
+        "source_ids": [
+          "SRC-010"
+        ]
+      },
+      {
+        "id": "PD-009",
+        "statement": "插件交互、裁切几何和屏幕内容来源必须以共享不变量统一治理；禁止用随机旋转、平行几何算法、固定外层圆角或未经参考绑定的默认界面制造视觉效果。",
+        "rationale": "用户真实宿主证据证明旧局部验收没有覆盖命中几何、轴向约束、最终像素和内容来源，导致同类问题反复回归。",
+        "status": "confirmed",
+        "source_ids": [
+          "SRC-011"
+        ]
+      }
+    ],
+    "non_goals": [
+      {
+        "id": "NG-001",
+        "statement": "本阶段不内置第三方图片生成 API、不保存模型密钥，也不证明任意截图都能自动生成高质量样机。",
+        "source_ids": [
+          "SRC-001",
+          "SRC-002"
+        ]
+      },
+      {
+        "id": "NG-002",
+        "statement": "本阶段不执行 GitHub、Netlify、Figma 社区或其他公网发布。",
+        "source_ids": [
+          "SRC-001"
+        ]
+      },
+      {
+        "id": "NG-003",
+        "statement": "本阶段不把四个 temporary-test 素材宣称为最终正式内容。",
+        "source_ids": [
+          "SRC-001",
+          "SRC-004"
+        ]
+      }
+    ],
+    "constraints": [
+      {
+        "id": "CON-001",
+        "statement": "保留当前工作区全部既有未提交修改，不重置、不覆盖无关成果。",
+        "type": "immovable",
+        "source_ids": [
+          "SRC-001"
+        ]
+      },
+      {
+        "id": "CON-002",
+        "statement": "自动化只能产生 PASS_CANDIDATE；最终验收和每个资产的正式入库必须由确定的人类决定。",
+        "type": "immovable",
+        "source_ids": [
+          "SRC-001",
+          "SRC-002"
+        ]
+      },
+      {
+        "id": "CON-003",
+        "statement": "优先复用现有 catalog contract、质检台、批准报告、快照和提升机制，避免创建平行正式库。",
+        "type": "immovable",
+        "source_ids": [
+          "SRC-002",
+          "SRC-005",
+          "SRC-006",
+          "SRC-007"
+        ]
+      },
+      {
+        "id": "CON-004",
+        "statement": "候选底图、测试库、正式库、缩略图、质检台、插件和导出链均不得把绿色或任何色键颜色作为待替换屏幕；旧绿幕 revision 不得继续作为活动素材或沿用任何批准。",
+        "type": "immovable",
+        "source_ids": [
+          "SRC-008"
+        ]
+      },
+      {
+        "id": "CON-005",
+        "statement": "内部测试、合同待办、旧截图或权利声明都不得代替当次单次人类创作委托；端到端工程验收应使用隔离 fixture 或等待真实委托。",
+        "type": "immovable",
+        "source_ids": [
+          "SRC-010"
+        ]
+      },
+      {
+        "id": "CON-006",
+        "statement": "卡片悬停不得改变命中几何；裁切单边只改变对应轴并固定对边；默认画面不得生成未经授权内容；QA 必须验证屏幕来源和最终像素泄漏。",
+        "type": "immovable",
+        "source_ids": [
+          "SRC-011"
+        ]
+      }
+    ],
+    "open_questions": [
+      {
+        "id": "Q-001",
+        "question": "参考图权利如何处理？",
+        "critical": true,
+        "status": "resolved",
+        "resolution": "每个资产由人类在 owned、authorized、reference-only 中明确选择；未选择时阻塞，reference-only 不复用参考图字节。",
+        "source_ids": [
+          "SRC-001"
+        ],
+        "resolution_source_ids": [
+          "SRC-001"
+        ]
+      },
+      {
+        "id": "Q-002",
+        "question": "用于最终真实闭环的第一张样机参考截图是哪一张？",
+        "critical": false,
+        "status": "resolved",
+        "resolution": "不再为内部验收寻找或复用截图；五个 r2 闭环已完成，未来新候选只能来自决定人的下一次明确委托。",
+        "source_ids": [
+          "SRC-001",
+          "SRC-010"
+        ],
+        "resolution_source_ids": [
+          "SRC-010"
+        ]
+      }
+    ],
+    "approval": {
+      "status": "pending",
+      "actor": {
+        "type": "human",
+        "identity": "",
+        "role": ""
+      },
+      "approved_at": "",
+      "fingerprint": "",
+      "attestation": {
+        "method": "local"
+      }
+    }
+  },
+  "demo_contract": {
+    "demo_type": "mixed",
+    "hypotheses": [
+      {
+        "id": "HYP-001",
+        "type": "technical_feasibility",
+        "statement": "本地确定性工具只能从未消耗的单次人类创作委托生成或更新完整测试样机包，并在无效输入时不留下半完成状态。",
+        "critical": true,
+        "source_ids": [
+          "SRC-001",
+          "SRC-002",
+          "SRC-003",
+          "SRC-010"
+        ],
+        "measure_ids": [
+          "MET-001",
+          "MET-002"
+        ]
+      },
+      {
+        "id": "HYP-002",
+        "type": "integration_feasibility",
+        "statement": "现有质检台、独立人类 release approval 与正式库提升可以形成摘要绑定、过期即拒绝、失败可恢复的真实闭环。",
+        "critical": true,
+        "source_ids": [
+          "SRC-001",
+          "SRC-002",
+          "SRC-005",
+          "SRC-006"
+        ],
+        "measure_ids": [
+          "MET-003",
+          "MET-004"
+        ]
+      },
+      {
+        "id": "HYP-003",
+        "type": "workflow",
+        "statement": "决定人可只做单次创作委托、权利、视觉和正式入库决定，新的执行对话可依靠持久状态继续工作。",
+        "critical": true,
+        "source_ids": [
+          "SRC-001",
+          "SRC-002",
+          "SRC-010"
+        ],
+        "measure_ids": [
+          "MET-005",
+          "MET-006"
+        ]
+      },
+      {
+        "id": "HYP-004",
+        "type": "technical_feasibility",
+        "statement": "显式孔径几何/遮罩可以在完全不使用色键的前提下，为全部现有样机和新候选稳定完成透视映射、遮挡恢复、接缝控制和最终导出。",
+        "critical": true,
+        "source_ids": [
+          "SRC-008",
+          "SRC-009"
+        ],
+        "measure_ids": [
+          "MET-007",
+          "MET-008"
+        ]
+      },
+      {
+        "id": "HYP-005",
+        "type": "workflow",
+        "statement": "权利声明与单次创作委托分离，并在状态机和导入程序中强制单次消耗、参考摘要绑定和复用授权，可阻止未经用户要求的候选进入活动路径。",
+        "critical": true,
+        "source_ids": [
+          "SRC-010"
+        ],
+        "measure_ids": [
+          "MET-009"
+        ]
+      }
+    ],
+    "audience": [
+      "Wang Zhentao（产品与视觉决定人）",
+      "拥有项目文件访问权的 AI/工程执行代理"
+    ],
+    "test_method": "先用确定性本地隔离 fixture 执行创作委托、单次消耗、成功、失败、边界、迁移、隔离和恢复测试；对全部活动底图、缩略图、schema、源码与构建产物执行零色键检查；保持已完成的五个 r2 真实闭环；未来新候选等待决定人实际委托，不为验收另行生产真实素材；不使用公网服务。",
+    "success_measures": [
+      {
+        "id": "MET-001",
+        "hypothesis_ids": [
+          "HYP-001"
+        ],
+        "measure": "受控有效 fixture 的测试库资产包与 manifest 结果",
+        "criterion": "全部必需字段、尺寸、缩略图、分类、revision 和 SHA-256 与实际文件一致，目录检查通过。",
+        "decision_rule": "全部一致才支持继续；任一不一致则修复并重跑。",
+        "source_ids": [
+          "SRC-002",
+          "SRC-003",
+          "SRC-007"
+        ]
+      },
+      {
+        "id": "MET-002",
+        "hypothesis_ids": [
+          "HYP-001"
+        ],
+        "measure": "缺失单次创作委托、缺失权利、未知分类、非法路径、重复不可变路径和损坏图片的失败行为",
+        "criterion": "每个失败均返回明确原因，测试 manifest、正式 manifest 和既有素材字节保持不变。",
+        "decision_rule": "任何静默接受或部分写入都否定技术可行性。",
+        "source_ids": [
+          "SRC-002",
+          "SRC-003",
+          "SRC-010"
+        ]
+      },
+      {
+        "id": "MET-003",
+        "hypothesis_ids": [
+          "HYP-002"
+        ],
+        "measure": "技术 QA、人类 release approval 与提升目标的摘要一致性",
+        "criterion": "只有三个记录绑定同一 assetId、revision、itemSha256 和当前 QA 摘要时提升成功。",
+        "decision_rule": "任一缺失、错配或过期必须拒绝且不改变正式 manifest。",
+        "source_ids": [
+          "SRC-002",
+          "SRC-003",
+          "SRC-006"
+        ]
+      },
+      {
+        "id": "MET-004",
+        "hypothesis_ids": [
+          "HYP-002"
+        ],
+        "measure": "提升失败与恢复结果",
+        "criterion": "注入复制冲突或摘要漂移后，旧正式库仍通过检查；修复后可重试成功并保留快照。",
+        "decision_rule": "旧正式库不可用或无法安全重试则否定集成可行性。",
+        "source_ids": [
+          "SRC-002",
+          "SRC-003",
+          "SRC-006"
+        ]
+      },
+      {
+        "id": "MET-005",
+        "hypothesis_ids": [
+          "HYP-003"
+        ],
+        "measure": "真实样机闭环中的人类操作",
+        "criterion": "决定人只提供当次创作委托、参考与权利模式、视觉决定、正式入库决定，不手工编辑清单、路径、分类、摘要或发布脚本。",
+        "decision_rule": "出现额外不可避免的人工工程操作则记录为流程缺口并修订。",
+        "source_ids": [
+          "SRC-001",
+          "SRC-002",
+          "SRC-010"
+        ]
+      },
+      {
+        "id": "MET-006",
+        "hypothesis_ids": [
+          "HYP-003"
+        ],
+        "measure": "无旧聊天上下文的恢复观察",
+        "criterion": "新的执行者读取仓库后准确报告当前状态、阻塞原因和唯一下一动作，且不复用聊天中的未记录批准。",
+        "decision_rule": "需要旧聊天补全关键状态则不支持工作流假设。",
+        "source_ids": [
+          "SRC-001",
+          "SRC-002"
+        ]
+      },
+      {
+        "id": "MET-007",
+        "hypothesis_ids": [
+          "HYP-004"
+        ],
+        "measure": "活动目录、运行时和构建产物的零色键完整性",
+        "criterion": "testing/production 当前项、共享渲染器、插件构建、质检服务和发布脚本中不存在色键 schema、色键代码或色键兼容分支；所有当前底图和缩略图均通过完整样机自动检查与人类检查。",
+        "decision_rule": "任一活动项仍是绿幕、任一执行路径仍依赖颜色键控或任一完整性检查未通过，迁移即不成立。",
+        "source_ids": [
+          "SRC-008",
+          "SRC-009"
+        ]
+      },
+      {
+        "id": "MET-008",
+        "hypothesis_ids": [
+          "HYP-004"
+        ],
+        "measure": "五个迁移样机的真实合成质量",
+        "criterion": "五个准确 r2 在网格、横屏、竖屏、边界、裁切、自由透视、300% 接缝和导出检查中均无绿幕、露底、越界和可见接缝，并取得人类对完整样机的明确结论。",
+        "decision_rule": "任何单个样机或场景失败都阻止正式库提升和合同验收，必须生成新 revision 或修正机制后重测。",
+        "source_ids": [
+          "SRC-008",
+          "SRC-009"
+        ]
+      },
+      {
+        "id": "MET-009",
+        "hypothesis_ids": [
+          "HYP-005"
+        ],
+        "measure": "未经委托候选的机器拒绝与隔离结果",
+        "criterion": "缺失委托、仅有权利声明、参考摘要错配、委托重复消耗或未授权复用均在写入前失败；错误生成的 limestone 候选从活动 testing 撤下并保留摘要一致的隔离证据；五个 production r2 不变。",
+        "decision_rule": "任一无委托路径能写入活动候选，或隔离破坏正式资产，工作流程纠正即失败。",
+        "source_ids": [
+          "SRC-010"
+        ]
+      }
+    ],
+    "in_scope_capability_ids": [
+      "CAP-001",
+      "CAP-002",
+      "CAP-003",
+      "CAP-004",
+      "CAP-005",
+      "CAP-006",
+      "CAP-007",
+      "CAP-008"
+    ],
+    "out_of_scope": [
+      "内置图片生成供应商 API",
+      "GitHub 或公网部署",
+      "Figma 社区发布",
+      "多人云权限系统",
+      "宣称生产规模可靠性或商业成功"
+    ],
+    "fidelity_focus": [
+      "role",
+      "implementation",
+      "look_and_feel"
+    ],
+    "approval": {
+      "status": "pending",
+      "actor": {
+        "type": "human",
+        "identity": "",
+        "role": ""
+      },
+      "approved_at": "",
+      "fingerprint": "",
+      "attestation": {
+        "method": "local"
+      }
+    }
+  },
+  "capabilities": [
+    {
+      "id": "CAP-001",
+      "name": "参考与候选安全导入",
+      "purpose": "只消耗已绑定单次人类创作委托的参考与权利记录，并把代理生成的候选变成完整、可校验的测试素材包。",
+      "source_decision_ids": [
+        "PD-001",
+        "PD-003",
+        "PD-008"
+      ],
+      "hypothesis_ids": [
+        "HYP-001"
+      ],
+      "priority": "core",
+      "truth_level": "constrained_real",
+      "valid_for_hypothesis": true,
+      "integration_mode": "真实本地文件、真实测试目录和原子文件写入",
+      "limitation": "只验证本地静态栅格样机，不内置或验证图片生成模型本身。",
+      "disclosure": "通过只证明候选导入机制，不证明任意截图都能生成合格视觉素材。"
+    },
+    {
+      "id": "CAP-002",
+      "name": "确定性身份、版本与受控分类",
+      "purpose": "自动产生或核验稳定 ID、revision、尺寸、缩略图、摘要、分类和标签。",
+      "source_decision_ids": [
+        "PD-004",
+        "PD-005"
+      ],
+      "hypothesis_ids": [
+        "HYP-001"
+      ],
+      "priority": "core",
+      "truth_level": "constrained_real",
+      "valid_for_hypothesis": true,
+      "integration_mode": "受控 taxonomy 与当前 catalog schema 的真实校验",
+      "limitation": "首版 taxonomy 仅包含当前已批准的显示器、手机和笔记本分类。",
+      "disclosure": "未知分类会阻塞，不代表系统能自动理解所有设备类别。"
+    },
+    {
+      "id": "CAP-003",
+      "name": "技术 QA 与双重人类批准绑定",
+      "purpose": "区分技术 QA、视觉批准和正式入库批准，并使三者绑定准确字节版本。",
+      "source_decision_ids": [
+        "PD-002",
+        "PD-005"
+      ],
+      "hypothesis_ids": [
+        "HYP-002",
+        "HYP-003"
+      ],
+      "priority": "core",
+      "truth_level": "constrained_real",
+      "valid_for_hypothesis": true,
+      "integration_mode": "真实质检台、真实摘要和本地人类声明记录",
+      "limitation": "本地人类声明可追溯但不提供密码学身份认证。",
+      "disclosure": "未来云端化需要认证审批，但不得降低当前版本绑定强度。"
+    },
+    {
+      "id": "CAP-004",
+      "name": "失败关闭的正式库提升与恢复",
+      "purpose": "只有当前批准有效时才复制不可变文件并最后原子更新正式清单。",
+      "source_decision_ids": [
+        "PD-001",
+        "PD-002",
+        "PD-005"
+      ],
+      "hypothesis_ids": [
+        "HYP-002"
+      ],
+      "priority": "core",
+      "truth_level": "constrained_real",
+      "valid_for_hypothesis": true,
+      "integration_mode": "真实本地 testing/production 目录、快照和提升脚本",
+      "limitation": "本阶段不验证远程 CDN 上传或跨服务原子性。",
+      "disclosure": "本地提升通过不等于线上目录已经部署。"
+    },
+    {
+      "id": "CAP-005",
+      "name": "持久状态与新对话恢复",
+      "purpose": "让执行者从仓库确定当前状态、阻塞和下一动作并遵守发布边界。",
+      "source_decision_ids": [
+        "PD-001",
+        "PD-006"
+      ],
+      "hypothesis_ids": [
+        "HYP-003"
+      ],
+      "priority": "core",
+      "truth_level": "constrained_real",
+      "valid_for_hypothesis": true,
+      "integration_mode": "仓库内 AGENTS、运行手册、政策、状态文件和确定性状态命令",
+      "limitation": "只对能够访问同一项目目录和本地运行时的执行者有效。",
+      "disclosure": "它不保证任意无文件访问权的聊天自动获得项目知识。"
+    },
+    {
+      "id": "CAP-006",
+      "name": "零绿幕完整样机合成",
+      "purpose": "以完整样机底图和显式孔径数据替代所有色键板，并让 testing、production、质检台、插件与导出共享一条无色键渲染路径。",
+      "source_decision_ids": [
+        "PD-007"
+      ],
+      "hypothesis_ids": [
+        "HYP-004"
+      ],
+      "priority": "core",
+      "truth_level": "constrained_real",
+      "valid_for_hypothesis": true,
+      "integration_mode": "真实 catalog 图像、显式屏幕孔径/遮罩、共享 Canvas 渲染器和真实 Figma 插件构建",
+      "limitation": "本阶段验证当前目录中的显示器、手机和笔记本静态栅格样机，不宣称覆盖任意复杂透明材质或动态三维场景。",
+      "disclosure": "自动像素检查不能单独证明审美完整，必须与准确 revision 的人类视觉检查共同通过。"
+    },
+    {
+      "id": "CAP-007",
+      "name": "单次创作委托与停止状态",
+      "purpose": "把用户对当次截图的创作请求记录为单次、可消耗、绑定摘要和数量上限的权威委托，并在无委托时稳定停在 WAITING_FOR_USER_INPUT。",
+      "source_decision_ids": [
+        "PD-008"
+      ],
+      "hypothesis_ids": [
+        "HYP-005"
+      ],
+      "priority": "core",
+      "truth_level": "constrained_real",
+      "valid_for_hypothesis": true,
+      "integration_mode": "不可变委托文件、工作流状态、单次消耗记录、隔离目录和导入前失败关闭检查",
+      "limitation": "本地人类确认是可追溯声明而非密码学身份认证；未来云端化时需替换为受认证审批。",
+      "disclosure": "通过委托门只证明用户要求制作该候选，不代替后续视觉批准、技术 QA 或正式入库批准。"
+    },
+    {
+      "id": "CAP-008",
+      "name": "稳定交互、单一几何与屏幕来源治理",
+      "purpose": "用共享不变量同时治理卡片命中、裁切轴向、孔径遮罩、外层画布和默认屏幕内容，防止同类问题从不同入口反复回归。",
+      "source_decision_ids": [
+        "PD-009"
+      ],
+      "hypothesis_ids": [
+        "HYP-004"
+      ],
+      "priority": "core",
+      "truth_level": "constrained_real",
+      "valid_for_hypothesis": true,
+      "integration_mode": "共享渲染器、插件 UI、素材迁移、QA 门禁、自动测试与真实 Figma+EX 复测",
+      "limitation": "当前真实宿主证据覆盖本地 Figma+EX 和五个现有样机；未来素材仍需逐 revision 人类视觉批准。",
+      "disclosure": "自动测试和单一宿主通过不等于线上发布或所有环境均已验证。"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "REQ-001",
+      "capability_id": "CAP-001",
+      "source_decision_ids": [
+        "PD-001",
+        "PD-003"
+      ],
+      "statement": "流水线 SHALL 在候选导入前记录参考摘要和人类声明的权利模式，并对 reference-only 禁止复用参考图字节。",
+      "rationale": "来源和权利未知不能被自动化推定为可发布。",
+      "priority": "must",
+      "verification_method": "test",
+      "touchpoint_ids": [
+        "TP-001",
+        "TP-003",
+        "TP-005"
+      ],
+      "scenarios": [
+        {
+          "id": "SCN-001",
+          "kind": "happy_path",
+          "given": [
+            "有效参考文件",
+            "有效人类权利声明"
+          ],
+          "when": "执行候选导入",
+          "then": [
+            "状态记录参考摘要和权利模式",
+            "候选进入 CANDIDATE_READY"
+          ],
+          "evidence_ids": [
+            "EVD-AP-001",
+            "EVD-AP-002",
+            "EVD-AP-015"
+          ]
+        },
+        {
+          "id": "SCN-002",
+          "kind": "failure",
+          "given": [
+            "权利模式缺失或 reference-only 复用参考图字节"
+          ],
+          "when": "执行候选导入",
+          "then": [
+            "操作失败并给出明确原因",
+            "测试 manifest 和既有文件不变"
+          ],
+          "evidence_ids": [
+            "EVD-AP-001",
+            "EVD-AP-002",
+            "EVD-AP-015"
+          ]
+        }
+      ],
+      "task_ids": [
+        "TASK-002",
+        "TASK-006"
+      ],
+      "implementation_refs": [
+        "scripts/asset-pipeline.mjs",
+        "scripts/lib/asset-pipeline.mjs",
+        "quality/asset-pipeline-policy.json",
+        "package.json",
+        "pnpm-lock.yaml"
+      ],
+      "evidence_ids": [
+        "EVD-AP-001",
+        "EVD-AP-002",
+        "EVD-AP-004",
+        "EVD-AP-015",
+        "EVD-AP-017"
+      ]
+    },
+    {
+      "id": "REQ-002",
+      "capability_id": "CAP-002",
+      "source_decision_ids": [
+        "PD-004",
+        "PD-005"
+      ],
+      "statement": "流水线 SHALL 确定性生成或核验 assetId、revision、尺寸、缩略图、摘要、分类和标签，并在写入前完成冲突检查。",
+      "rationale": "插件识别、缓存、批准和不可变文件依赖稳定身份与真实元数据。",
+      "priority": "must",
+      "verification_method": "test",
+      "touchpoint_ids": [
+        "TP-001",
+        "TP-003",
+        "TP-005"
+      ],
+      "scenarios": [
+        {
+          "id": "SCN-003",
+          "kind": "happy_path",
+          "given": [
+            "有效基础图",
+            "受控分类",
+            "合法屏幕几何"
+          ],
+          "when": "创建新样机",
+          "then": [
+            "自动生成完整素材包和清单项",
+            "所有摘要与真实文件一致"
+          ],
+          "evidence_ids": [
+            "EVD-AP-001",
+            "EVD-AP-002",
+            "EVD-AP-015"
+          ]
+        },
+        {
+          "id": "SCN-004",
+          "kind": "edge",
+          "given": [
+            "未知分类、非法 ID 或相同不可变路径不同字节"
+          ],
+          "when": "创建或更新样机",
+          "then": [
+            "操作失败关闭",
+            "不会创建新分类或覆盖既有文件"
+          ],
+          "evidence_ids": [
+            "EVD-AP-001",
+            "EVD-AP-002",
+            "EVD-AP-015"
+          ]
+        }
+      ],
+      "task_ids": [
+        "TASK-002",
+        "TASK-006"
+      ],
+      "implementation_refs": [
+        "scripts/asset-pipeline.mjs",
+        "scripts/lib/asset-pipeline.mjs",
+        "quality/asset-pipeline-policy.json",
+        "package.json",
+        "pnpm-lock.yaml"
+      ],
+      "evidence_ids": [
+        "EVD-AP-001",
+        "EVD-AP-002",
+        "EVD-AP-004",
+        "EVD-AP-015",
+        "EVD-AP-017"
+      ]
+    },
+    {
+      "id": "REQ-003",
+      "capability_id": "CAP-003",
+      "source_decision_ids": [
+        "PD-002",
+        "PD-005"
+      ],
+      "statement": "视觉批准 SHALL 由确定的人类绑定 assetId、revision 和 candidateSha256；候选字节变化后旧批准失效。",
+      "rationale": "视觉认可必须对应实际进入质检的候选。",
+      "priority": "must",
+      "verification_method": "test",
+      "touchpoint_ids": [
+        "TP-001",
+        "TP-002",
+        "TP-003",
+        "TP-005"
+      ],
+      "scenarios": [
+        {
+          "id": "SCN-005",
+          "kind": "happy_path",
+          "given": [
+            "候选已生成",
+            "决定人明确视觉通过"
+          ],
+          "when": "记录视觉批准",
+          "then": [
+            "批准绑定准确候选摘要",
+            "状态进入 VISUAL_APPROVED"
+          ],
+          "evidence_ids": [
+            "EVD-AP-001",
+            "EVD-AP-002",
+            "EVD-AP-015"
+          ]
+        },
+        {
+          "id": "SCN-006",
+          "kind": "failure",
+          "given": [
+            "批准摘要与当前候选不一致"
+          ],
+          "when": "尝试进入 TESTING",
+          "then": [
+            "操作被拒绝",
+            "旧批准保留为历史但不再 current"
+          ],
+          "evidence_ids": [
+            "EVD-AP-001",
+            "EVD-AP-002",
+            "EVD-AP-015"
+          ]
+        }
+      ],
+      "task_ids": [
+        "TASK-003",
+        "TASK-006"
+      ],
+      "implementation_refs": [
+        "scripts/authorize-mockup.mjs",
+        "scripts/lib/asset-pipeline.mjs",
+        "asset-lab/index.html",
+        "asset-lab/styles.css",
+        "asset-lab/app.js",
+        "scripts/serve-catalog.mjs"
+      ],
+      "evidence_ids": [
+        "EVD-AP-001",
+        "EVD-AP-002",
+        "EVD-AP-003",
+        "EVD-AP-004",
+        "EVD-AP-015",
+        "EVD-AP-017",
+        "EVD-AP-019"
+      ]
+    },
+    {
+      "id": "REQ-004",
+      "capability_id": "CAP-003",
+      "source_decision_ids": [
+        "PD-002",
+        "PD-005"
+      ],
+      "statement": "正式入库批准 SHALL 只在技术 QA 通过后由确定的人类记录，并绑定当前 itemSha256 与 qaReportSha256。",
+      "rationale": "机器检查与人类产品决定必须同时存在且不能指向不同版本。",
+      "priority": "must",
+      "verification_method": "test",
+      "touchpoint_ids": [
+        "TP-002",
+        "TP-003",
+        "TP-004",
+        "TP-005"
+      ],
+      "scenarios": [
+        {
+          "id": "SCN-007",
+          "kind": "happy_path",
+          "given": [
+            "当前技术 QA 有效",
+            "决定人明确批准正式入库"
+          ],
+          "when": "记录 release approval",
+          "then": [
+            "记录包含人类、时间、item 和 QA 摘要",
+            "状态进入 RELEASE_APPROVED"
+          ],
+          "evidence_ids": [
+            "EVD-AP-001",
+            "EVD-AP-002",
+            "EVD-AP-003",
+            "EVD-AP-015"
+          ]
+        },
+        {
+          "id": "SCN-008",
+          "kind": "failure",
+          "given": [
+            "QA 缺失、失败、过期或人类决定缺失"
+          ],
+          "when": "记录批准或执行提升",
+          "then": [
+            "操作被拒绝",
+            "正式 manifest 不变"
+          ],
+          "evidence_ids": [
+            "EVD-AP-001",
+            "EVD-AP-002",
+            "EVD-AP-003",
+            "EVD-AP-015"
+          ]
+        }
+      ],
+      "task_ids": [
+        "TASK-003",
+        "TASK-004",
+        "TASK-006"
+      ],
+      "implementation_refs": [
+        "scripts/authorize-mockup.mjs",
+        "scripts/serve-catalog.mjs",
+        "scripts/promote-mockup.mjs",
+        "scripts/catalog-release.mjs",
+        "shared/catalog-contract.js",
+        "scripts/lib/asset-pipeline.mjs"
+      ],
+      "evidence_ids": [
+        "EVD-AP-001",
+        "EVD-AP-002",
+        "EVD-AP-003",
+        "EVD-AP-004",
+        "EVD-AP-015",
+        "EVD-AP-017",
+        "EVD-AP-019"
+      ]
+    },
+    {
+      "id": "REQ-005",
+      "capability_id": "CAP-004",
+      "source_decision_ids": [
+        "PD-001",
+        "PD-002",
+        "PD-005"
+      ],
+      "statement": "提升 SHALL 先验证双重批准并完成快照、不可变文件复制和摘要核验，最后原子更新正式 manifest；失败时旧正式库保持可用。",
+      "rationale": "避免清单先更新、文件缺失或半次提升污染插件读取。",
+      "priority": "must",
+      "verification_method": "test",
+      "touchpoint_ids": [
+        "TP-004",
+        "TP-005"
+      ],
+      "scenarios": [
+        {
+          "id": "SCN-009",
+          "kind": "happy_path",
+          "given": [
+            "双重批准均为当前版本",
+            "目标不可变路径无冲突"
+          ],
+          "when": "提升单个样机",
+          "then": [
+            "素材和批准记录进入正式库",
+            "catalogVersion 递增且正式检查通过"
+          ],
+          "evidence_ids": [
+            "EVD-AP-001",
+            "EVD-AP-002",
+            "EVD-AP-015"
+          ]
+        },
+        {
+          "id": "SCN-010",
+          "kind": "recovery",
+          "given": [
+            "复制冲突、摘要漂移或中途失败"
+          ],
+          "when": "提升失败后修复并重试",
+          "then": [
+            "失败期间旧正式 manifest 可用",
+            "修复后可从明确状态安全重试"
+          ],
+          "evidence_ids": [
+            "EVD-AP-001",
+            "EVD-AP-002",
+            "EVD-AP-015"
+          ]
+        }
+      ],
+      "task_ids": [
+        "TASK-004",
+        "TASK-006"
+      ],
+      "implementation_refs": [
+        "scripts/promote-mockup.mjs",
+        "scripts/catalog-release.mjs",
+        "shared/catalog-contract.js",
+        "scripts/lib/asset-pipeline.mjs",
+        "scripts/lib/catalog-history.mjs"
+      ],
+      "evidence_ids": [
+        "EVD-AP-001",
+        "EVD-AP-002",
+        "EVD-AP-004",
+        "EVD-AP-015",
+        "EVD-AP-017"
+      ]
+    },
+    {
+      "id": "REQ-006",
+      "capability_id": "CAP-005",
+      "source_decision_ids": [
+        "PD-006"
+      ],
+      "statement": "仓库 SHALL 持久记录每个资产的当前状态、摘要、阻塞原因、历史决定和唯一下一动作，并提供新对话可执行的状态命令与运行手册。",
+      "rationale": "执行连续性必须来自可检查状态而非聊天记忆。",
+      "priority": "must",
+      "verification_method": "user_research",
+      "touchpoint_ids": [
+        "TP-001",
+        "TP-003",
+        "TP-005",
+        "TP-006"
+      ],
+      "scenarios": [
+        {
+          "id": "SCN-011",
+          "kind": "recovery",
+          "given": [
+            "新执行对话没有旧聊天上下文",
+            "仓库包含中途停止的资产"
+          ],
+          "when": "执行合同和状态检查",
+          "then": [
+            "准确报告当前状态和阻塞",
+            "只执行政策允许的下一动作"
+          ],
+          "evidence_ids": []
+        },
+        {
+          "id": "SCN-012",
+          "kind": "failure",
+          "given": [
+            "状态摘要与实际文件不一致"
+          ],
+          "when": "执行恢复检查",
+          "then": [
+            "状态标记 BLOCKED 或失效",
+            "不会依据旧聊天或旧批准继续"
+          ],
+          "evidence_ids": [
+            "EVD-AP-001",
+            "EVD-AP-002"
+          ]
+        }
+      ],
+      "task_ids": [
+        "TASK-005",
+        "TASK-006"
+      ],
+      "implementation_refs": [
+        "AGENTS.md",
+        "docs/ASSET_PIPELINE_RUNBOOK.md",
+        "README.md",
+        "scripts/asset-pipeline.mjs",
+        "package.json"
+      ],
+      "evidence_ids": [
+        "EVD-AP-001",
+        "EVD-AP-002",
+        "EVD-AP-003",
+        "EVD-AP-004"
+      ]
+    },
+    {
+      "id": "REQ-007",
+      "capability_id": "CAP-005",
+      "source_decision_ids": [
+        "PD-001"
+      ],
+      "statement": "本阶段工具和文档 SHALL 保持 GitHub、Netlify、Figma 社区与其他外部部署为禁止状态，除非未来合同变更并重新批准。",
+      "rationale": "当前授权只覆盖本地实现和验证。",
+      "priority": "must",
+      "verification_method": "inspection",
+      "touchpoint_ids": [
+        "TP-003",
+        "TP-005",
+        "TP-006"
+      ],
+      "scenarios": [
+        {
+          "id": "SCN-013",
+          "kind": "failure",
+          "given": [
+            "本阶段调用部署或发布动作"
+          ],
+          "when": "政策校验运行",
+          "then": [
+            "校验失败并指出未授权边界",
+            "不执行外部操作"
+          ],
+          "evidence_ids": [
+            "EVD-AP-001",
+            "EVD-AP-002",
+            "EVD-AP-004",
+            "EVD-AP-016"
+          ]
+        }
+      ],
+      "task_ids": [
+        "TASK-001",
+        "TASK-005",
+        "TASK-006"
+      ],
+      "implementation_refs": [
+        "quality/asset-pipeline-policy.json",
+        "scripts/verify-asset-pipeline-contract.mjs",
+        "AGENTS.md",
+        "docs/ASSET_PIPELINE_RUNBOOK.md",
+        "package.json"
+      ],
+      "evidence_ids": [
+        "EVD-AP-001",
+        "EVD-AP-002",
+        "EVD-AP-004",
+        "EVD-AP-016"
+      ]
+    },
+    {
+      "id": "REQ-008",
+      "capability_id": "CAP-006",
+      "source_decision_ids": [
+        "PD-007"
+      ],
+      "statement": "流水线 SHALL 只接收自身已是完整样机的候选底图和缩略图，并 SHALL 拒绝色键字段、色键模式、典型绿幕占位屏或依赖运行时隐藏占位板才完整的素材。",
+      "rationale": "完整性必须从候选进入系统时成立，不能靠插件缩略图或最终合成掩盖不合格底图。",
+      "priority": "must",
+      "verification_method": "test",
+      "touchpoint_ids": [
+        "TP-001",
+        "TP-002",
+        "TP-003",
+        "TP-005"
+      ],
+      "scenarios": [
+        {
+          "id": "SCN-014",
+          "kind": "happy_path",
+          "given": [
+            "完整非色键候选底图",
+            "显式屏幕孔径几何",
+            "完整缩略图"
+          ],
+          "when": "候选导入并进入视觉审核",
+          "then": [
+            "底图和缩略图在不运行替换算法时均可直接展示",
+            "自动完整性检查和人类完整样机检查均可独立执行"
+          ],
+          "evidence_ids": [
+            "EVD-AP-006",
+            "EVD-AP-007",
+            "EVD-AP-008",
+            "EVD-AP-009",
+            "EVD-AP-015"
+          ]
+        },
+        {
+          "id": "SCN-015",
+          "kind": "failure",
+          "given": [
+            "manifest 含色键字段或模式",
+            "屏幕区域呈典型高占比绿幕占位",
+            "缩略图与底图完整性不一致"
+          ],
+          "when": "导入、目录检查、技术 QA 或提升任一门禁运行",
+          "then": [
+            "操作失败关闭并指出具体不合格项",
+            "不生成视觉批准、技术 QA 或正式入库资格"
+          ],
+          "evidence_ids": [
+            "EVD-AP-005",
+            "EVD-AP-006",
+            "EVD-AP-008",
+            "EVD-AP-009",
+            "EVD-AP-015"
+          ]
+        }
+      ],
+      "task_ids": [
+        "TASK-007",
+        "TASK-008",
+        "TASK-009",
+        "TASK-010"
+      ],
+      "implementation_refs": [
+        "quality/asset-pipeline-policy.json",
+        "scripts/lib/asset-pipeline.mjs",
+        "shared/catalog-contract.js",
+        "scripts/serve-catalog.mjs",
+        "scripts/catalog-release.mjs",
+        "scripts/verify-asset-pipeline-contract.mjs"
+      ],
+      "evidence_ids": [
+        "EVD-AP-005",
+        "EVD-AP-006",
+        "EVD-AP-007",
+        "EVD-AP-008",
+        "EVD-AP-009",
+        "EVD-AP-015",
+        "EVD-AP-017",
+        "EVD-AP-018"
+      ]
+    },
+    {
+      "id": "REQ-009",
+      "capability_id": "CAP-006",
+      "source_decision_ids": [
+        "PD-007"
+      ],
+      "statement": "共享渲染器 SHALL 仅依据显式屏幕孔径几何/遮罩投影用户画面，并 SHALL 删除按底图颜色推断孔径、清除色溢或扩张色键边缘的全部代码和兼容分支。",
+      "rationale": "单一数据驱动合成路径能让编辑坐标、可见边界、裁切、命中测试和导出保持一致，并从根上消除绿幕与色溢。",
+      "priority": "must",
+      "verification_method": "test",
+      "touchpoint_ids": [
+        "TP-002",
+        "TP-005",
+        "TP-007"
+      ],
+      "scenarios": [
+        {
+          "id": "SCN-016",
+          "kind": "happy_path",
+          "given": [
+            "完整样机底图",
+            "显式孔径几何或遮罩",
+            "任意批准测试画面"
+          ],
+          "when": "质检台、插件或导出调用共享渲染器",
+          "then": [
+            "用户画面只出现在显式孔径内",
+            "遮挡与反射按声明图层恢复",
+            "所有入口产生同一合成结果"
+          ],
+          "evidence_ids": [
+            "EVD-AP-006",
+            "EVD-AP-007",
+            "EVD-AP-008",
+            "EVD-AP-009",
+            "EVD-AP-013",
+            "EVD-AP-014"
+          ]
+        },
+        {
+          "id": "SCN-017",
+          "kind": "edge",
+          "given": [
+            "300% 缩放、裁切边界、自由透视和高对比测试画面"
+          ],
+          "when": "执行最终合成和逐像素边界检查",
+          "then": [
+            "孔径外用户像素为零",
+            "孔径边缘没有绿幕、露底、可见缝或锯齿扩张",
+            "选择框、命中区域和最终像素边界一致"
+          ],
+          "evidence_ids": [
+            "EVD-AP-006",
+            "EVD-AP-008",
+            "EVD-AP-009",
+            "EVD-AP-013",
+            "EVD-AP-014"
+          ]
+        }
+      ],
+      "task_ids": [
+        "TASK-007",
+        "TASK-009"
+      ],
+      "implementation_refs": [
+        "shared/mockup-renderer.js",
+        "plugin/code.js",
+        "plugin/ui.js",
+        "asset-lab/app.js",
+        "scripts/build-plugin.mjs",
+        "scripts/generate-catalog-thumbnails.mjs"
+      ],
+      "evidence_ids": [
+        "EVD-AP-005",
+        "EVD-AP-006",
+        "EVD-AP-007",
+        "EVD-AP-008",
+        "EVD-AP-009",
+        "EVD-AP-013",
+        "EVD-AP-014",
+        "EVD-AP-018"
+      ]
+    },
+    {
+      "id": "REQ-010",
+      "capability_id": "CAP-006",
+      "source_decision_ids": [
+        "PD-005",
+        "PD-007"
+      ],
+      "statement": "四个现有正式样机和 workstation-display-three-quarter SHALL 以新 revision 迁移为完整非色键样机；旧绿幕 revision SHALL 从所有活动清单和服务路径撤下，且其旧批准 SHALL 仅保留为不可复用的历史。",
+      "rationale": "只修改新候选会让正式库继续违反硬规则；覆盖旧字节又会破坏版本与批准追踪。",
+      "priority": "must",
+      "verification_method": "demonstration",
+      "touchpoint_ids": [
+        "TP-001",
+        "TP-002",
+        "TP-003",
+        "TP-004",
+        "TP-005",
+        "TP-007"
+      ],
+      "scenarios": [
+        {
+          "id": "SCN-018",
+          "kind": "recovery",
+          "given": [
+            "活动目录含五个不合格绿幕 r1",
+            "旧批准绑定 r1 摘要"
+          ],
+          "when": "执行零绿幕迁移",
+          "then": [
+            "每个样机产生独立 r2 并重新完成视觉、技术和正式批准",
+            "活动清单不再引用 r1",
+            "r1 历史记录不能通过当前门禁"
+          ],
+          "evidence_ids": [
+            "EVD-AP-006",
+            "EVD-AP-008",
+            "EVD-AP-009",
+            "EVD-AP-013",
+            "EVD-AP-014"
+          ]
+        },
+        {
+          "id": "SCN-019",
+          "kind": "failure",
+          "given": [
+            "任一旧绿幕文件仍被活动 manifest、插件、质检台或提升脚本引用"
+          ],
+          "when": "目录检查或发布检查运行",
+          "then": [
+            "检查失败并列出残留引用",
+            "不得声称迁移完成或继续正式提升"
+          ],
+          "evidence_ids": [
+            "EVD-AP-005",
+            "EVD-AP-006",
+            "EVD-AP-007",
+            "EVD-AP-008",
+            "EVD-AP-009",
+            "EVD-AP-013",
+            "EVD-AP-014"
+          ]
+        }
+      ],
+      "task_ids": [
+        "TASK-008",
+        "TASK-009",
+        "TASK-010"
+      ],
+      "implementation_refs": [
+        "scripts/promote-mockup.mjs",
+        "scripts/catalog-release.mjs",
+        "docs/ARCHITECTURE.md",
+        "docs/ASSET_PIPELINE_RUNBOOK.md"
+      ],
+      "evidence_ids": [
+        "EVD-AP-005",
+        "EVD-AP-006",
+        "EVD-AP-007",
+        "EVD-AP-008",
+        "EVD-AP-009",
+        "EVD-AP-013",
+        "EVD-AP-014",
+        "EVD-AP-018"
+      ]
+    },
+    {
+      "id": "REQ-011",
+      "capability_id": "CAP-007",
+      "source_decision_ids": [
+        "PD-008"
+      ],
+      "statement": "流水线 SHALL 在任何候选创建前要求不可变的单次人类创作委托，并 SHALL 将权利声明与创作委托分离；委托必须绑定参考摘要、assetId、分类、权利模式、人类决定人和最多一个候选，且不可重复消耗。",
+      "rationale": "防止将“有权使用截图”、旧截图或内部验收任务错当成“用户已要求新建候选”。",
+      "priority": "must",
+      "verification_method": "test",
+      "touchpoint_ids": [
+        "TP-001",
+        "TP-003",
+        "TP-005",
+        "TP-006"
+      ],
+      "scenarios": [
+        {
+          "id": "SCN-020",
+          "kind": "happy_path",
+          "given": [
+            "决定人对准确参考图明确要求制作一个候选",
+            "权利模式、assetId 和受控分类已明确"
+          ],
+          "when": "记录委托并导入一个候选",
+          "then": [
+            "委托绑定参考 SHA-256 和最多一个候选",
+            "导入后委托立即变为 CONSUMED",
+            "候选可回溯委托文件摘要"
+          ],
+          "evidence_ids": [
+            "EVD-AP-011",
+            "EVD-AP-012",
+            "EVD-AP-015"
+          ]
+        },
+        {
+          "id": "SCN-021",
+          "kind": "failure",
+          "given": [
+            "缺少创作委托、仅有权利声明、委托已消耗、参考摘要错配或旧截图复用未授权"
+          ],
+          "when": "尝试生成或导入候选",
+          "then": [
+            "操作在写入前失败关闭",
+            "testing、production、既有状态和素材字节不变"
+          ],
+          "evidence_ids": [
+            "EVD-AP-010",
+            "EVD-AP-011",
+            "EVD-AP-012",
+            "EVD-AP-015"
+          ]
+        },
+        {
+          "id": "SCN-022",
+          "kind": "recovery",
+          "given": [
+            "一个因旧合同缺口已进入活动 testing 的未经委托候选"
+          ],
+          "when": "执行可追溯隔离",
+          "then": [
+            "候选从活动 testing 撤下并标记 REJECTED",
+            "原底图、缩略图和参考图以原 SHA-256 保留在隔离审计区",
+            "五个已批准 production r2 不变"
+          ],
+          "evidence_ids": [
+            "EVD-AP-011",
+            "EVD-AP-012",
+            "EVD-AP-015"
+          ]
+        }
+      ],
+      "task_ids": [
+        "TASK-011"
+      ],
+      "implementation_refs": [
+        "scripts/asset-pipeline.mjs",
+        "scripts/lib/asset-pipeline.mjs",
+        "quality/asset-pipeline-policy.json",
+        "catalog/workflow/state.json",
+        "AGENTS.md",
+        "docs/ASSET_PIPELINE_DEVELOPMENT_CONTRACT.md",
+        "docs/ASSET_PIPELINE_RUNBOOK.md",
+        "tests/asset-pipeline.test.mjs",
+        "tests/asset-pipeline-contract.test.mjs"
+      ],
+      "evidence_ids": [
+        "EVD-AP-010",
+        "EVD-AP-011",
+        "EVD-AP-012",
+        "EVD-AP-015",
+        "EVD-AP-017",
+        "EVD-AP-019"
+      ]
+    },
+    {
+      "id": "REQ-012",
+      "capability_id": "CAP-008",
+      "source_decision_ids": [
+        "PD-009"
+      ],
+      "statement": "插件 SHALL 保持素材卡片命中几何稳定、单边裁切严格单轴、裁切框与物理孔径职责分离，并 SHALL 拒绝缺少准确来源声明的默认屏幕内容和可见彩色角块。",
+      "rationale": "真实宿主回归来自多套局部机制互相矛盾，只有共享不变量、失败关闭素材门禁和真实宿主复测能从最高错误层防止复发。",
+      "priority": "must",
+      "verification_method": "demonstration",
+      "touchpoint_ids": [
+        "TP-002",
+        "TP-005",
+        "TP-007"
+      ],
+      "scenarios": [
+        {
+          "id": "SCN-023",
+          "kind": "happy_path",
+          "given": [
+            "当前 Figma+EX 构建",
+            "五个 neutral-off r3 测试候选",
+            "真实 Figma 图像选区"
+          ],
+          "when": "反复悬停卡片、导入选区并分别拖动右边和下边",
+          "then": [
+            "卡片只改变非几何视觉反馈",
+            "右边拖动不改变上下边",
+            "下边拖动不改变左右边",
+            "默认预览无未经授权界面或彩色角块"
+          ],
+          "evidence_ids": [
+            "EVD-AP-020"
+          ]
+        },
+        {
+          "id": "SCN-024",
+          "kind": "failure",
+          "given": [
+            "缺失 screen.presentation",
+            "neutral-off 屏幕色度超限",
+            "reference-bound 摘要错配",
+            "悬停或裁切实现引入几何漂移"
+          ],
+          "when": "运行候选、目录、插件或发布门禁",
+          "then": [
+            "操作失败关闭并指出具体不变量",
+            "旧 production 保持可用但不得通过新发布门禁",
+            "不得伪造元数据或降低阈值绕过"
+          ],
+          "evidence_ids": [
+            "EVD-AP-020"
+          ]
+        }
+      ],
+      "task_ids": [
+        "TASK-012"
+      ],
+      "implementation_refs": [
+        "shared/mockup-renderer.js",
+        "plugin/ui.js",
+        "plugin/styles.css",
+        "scripts/lib/no-chroma.mjs",
+        "scripts/prepare-neutral-screen-corrections.mjs",
+        "tests/plugin.test.mjs",
+        "tests/no-chroma.test.mjs",
+        "docs/CONTENT_LIFECYCLE_HOVER_ROOT_CAUSE_2026-10-31.md",
+        "docs/CROP_GEOMETRY_ROOT_CAUSE_2026-10-31.md",
+        "docs/SEAM_ROOT_CAUSE_2026-10-30.md"
+      ],
+      "evidence_ids": [
+        "EVD-AP-020"
+      ]
+    }
+  ],
+  "implementation_plan": {
+    "vertical_slice": {
+      "capability_ids": [
+        "CAP-001",
+        "CAP-002",
+        "CAP-003",
+        "CAP-004",
+        "CAP-005",
+        "CAP-006",
+        "CAP-007",
+        "CAP-008"
+      ],
+      "requirement_ids": [
+        "REQ-001",
+        "REQ-002",
+        "REQ-003",
+        "REQ-004",
+        "REQ-005",
+        "REQ-006",
+        "REQ-007",
+        "REQ-008",
+        "REQ-009",
+        "REQ-010",
+        "REQ-011",
+        "REQ-012"
+      ],
+      "touchpoint_ids": [
+        "TP-001",
+        "TP-002",
+        "TP-003",
+        "TP-004",
+        "TP-005",
+        "TP-006",
+        "TP-007"
+      ],
+      "completion_rule": "旧色键架构与活动绿幕 revision 全部撤出；权利声明与创作委托完全分离；卡片悬停、裁切轴向、孔径、外层画布和屏幕内容来源由共享不变量治理；五个 r3 修订候选分别获得准确视觉批准、技术 QA 和正式入库批准后替换旧 r2；production、当前构建、完整测试和真实 Figma 宿主复测全部通过；无开放高/严重发现；未来新候选只在决定人真实委托后开始。"
+    },
+    "touchpoints": [
+      {
+        "id": "TP-001",
+        "kind": "automation",
+        "name": "样机流水线命令",
+        "requirement_ids": [
+          "REQ-001",
+          "REQ-002",
+          "REQ-003",
+          "REQ-006",
+          "REQ-008",
+          "REQ-010",
+          "REQ-011"
+        ],
+        "states": [
+          "ready",
+          "running",
+          "complete",
+          "failed",
+          "blocked"
+        ],
+        "file_refs": [
+          "scripts/asset-pipeline.mjs",
+          "scripts/lib/asset-pipeline.mjs",
+          "package.json",
+          "pnpm-lock.yaml"
+        ]
+      },
+      {
+        "id": "TP-002",
+        "kind": "screen",
+        "name": "样机质检台",
+        "requirement_ids": [
+          "REQ-003",
+          "REQ-004",
+          "REQ-008",
+          "REQ-009",
+          "REQ-010",
+          "REQ-012"
+        ],
+        "states": [
+          "loading",
+          "testing",
+          "qa_failed",
+          "qa_passed",
+          "awaiting_release_approval",
+          "release_approved",
+          "error"
+        ],
+        "file_refs": [
+          "asset-lab/index.html",
+          "asset-lab/styles.css",
+          "asset-lab/app.js",
+          "scripts/serve-catalog.mjs"
+        ]
+      },
+      {
+        "id": "TP-003",
+        "kind": "data",
+        "name": "流水线政策与持久状态",
+        "requirement_ids": [
+          "REQ-001",
+          "REQ-002",
+          "REQ-003",
+          "REQ-004",
+          "REQ-006",
+          "REQ-007",
+          "REQ-008",
+          "REQ-010",
+          "REQ-011"
+        ],
+        "states": [
+          "valid",
+          "invalid",
+          "current",
+          "stale",
+          "blocked"
+        ],
+        "file_refs": [
+          "quality/asset-pipeline-policy.json",
+          "scripts/lib/asset-pipeline.mjs"
+        ]
+      },
+      {
+        "id": "TP-004",
+        "kind": "integration",
+        "name": "批准与正式库提升",
+        "requirement_ids": [
+          "REQ-004",
+          "REQ-005",
+          "REQ-010"
+        ],
+        "states": [
+          "not_authorized",
+          "authorized",
+          "promoting",
+          "promoted",
+          "failed",
+          "recoverable"
+        ],
+        "file_refs": [
+          "scripts/authorize-mockup.mjs",
+          "scripts/promote-mockup.mjs",
+          "scripts/catalog-release.mjs",
+          "shared/catalog-contract.js",
+          "scripts/lib/asset-pipeline.mjs"
+        ]
+      },
+      {
+        "id": "TP-005",
+        "kind": "test",
+        "name": "机器门禁与回归测试",
+        "requirement_ids": [
+          "REQ-001",
+          "REQ-002",
+          "REQ-003",
+          "REQ-004",
+          "REQ-005",
+          "REQ-006",
+          "REQ-007",
+          "REQ-008",
+          "REQ-009",
+          "REQ-010",
+          "REQ-011",
+          "REQ-012"
+        ],
+        "states": [
+          "not_run",
+          "pass",
+          "fail",
+          "inconclusive"
+        ],
+        "file_refs": [
+          "scripts/verify-asset-pipeline-contract.mjs",
+          "tests/asset-pipeline-contract.test.mjs",
+          "tests/asset-pipeline.test.mjs",
+          "tests/catalog.test.mjs"
+        ]
+      },
+      {
+        "id": "TP-006",
+        "kind": "content",
+        "name": "新对话入口与运行手册",
+        "requirement_ids": [
+          "REQ-006",
+          "REQ-007",
+          "REQ-011"
+        ],
+        "states": [
+          "current",
+          "stale",
+          "blocked"
+        ],
+        "file_refs": [
+          "AGENTS.md",
+          "docs/ASSET_PIPELINE_RUNBOOK.md",
+          "README.md"
+        ]
+      },
+      {
+        "id": "TP-007",
+        "kind": "integration",
+        "name": "显式孔径共享渲染器与活动样机目录",
+        "requirement_ids": [
+          "REQ-009",
+          "REQ-010",
+          "REQ-012"
+        ],
+        "states": [
+          "legacy_chroma_blocked",
+          "migration_pending",
+          "aperture_renderer_ready",
+          "assets_migrated",
+          "verified",
+          "failed"
+        ],
+        "file_refs": [
+          "shared/mockup-renderer.js",
+          "plugin/code.js",
+          "plugin/ui.js"
+        ]
+      }
+    ],
+    "tasks": [
+      {
+        "id": "TASK-001",
+        "requirement_ids": [
+          "REQ-007"
+        ],
+        "touchpoint_ids": [
+          "TP-003",
+          "TP-005"
+        ],
+        "description": "实现机器政策校验器并把未授权外部发布设为失败关闭。",
+        "file_refs": [
+          "scripts/verify-asset-pipeline-contract.mjs",
+          "quality/asset-pipeline-policy.json",
+          "package.json"
+        ],
+        "status": "done",
+        "test_refs": [
+          "tests/asset-pipeline-contract.test.mjs"
+        ],
+        "evidence_ids": [
+          "EVD-AP-001",
+          "EVD-AP-002",
+          "EVD-AP-004"
+        ],
+        "removal_change_id": ""
+      },
+      {
+        "id": "TASK-002",
+        "requirement_ids": [
+          "REQ-001",
+          "REQ-002"
+        ],
+        "touchpoint_ids": [
+          "TP-001",
+          "TP-003",
+          "TP-005"
+        ],
+        "description": "实现参考记录、原子素材导入、缩略图、自动身份/revision/尺寸/摘要和受控分类。",
+        "file_refs": [
+          "scripts/asset-pipeline.mjs",
+          "scripts/lib/asset-pipeline.mjs",
+          "package.json",
+          "pnpm-lock.yaml"
+        ],
+        "status": "done",
+        "test_refs": [
+          "tests/asset-pipeline.test.mjs"
+        ],
+        "evidence_ids": [
+          "EVD-AP-001",
+          "EVD-AP-002",
+          "EVD-AP-004"
+        ],
+        "removal_change_id": ""
+      },
+      {
+        "id": "TASK-003",
+        "requirement_ids": [
+          "REQ-003",
+          "REQ-004"
+        ],
+        "touchpoint_ids": [
+          "TP-001",
+          "TP-002",
+          "TP-003",
+          "TP-005"
+        ],
+        "description": "实现视觉批准、技术 QA 和正式入库批准的分离记录与过期检测。",
+        "file_refs": [
+          "scripts/authorize-mockup.mjs",
+          "scripts/serve-catalog.mjs",
+          "asset-lab/index.html",
+          "asset-lab/styles.css",
+          "asset-lab/app.js",
+          "scripts/lib/asset-pipeline.mjs"
+        ],
+        "status": "done",
+        "test_refs": [
+          "tests/asset-pipeline.test.mjs"
+        ],
+        "evidence_ids": [
+          "EVD-AP-001",
+          "EVD-AP-002",
+          "EVD-AP-003",
+          "EVD-AP-004"
+        ],
+        "removal_change_id": ""
+      },
+      {
+        "id": "TASK-004",
+        "requirement_ids": [
+          "REQ-004",
+          "REQ-005"
+        ],
+        "touchpoint_ids": [
+          "TP-004",
+          "TP-005"
+        ],
+        "description": "强化正式库提升，强制 release approval、原子顺序、摘要复核与恢复语义。",
+        "file_refs": [
+          "scripts/promote-mockup.mjs",
+          "scripts/catalog-release.mjs",
+          "shared/catalog-contract.js",
+          "scripts/lib/asset-pipeline.mjs"
+        ],
+        "status": "done",
+        "test_refs": [
+          "tests/asset-pipeline.test.mjs",
+          "tests/catalog.test.mjs"
+        ],
+        "evidence_ids": [
+          "EVD-AP-001",
+          "EVD-AP-002",
+          "EVD-AP-004"
+        ],
+        "removal_change_id": ""
+      },
+      {
+        "id": "TASK-005",
+        "requirement_ids": [
+          "REQ-006",
+          "REQ-007"
+        ],
+        "touchpoint_ids": [
+          "TP-001",
+          "TP-003",
+          "TP-006"
+        ],
+        "description": "创建根级执行入口、运行手册和可验证的状态/下一动作输出。",
+        "file_refs": [
+          "AGENTS.md",
+          "docs/ASSET_PIPELINE_RUNBOOK.md",
+          "README.md",
+          "scripts/asset-pipeline.mjs",
+          "package.json"
+        ],
+        "status": "done",
+        "test_refs": [
+          "tests/asset-pipeline.test.mjs",
+          "tests/asset-pipeline-contract.test.mjs"
+        ],
+        "evidence_ids": [
+          "EVD-AP-001",
+          "EVD-AP-002",
+          "EVD-AP-003",
+          "EVD-AP-004"
+        ],
+        "removal_change_id": ""
+      },
+      {
+        "id": "TASK-006",
+        "requirement_ids": [
+          "REQ-001",
+          "REQ-002",
+          "REQ-003",
+          "REQ-004",
+          "REQ-005",
+          "REQ-006",
+          "REQ-007"
+        ],
+        "touchpoint_ids": [
+          "TP-001",
+          "TP-002",
+          "TP-003",
+          "TP-004",
+          "TP-005",
+          "TP-006"
+        ],
+        "description": "执行成功、失败、边界、恢复和现有目录回归测试，保存可摘要绑定的证据。",
+        "file_refs": [
+          "tests/asset-pipeline.test.mjs",
+          "tests/asset-pipeline-contract.test.mjs",
+          "tests/catalog.test.mjs"
+        ],
+        "status": "done",
+        "test_refs": [
+          "tests/asset-pipeline.test.mjs",
+          "tests/asset-pipeline-contract.test.mjs",
+          "tests/catalog.test.mjs"
+        ],
+        "evidence_ids": [
+          "EVD-AP-001",
+          "EVD-AP-002",
+          "EVD-AP-003",
+          "EVD-AP-004"
+        ],
+        "removal_change_id": ""
+      },
+      {
+        "id": "TASK-007",
+        "requirement_ids": [
+          "REQ-008",
+          "REQ-009"
+        ],
+        "touchpoint_ids": [
+          "TP-002",
+          "TP-003",
+          "TP-005",
+          "TP-007"
+        ],
+        "description": "建立 catalog schema v5 与 aperture-mask 共享渲染器，删除色键检测、色溢清理、色键接缝测量和 v4 兼容分支，并同步质检、插件、缩略图和发布校验。",
+        "file_refs": [
+          "shared/mockup-renderer.js",
+          "shared/catalog-contract.js",
+          "quality/asset-pipeline-policy.json",
+          "scripts/lib/asset-pipeline.mjs",
+          "scripts/serve-catalog.mjs",
+          "scripts/catalog-release.mjs",
+          "scripts/generate-catalog-thumbnails.mjs",
+          "scripts/build-plugin.mjs",
+          "asset-lab/app.js",
+          "plugin/code.js",
+          "plugin/ui.js",
+          "docs/ARCHITECTURE.md",
+          "docs/ASSET_PIPELINE_RUNBOOK.md"
+        ],
+        "status": "done",
+        "test_refs": [
+          "tests/catalog.test.mjs",
+          "tests/plugin.test.mjs",
+          "tests/asset-pipeline.test.mjs",
+          "tests/asset-pipeline-contract.test.mjs"
+        ],
+        "evidence_ids": [
+          "EVD-AP-006",
+          "EVD-AP-007"
+        ],
+        "removal_change_id": ""
+      },
+      {
+        "id": "TASK-008",
+        "requirement_ids": [
+          "REQ-008",
+          "REQ-010"
+        ],
+        "touchpoint_ids": [
+          "TP-001",
+          "TP-003",
+          "TP-004",
+          "TP-007"
+        ],
+        "description": "用确定性迁移工具为四个现有正式样机和 workstation-display-three-quarter 生成完整非色键 r2，撤下活动 r1 引用并使所有旧批准不可复用。",
+        "file_refs": [
+          "scripts/migrate-chroma-catalog-v5.mjs",
+          "scripts/lib/asset-pipeline.mjs",
+          "scripts/promote-mockup.mjs",
+          "scripts/catalog-release.mjs"
+        ],
+        "status": "done",
+        "test_refs": [
+          "tests/catalog-migration.test.mjs",
+          "tests/asset-pipeline.test.mjs"
+        ],
+        "evidence_ids": [
+          "EVD-AP-006",
+          "EVD-AP-007"
+        ],
+        "removal_change_id": ""
+      },
+      {
+        "id": "TASK-009",
+        "requirement_ids": [
+          "REQ-008",
+          "REQ-009",
+          "REQ-010"
+        ],
+        "touchpoint_ids": [
+          "TP-002",
+          "TP-005",
+          "TP-007"
+        ],
+        "description": "增加零色键静态扫描、典型绿幕占位拒绝、显式孔径逐像素边界测试、五个 r2 多场景回归和活动目录残留引用检查。",
+        "file_refs": [
+          "scripts/verify-no-chroma.mjs",
+          "scripts/verify-asset-pipeline-contract.mjs",
+          "tests/no-chroma.test.mjs",
+          "tests/catalog-migration.test.mjs",
+          "tests/catalog.test.mjs",
+          "tests/plugin.test.mjs",
+          "tests/asset-pipeline.test.mjs"
+        ],
+        "status": "done",
+        "test_refs": [
+          "tests/no-chroma.test.mjs",
+          "tests/catalog-migration.test.mjs",
+          "tests/catalog.test.mjs",
+          "tests/plugin.test.mjs",
+          "tests/asset-pipeline.test.mjs"
+        ],
+        "evidence_ids": [
+          "EVD-AP-006",
+          "EVD-AP-007"
+        ],
+        "removal_change_id": ""
+      },
+      {
+        "id": "TASK-010",
+        "requirement_ids": [
+          "REQ-008",
+          "REQ-010"
+        ],
+        "touchpoint_ids": [
+          "TP-001",
+          "TP-002",
+          "TP-003",
+          "TP-004",
+          "TP-005",
+          "TP-007"
+        ],
+        "description": "在五个迁移 r2 分别取得准确视觉结论后，用一个全新完整非绿幕候选执行导入、视觉批准、技术 QA、正式入库批准和原子提升的真实闭环。",
+        "file_refs": [
+          "scripts/asset-pipeline.mjs",
+          "scripts/authorize-mockup.mjs",
+          "scripts/serve-catalog.mjs",
+          "scripts/promote-mockup.mjs"
+        ],
+        "status": "removed",
+        "test_refs": [
+          "tests/asset-pipeline.test.mjs",
+          "tests/no-chroma.test.mjs"
+        ],
+        "evidence_ids": [],
+        "removal_change_id": "CHG-004"
+      },
+      {
+        "id": "TASK-011",
+        "requirement_ids": [
+          "REQ-011"
+        ],
+        "touchpoint_ids": [
+          "TP-001",
+          "TP-003",
+          "TP-005",
+          "TP-006"
+        ],
+        "description": "从合同、状态机和导入程序中分离权利声明与创作委托，实现绑定参考摘要、最多一个候选、单次消耗、复用授权和可追溯隔离，并将错误候选撤出活动 testing 路径。",
+        "file_refs": [
+          "scripts/asset-pipeline.mjs",
+          "scripts/lib/asset-pipeline.mjs",
+          "quality/asset-pipeline-policy.json",
+          "catalog/workflow/state.json",
+          "AGENTS.md",
+          "docs/ASSET_PIPELINE_DEVELOPMENT_CONTRACT.md",
+          "docs/ASSET_PIPELINE_RUNBOOK.md",
+          "tests/asset-pipeline.test.mjs",
+          "tests/asset-pipeline-contract.test.mjs"
+        ],
+        "status": "done",
+        "test_refs": [
+          "tests/asset-pipeline.test.mjs",
+          "tests/asset-pipeline-contract.test.mjs"
+        ],
+        "evidence_ids": [
+          "EVD-AP-011",
+          "EVD-AP-012"
+        ],
+        "removal_change_id": ""
+      },
+      {
+        "id": "TASK-012",
+        "requirement_ids": [
+          "REQ-012"
+        ],
+        "touchpoint_ids": [
+          "TP-002",
+          "TP-005",
+          "TP-007"
+        ],
+        "description": "删除随机悬停和生成式默认画面，统一鼠标/键盘裁切约束与精确投影路径，建立屏幕来源门禁，生成五个 r3 neutral-off 修订候选并在真实 Figma+EX 复测。",
+        "file_refs": [
+          "shared/mockup-renderer.js",
+          "plugin/ui.js",
+          "plugin/styles.css",
+          "scripts/lib/no-chroma.mjs",
+          "scripts/prepare-neutral-screen-corrections.mjs",
+          "tests/plugin.test.mjs",
+          "tests/no-chroma.test.mjs",
+          "docs/CONTENT_LIFECYCLE_HOVER_ROOT_CAUSE_2026-10-31.md",
+          "docs/CROP_GEOMETRY_ROOT_CAUSE_2026-10-31.md",
+          "docs/SEAM_ROOT_CAUSE_2026-10-30.md"
+        ],
+      "status": "blocked",
+        "test_refs": [
+          "tests/plugin.test.mjs",
+          "tests/no-chroma.test.mjs",
+          "tests/catalog.test.mjs"
+        ],
+        "evidence_ids": [],
+        "removal_change_id": ""
+      }
+    ]
+  },
+  "evidence": [
+    {
+      "id": "EVD-AP-001",
+      "proof_layer": "L1",
+      "kind": "test_report",
+      "claim": "当前封印实现通过完整本地工程门禁，包括 89 项测试、目录检查、回滚库存和 500 项目录烟测。",
+      "locator": "docs/evidence/asset-pipeline/2026-10-31-full-check.json",
+      "content_digest": "sha256:de7bf19de42e3902f483c950e15788c843b3b1214b74e69c8bf7ae33b859f654",
+      "created_at": "2026-10-31T12:20:04+08:00",
+      "requirement_ids": [
+        "REQ-001",
+        "REQ-002",
+        "REQ-003",
+        "REQ-004",
+        "REQ-005",
+        "REQ-006",
+        "REQ-007"
+      ],
+      "hypothesis_ids": [
+        "HYP-001",
+        "HYP-002"
+      ],
+      "scenario_ids": [
+        "SCN-001",
+        "SCN-002",
+        "SCN-003",
+        "SCN-004",
+        "SCN-005",
+        "SCN-006",
+        "SCN-007",
+        "SCN-008",
+        "SCN-009",
+        "SCN-010",
+        "SCN-012",
+        "SCN-013"
+      ],
+      "measure_ids": [
+        "MET-001",
+        "MET-002",
+        "MET-003",
+        "MET-004"
+      ],
+      "result": "pass",
+      "truth": "real",
+      "notes": "本机工程证据；不等于真实新样机的人类验收，也不等于外部发布。",
+      "producer": {
+        "type": "command",
+        "identity": "pnpm check"
+      },
+      "environment": "macOS 本地工作区、Codex Node 运行时、真实 testing/production 回归目录",
+      "revision": "tree:sha256:66a73f7a7cd49e5fbcffd891023ae0c76bef54905c27fbe41d16339ca3f73411",
+      "build_fingerprint": "sha256:c17fbbfc01e8b6b42898735458f1ca14c7bd618a7c149b8e5fbcfbfcff85b13a"
+    },
+    {
+      "id": "EVD-AP-002",
+      "proof_layer": "L2",
+      "kind": "test_report",
+      "claim": "真实本地文件 fixture 验证候选导入、摘要批准、过期拒绝、冲突失败和恢复提升的可观察行为。",
+      "locator": "docs/evidence/asset-pipeline/2026-10-31-pipeline-scenarios.json",
+      "content_digest": "sha256:f3d6a5d45ceb57a3bd8738bb45b3d8dbc5c898a2b9f5adb40ade980815d43213",
+      "created_at": "2026-10-31T12:20:04+08:00",
+      "requirement_ids": [
+        "REQ-001",
+        "REQ-002",
+        "REQ-003",
+        "REQ-004",
+        "REQ-005",
+        "REQ-006",
+        "REQ-007"
+      ],
+      "hypothesis_ids": [
+        "HYP-001",
+        "HYP-002"
+      ],
+      "scenario_ids": [
+        "SCN-001",
+        "SCN-002",
+        "SCN-003",
+        "SCN-004",
+        "SCN-005",
+        "SCN-006",
+        "SCN-007",
+        "SCN-008",
+        "SCN-009",
+        "SCN-010",
+        "SCN-012",
+        "SCN-013"
+      ],
+      "measure_ids": [
+        "MET-001",
+        "MET-002",
+        "MET-003",
+        "MET-004"
+      ],
+      "result": "pass",
+      "truth": "real",
+      "notes": "素材、manifest、状态、批准与冲突均在隔离临时目录真实读写；不是模拟返回值。",
+      "producer": {
+        "type": "command",
+        "identity": "node --test tests/asset-pipeline-contract.test.mjs tests/asset-pipeline.test.mjs"
+      },
+      "environment": "macOS 本地临时项目、真实 sharp 图片处理与文件系统",
+      "revision": "tree:sha256:66a73f7a7cd49e5fbcffd891023ae0c76bef54905c27fbe41d16339ca3f73411",
+      "build_fingerprint": "sha256:c17fbbfc01e8b6b42898735458f1ca14c7bd618a7c149b8e5fbcfbfcff85b13a"
+    },
+    {
+      "id": "EVD-AP-003",
+      "proof_layer": "L2",
+      "kind": "screenshot",
+      "claim": "真实 Chrome 质检台明确区分技术 QA 与正式入库批准，并在大、小桌面窗口保持关键操作可用。",
+      "locator": "docs/evidence/asset-pipeline/2026-10-31-browser-qa.json",
+      "content_digest": "sha256:7c7798ca5f0e5ad5baed729d3d187a9e2f803722f839e97c52a43e06519067ac",
+      "created_at": "2026-10-31T12:20:04+08:00",
+      "requirement_ids": [
+        "REQ-003",
+        "REQ-004",
+        "REQ-006"
+      ],
+      "hypothesis_ids": [
+        "HYP-002"
+      ],
+      "scenario_ids": [
+        "SCN-007",
+        "SCN-008"
+      ],
+      "measure_ids": [],
+      "result": "pass",
+      "truth": "real",
+      "notes": "浏览器 QA 未对仓库目录提交坐标保存或技术 QA 写入；这些可变路径由隔离测试证据覆盖。",
+      "producer": {
+        "type": "system",
+        "identity": "Codex Playwright QA"
+      },
+      "environment": "本机 Google Chrome，http://127.0.0.1:4173/lab，1440x900 与 1100x760",
+      "revision": "tree:sha256:66a73f7a7cd49e5fbcffd891023ae0c76bef54905c27fbe41d16339ca3f73411",
+      "build_fingerprint": "sha256:c17fbbfc01e8b6b42898735458f1ca14c7bd618a7c149b8e5fbcfbfcff85b13a"
+    },
+    {
+      "id": "EVD-AP-004",
+      "proof_layer": "L3",
+      "kind": "inspection",
+      "claim": "实现语义与批准合同一致，真实能力与限制已披露，未引入未授权外部发布或第二套工作流。",
+      "locator": "docs/evidence/asset-pipeline/2026-10-31-semantic-inspection.json",
+      "content_digest": "sha256:d850d062d3caf0832b1a71299e1bb921461a604850a0027fca274d0d558e8c40",
+      "created_at": "2026-10-31T12:20:04+08:00",
+      "requirement_ids": [
+        "REQ-001",
+        "REQ-002",
+        "REQ-003",
+        "REQ-004",
+        "REQ-005",
+        "REQ-006",
+        "REQ-007"
+      ],
+      "hypothesis_ids": [
+        "HYP-001",
+        "HYP-002",
+        "HYP-003"
+      ],
+      "scenario_ids": [
+        "SCN-013"
+      ],
+      "measure_ids": [],
+      "result": "pass",
+      "truth": "real",
+      "notes": "审查明确保留真实样机闭环、新对话恢复观察和最终人类验收为未完成。",
+      "producer": {
+        "type": "system",
+        "identity": "Codex"
+      },
+      "environment": "批准合同、当前封印文件、测试与浏览器证据的本地交叉审查",
+      "revision": "tree:sha256:66a73f7a7cd49e5fbcffd891023ae0c76bef54905c27fbe41d16339ca3f73411",
+      "build_fingerprint": "sha256:c17fbbfc01e8b6b42898735458f1ca14c7bd618a7c149b8e5fbcfbfcff85b13a"
+    },
+    {
+      "id": "EVD-AP-005",
+      "proof_layer": "L3",
+      "kind": "inspection",
+      "claim": "当前五个活动底图、catalog schema v4、共享渲染器 2.3.0、质检服务和发布规则均依赖绿幕色键，不能满足零绿幕完整样机决定。",
+      "locator": "docs/evidence/asset-pipeline/2026-10-31-chroma-audit.json",
+      "content_digest": "sha256:a2fc1ab9431086d0fb8831ebf1dae843bfd2cd00dfccd8a194946e410cfa667a",
+      "created_at": "2026-10-31T12:39:19+08:00",
+      "requirement_ids": [
+        "REQ-008",
+        "REQ-009",
+        "REQ-010"
+      ],
+      "hypothesis_ids": [
+        "HYP-004"
+      ],
+      "scenario_ids": [
+        "SCN-015",
+        "SCN-019"
+      ],
+      "measure_ids": [
+        "MET-007"
+      ],
+      "result": "fail",
+      "truth": "real",
+      "notes": "这是对旧批准 build 与当前活动目录的只读反证；它证明必须迁移，不证明未来实现已合格。",
+      "producer": {
+        "type": "system",
+        "identity": "Codex read-only repository and visual audit"
+      },
+      "environment": "macOS 本地工作区；逐文件源码搜索与五个活动底图视觉检查",
+      "revision": "tree:sha256:66a73f7a7cd49e5fbcffd891023ae0c76bef54905c27fbe41d16339ca3f73411",
+      "build_fingerprint": "sha256:c17fbbfc01e8b6b42898735458f1ca14c7bd618a7c149b8e5fbcfbfcff85b13a"
+    },
+    {
+      "id": "EVD-AP-006",
+      "proof_layer": "L1",
+      "kind": "test_report",
+      "claim": "零绿幕 v5 工程实现、五个 r2 正式提升、活动 r1 隔离、回滚快照和全量本地门禁均通过。",
+      "locator": "docs/evidence/asset-pipeline/2026-10-31-no-chroma-engineering.json",
+      "content_digest": "sha256:351ff671f6d113f4191c2c6e38bb248f4ac5dc8e7f9f56e7b3c4fee4deca7738",
+      "created_at": "2026-10-31T13:54:00+08:00",
+      "requirement_ids": [
+        "REQ-008",
+        "REQ-009",
+        "REQ-010"
+      ],
+      "hypothesis_ids": [
+        "HYP-004"
+      ],
+      "scenario_ids": [
+        "SCN-014",
+        "SCN-015",
+        "SCN-016",
+        "SCN-017",
+        "SCN-018",
+        "SCN-019"
+      ],
+      "measure_ids": [
+        "MET-007"
+      ],
+      "result": "pass",
+      "truth": "real",
+      "notes": "96/96 测试与目录、静态扫描、迁移、正式提升、回滚、新 r1 合法性和本地性能门禁真实执行；高绿色候选只能由绑定准确 SHA 的人类视觉批准消歧；TASK-010 已到 CANDIDATE_READY。",
+      "producer": {
+        "type": "command",
+        "identity": "pnpm check"
+      },
+      "environment": "macOS 本地工作区、Codex Node 运行时、schema v5 testing/production 目录",
+      "revision": "tree:sha256:dde314c870ba2ff34b230d93e2699750542be1b38f8d83d762fd5fce62e91038",
+      "build_fingerprint": "sha256:c19896566bfe475753cc3e99b3743a4b88ad4582fbd9d212040966de462102e3"
+    },
+    {
+      "id": "EVD-AP-007",
+      "proof_layer": "L2",
+      "kind": "screenshot",
+      "claim": "本地真实质检台逐个载入五个 r2，每个均显示 10/10 自动检查与 0.00% 优势绿色比例，审批锁阻止绕过视觉批准，旧 r1 活动 URL 返回 404。",
+      "locator": "docs/evidence/asset-pipeline/2026-10-31-no-chroma-browser-qa.json",
+      "content_digest": "sha256:4c759ee7dc85d9e6745acb383f5f0e95881c8d59d16f4bd0247ed773524e937a",
+      "created_at": "2026-10-31T13:19:12+08:00",
+      "requirement_ids": [
+        "REQ-008",
+        "REQ-009",
+        "REQ-010"
+      ],
+      "hypothesis_ids": [
+        "HYP-004"
+      ],
+      "scenario_ids": [
+        "SCN-014",
+        "SCN-016",
+        "SCN-019"
+      ],
+      "measure_ids": [
+        "MET-007"
+      ],
+      "result": "pass",
+      "truth": "real",
+      "notes": "真实浏览器交互和视觉检查；未写入几何、技术 QA、正式批准或 production。决定人视觉批准仍是下一道门。",
+      "producer": {
+        "type": "system",
+        "identity": "Codex browser QA"
+      },
+      "environment": "Codex in-app browser、http://127.0.0.1:4173/lab、809x696 CSS 像素",
+      "revision": "tree:sha256:f4d1258ba5a56643580715c0a7848edc75dfb7ab1f6b3de796a116a80cfc1a39",
+      "build_fingerprint": "sha256:c19896566bfe475753cc3e99b3743a4b88ad4582fbd9d212040966de462102e3"
+    },
+    {
+      "id": "EVD-AP-008",
+      "proof_layer": "L2",
+      "kind": "test_report",
+      "claim": "决定人对五个准确 r2 候选作出 SHA 绑定的视觉批准后，五项候选均完成 10/10 自动检查、4/4 测试图和 5/5 人工检查并进入 QA_PASSED。",
+      "locator": "docs/evidence/asset-pipeline/2026-10-31-r2-visual-approval-and-technical-qa.json",
+      "content_digest": "sha256:6ff7a2fe53fb8463441357ea4b81bcf8f13b4a791807f4265639ce077c0e7d4e",
+      "created_at": "2026-10-31T13:42:33+08:00",
+      "requirement_ids": [
+        "REQ-008",
+        "REQ-009",
+        "REQ-010"
+      ],
+      "hypothesis_ids": [
+        "HYP-004"
+      ],
+      "scenario_ids": [
+        "SCN-014",
+        "SCN-015",
+        "SCN-016",
+        "SCN-017",
+        "SCN-018",
+        "SCN-019"
+      ],
+      "measure_ids": [
+        "MET-007"
+      ],
+      "result": "pass",
+      "truth": "real",
+      "notes": "五份视觉批准、五份技术 QA 报告、工作流状态和测试目录均已复核；仍需决定人另行批准每个准确 itemSha256 才能进入正式库。",
+      "producer": {
+        "type": "system",
+        "identity": "Codex browser QA using Wang Zhentao's exact SHA-bound visual decisions"
+      },
+      "environment": "Codex in-app browser、http://127.0.0.1:4173/lab、Renderer 2.4.0",
+      "revision": "tree:sha256:f4d1258ba5a56643580715c0a7848edc75dfb7ab1f6b3de796a116a80cfc1a39",
+      "build_fingerprint": "sha256:c19896566bfe475753cc3e99b3743a4b88ad4582fbd9d212040966de462102e3"
+    },
+    {
+      "id": "EVD-AP-009",
+      "proof_layer": "L1",
+      "kind": "test_report",
+      "claim": "五个零绿幕 r2 在独立人类正式批准后原子提升到本地 production 2026.10.31.4，并通过插件共享目录合同、HTTP 字节完整性、回滚快照和全量门禁。",
+      "locator": "docs/evidence/asset-pipeline/2026-10-31-r2-production-promotion.json",
+      "content_digest": "sha256:a070d56f7ac34444e04f398c0217a1d8fea58bf5e9d05e63de4ff5f43f165631",
+      "created_at": "2026-10-31T13:47:39+08:00",
+      "requirement_ids": [
+        "REQ-008",
+        "REQ-009",
+        "REQ-010"
+      ],
+      "hypothesis_ids": [
+        "HYP-004"
+      ],
+      "scenario_ids": [
+        "SCN-014",
+        "SCN-015",
+        "SCN-016",
+        "SCN-017",
+        "SCN-018",
+        "SCN-019"
+      ],
+      "measure_ids": [
+        "MET-007"
+      ],
+      "result": "pass",
+      "truth": "real",
+      "notes": "production manifest、回滚快照、十个 HTTP 素材响应、五份 QA、五份 release approval、共享插件目录合同和 95/95 回归均已验证；没有执行外部部署。",
+      "producer": {
+        "type": "command",
+        "identity": "pnpm check and local production catalog verification"
+      },
+      "environment": "macOS 本地工作区、production 2026.10.31.4、Renderer 2.4.0、127.0.0.1:4173",
+      "revision": "tree:sha256:dde314c870ba2ff34b230d93e2699750542be1b38f8d83d762fd5fce62e91038",
+      "build_fingerprint": "sha256:c19896566bfe475753cc3e99b3743a4b88ad4582fbd9d212040966de462102e3"
+    },
+    {
+      "id": "EVD-AP-010",
+      "proof_layer": "L2",
+      "kind": "screenshot",
+      "claim": "limestone-ultrawide-front r1 在只有 owned 权利声明、没有当次单次人类创作委托时仍能进入 CANDIDATE_READY，证明旧合同和程序存在未授权创建路径。",
+      "locator": "docs/evidence/asset-pipeline/2026-10-31-limestone-ultrawide-candidate.json",
+      "content_digest": "sha256:04a7576941e09a76077b67e7a6f7147e04a8a3b6ff8e702363f921cd53974fbf",
+      "created_at": "2026-10-31T13:54:00+08:00",
+      "requirement_ids": [
+        "REQ-011"
+      ],
+      "hypothesis_ids": [
+        "HYP-005"
+      ],
+      "scenario_ids": [
+        "SCN-021"
+      ],
+      "measure_ids": [
+        "MET-009"
+      ],
+      "result": "fail",
+      "truth": "real",
+      "notes": "该证据是旧流程缺口的真实反证，不再作为合格候选或待完成用户任务的通过证据。",
+      "producer": {
+        "type": "system",
+        "identity": "Codex built-in imagegen and local asset pipeline"
+      },
+      "environment": "macOS 本地工作区、Codex in-app browser、http://127.0.0.1:4173/lab、Renderer 2.4.0",
+      "revision": "tree:sha256:dde314c870ba2ff34b230d93e2699750542be1b38f8d83d762fd5fce62e91038",
+      "build_fingerprint": "sha256:c19896566bfe475753cc3e99b3743a4b88ad4582fbd9d212040966de462102e3"
+    },
+    {
+      "id": "EVD-AP-011",
+      "proof_layer": "L1",
+      "kind": "test_report",
+      "claim": "已实施并真实验证单次人类创作委托、参考摘要绑定、单次消耗、复用授权和可追溯隔离；错误候选已撤出活动 testing，五个 production r2 保持不变。",
+      "locator": "docs/evidence/asset-pipeline/2026-10-31-workflow-authorization-correction.json",
+      "content_digest": "sha256:d844348a7c25b07f2565725c4fd13013994ab1bacd46d6e0420f044e0b9205f2",
+      "created_at": "2026-10-31T14:23:59+08:00",
+      "requirement_ids": [
+        "REQ-011"
+      ],
+      "hypothesis_ids": [
+        "HYP-005"
+      ],
+      "scenario_ids": [
+        "SCN-020",
+        "SCN-021",
+        "SCN-022"
+      ],
+      "measure_ids": [
+        "MET-009"
+      ],
+      "result": "pass",
+      "truth": "real",
+      "notes": "16/16 针对性测试通过；testing 2026.10.31.4 与快照逐字一致且只含五个批准 r2；production manifest SHA-256 仍为 c8e53f...;隔离三份文件摘要与原记录一致；当前状态 WAITING_FOR_USER_INPUT。",
+      "producer": {
+        "type": "command",
+        "identity": "Node targeted authorization, quarantine, catalog, history and zero-chroma verification"
+      },
+      "environment": "macOS 本地工作区、Codex Node 运行时、schema v5 testing/production 目录",
+      "revision": "tree:sha256:f968a03c4c1c5e7c99601dfbc5ffd37a924d07594fdd236c31bf9145992ef910",
+      "build_fingerprint": "sha256:7a1f6a433825268457b6786d0494937359a47dd0774e968109d11a8df5dc47b0"
+    },
+    {
+      "id": "EVD-AP-012",
+      "proof_layer": "L1",
+      "kind": "test_report",
+      "claim": "当前批准并封印的工作流纠正实现通过完整本地工程门禁：97/97 测试、十个活动样机零绿幕检查、testing/production 2026.10.31.4、回滚库存及 500 项目录浏览器烟测。",
+      "locator": "docs/evidence/asset-pipeline/2026-10-31-workflow-correction-full-check.json",
+      "content_digest": "sha256:5e89d9ef234db412c16d02444f28b61afe0db29338db9e7f859ce01e0579f02b",
+      "created_at": "2026-10-31T14:44:16+08:00",
+      "requirement_ids": [
+        "REQ-011"
+      ],
+      "hypothesis_ids": [
+        "HYP-005"
+      ],
+      "scenario_ids": [
+        "SCN-020",
+        "SCN-021",
+        "SCN-022"
+      ],
+      "measure_ids": [
+        "MET-009"
+      ],
+      "result": "pass",
+      "truth": "real",
+      "notes": "带固定 Node 运行时的 pnpm check 退出码为 0；97/97 测试通过；testing 与 production 均只含五个批准 r2；活动路径没有未经委托候选；无任何外部发布。",
+      "producer": {
+        "type": "command",
+        "identity": "pnpm check with pinned local Node runtime"
+      },
+      "environment": "macOS 本地工作区、development build、schema v5 testing/production、Renderer 2.4.0、local Chrome smoke",
+      "revision": "tree:sha256:f968a03c4c1c5e7c99601dfbc5ffd37a924d07594fdd236c31bf9145992ef910",
+      "build_fingerprint": "sha256:7a1f6a433825268457b6786d0494937359a47dd0774e968109d11a8df5dc47b0"
+    },
+    {
+      "id": "EVD-AP-013",
+      "proof_layer": "L1",
+      "kind": "test_report",
+      "claim": "当前封印实现通过完整本地工程门禁：99/99 测试、零绿幕目录、两个正式目录、回滚库存、静态无障碍与 500 项目录性能烟测全部通过。",
+      "locator": "docs/evidence/asset-pipeline/2026-10-31-figma-real-host-full-flow.json",
+      "content_digest": "sha256:6109de80f4e2c416eeb3b8f10bb843beb9d1ad27ee97584ce8597a62d0831b07",
+      "created_at": "2026-10-31T15:17:24+08:00",
+      "requirement_ids": [
+        "REQ-009",
+        "REQ-010"
+      ],
+      "hypothesis_ids": [
+        "HYP-004"
+      ],
+      "scenario_ids": [
+        "SCN-016",
+        "SCN-017",
+        "SCN-018",
+        "SCN-019"
+      ],
+      "measure_ids": [
+        "MET-007"
+      ],
+      "result": "pass",
+      "truth": "real",
+      "notes": "固定 Node 运行时下 pnpm build && pnpm check 退出码为 0；最终本地开发构建为 DEV-EE4E61CF1965；未创建新样机，未修改正式目录，未外部发布。",
+      "producer": {
+        "type": "command",
+        "identity": "pnpm build and pnpm check with pinned local Node runtime"
+      },
+      "environment": "macOS 本地工作区、development build DEV-EE4E61CF1965、schema v5 testing/production、Renderer 2.4.0、local Chrome smoke",
+      "revision": "tree:sha256:6a332b5157beaf93dd2f71a8adcc40816f7fc3c4c88ae19d0ef4df434d026083",
+      "build_fingerprint": "sha256:7a1f6a433825268457b6786d0494937359a47dd0774e968109d11a8df5dc47b0"
+    },
+    {
+      "id": "EVD-AP-014",
+      "proof_layer": "L2",
+      "kind": "runtime_log",
+      "claim": "最终本地构建在真实 Figma+EX 宿主中完成素材校验与渲染、Figma 选区导入、缩放/平移/旋转、自由透视、切换样机、粘贴回画布及原尺寸 PNG 导出的完整可观测闭环。",
+      "locator": "docs/evidence/asset-pipeline/2026-10-31-figma-real-host-full-flow.json",
+      "content_digest": "sha256:6109de80f4e2c416eeb3b8f10bb843beb9d1ad27ee97584ce8597a62d0831b07",
+      "created_at": "2026-10-31T15:17:24+08:00",
+      "requirement_ids": [
+        "REQ-009",
+        "REQ-010"
+      ],
+      "hypothesis_ids": [
+        "HYP-004"
+      ],
+      "scenario_ids": [
+        "SCN-016",
+        "SCN-017",
+        "SCN-018",
+        "SCN-019"
+      ],
+      "measure_ids": [
+        "MET-007"
+      ],
+      "result": "pass",
+      "truth": "real",
+      "notes": "真实宿主中导出 1448 x 1086 RGB PNG，摘要 sha256:e0232bfb65566c05d9f1d717782b6b3566b154e58c016c74d3e57f5d67ba79c2；粘贴生成并选中 1200 x 900 的 Figma 节点 335:9；不包含外部发布或最终人类验收。",
+      "producer": {
+        "type": "system",
+        "identity": "Codex native Figma host verification"
+      },
+      "environment": "/Applications/Figma+EX.app、Untitled Figma file、http://localhost:4173 testing catalog、DEV-EE4E61CF1965",
+      "revision": "tree:sha256:6a332b5157beaf93dd2f71a8adcc40816f7fc3c4c88ae19d0ef4df434d026083",
+      "build_fingerprint": "sha256:7a1f6a433825268457b6786d0494937359a47dd0774e968109d11a8df5dc47b0"
+    },
+    {
+      "id": "EVD-AP-015",
+      "proof_layer": "L1",
+      "kind": "test_report",
+      "claim": "当前封印实现重新通过真实文件候选创建、权利失败关闭、摘要绑定的双重批准、可恢复原子提升、单次人类创作委托、可追溯隔离、五个正式 r2 不变及零绿幕门禁。",
+      "locator": "docs/evidence/asset-pipeline/2026-10-31-workflow-authorization-current-recheck.json",
+      "content_digest": "sha256:6b7c4aca24aad1a65db082ab6499004e5f45db7975edae8506d1d1b875a276b1",
+      "created_at": "2026-10-31T15:22:14+08:00",
+      "requirement_ids": [
+        "REQ-001",
+        "REQ-002",
+        "REQ-003",
+        "REQ-004",
+        "REQ-005",
+        "REQ-008",
+        "REQ-011"
+      ],
+      "hypothesis_ids": [
+        "HYP-001",
+        "HYP-002",
+        "HYP-004",
+        "HYP-005"
+      ],
+      "scenario_ids": [
+        "SCN-001",
+        "SCN-002",
+        "SCN-003",
+        "SCN-004",
+        "SCN-005",
+        "SCN-006",
+        "SCN-007",
+        "SCN-008",
+        "SCN-009",
+        "SCN-010",
+        "SCN-014",
+        "SCN-015",
+        "SCN-020",
+        "SCN-021",
+        "SCN-022"
+      ],
+      "measure_ids": [
+        "MET-001",
+        "MET-002",
+        "MET-003",
+        "MET-004",
+        "MET-007",
+        "MET-009"
+      ],
+      "result": "pass",
+      "truth": "real",
+      "notes": "当前 revision 下 6/6 真实文件流水线与合同测试通过；testing 与 production 均为 2026.10.31.4 且各含五个批准 r2；10 个活动项通过零绿幕检查；错误候选三份隔离文件摘要未变；状态为 WAITING_FOR_USER_INPUT。",
+      "producer": {
+        "type": "command",
+        "identity": "Codex bundled Node targeted workflow, catalog, quarantine, history and zero-chroma recheck"
+      },
+      "environment": "macOS 本地工作区、Codex bundled Node、schema v5 testing/production、Renderer 2.4.0",
+      "revision": "tree:sha256:6a332b5157beaf93dd2f71a8adcc40816f7fc3c4c88ae19d0ef4df434d026083",
+      "build_fingerprint": "sha256:7a1f6a433825268457b6786d0494937359a47dd0774e968109d11a8df5dc47b0"
+    },
+    {
+      "id": "EVD-AP-016",
+      "proof_layer": "L3",
+      "kind": "inspection",
+      "claim": "当前实现与已批准的本地范围、人类决定边界、单次委托纠正、零绿幕决定和真实能力披露一致；外部发布仍由政策与合同测试失败关闭。",
+      "locator": "docs/evidence/asset-pipeline/2026-10-31-current-semantic-and-scope-inspection.json",
+      "content_digest": "sha256:c239d439920c4325d96c2268f36704ecc45b32e8aca8c20a835d7beb93deb57c",
+      "created_at": "2026-10-31T15:25:13+08:00",
+      "requirement_ids": [
+        "REQ-007"
+      ],
+      "hypothesis_ids": [
+        "HYP-003",
+        "HYP-005"
+      ],
+      "scenario_ids": [
+        "SCN-013"
+      ],
+      "measure_ids": [],
+      "result": "pass",
+      "truth": "real",
+      "notes": "语义检查覆盖授权范围、机器发布边界、人机决定职责、错误候选隔离、零绿幕实现、真实 Figma 宿主行为和限制披露；没有执行任何外部操作。",
+      "producer": {
+        "type": "system",
+        "identity": "Codex contract-to-implementation semantic inspection"
+      },
+      "environment": "current local repository, approved standard-profile contract, sealed revision and current L1/L2 evidence",
+      "revision": "tree:sha256:6a332b5157beaf93dd2f71a8adcc40816f7fc3c4c88ae19d0ef4df434d026083",
+      "build_fingerprint": "sha256:7a1f6a433825268457b6786d0494937359a47dd0774e968109d11a8df5dc47b0"
+    },
+    {
+      "id": "EVD-AP-017",
+      "proof_layer": "L2",
+      "kind": "test_report",
+      "claim": "当前封印版本的真实本地文件 fixture 可观察到确定性候选创建、权利失败关闭、摘要绑定批准、冲突恢复、原子提升、单次委托和隔离行为。",
+      "locator": "docs/evidence/asset-pipeline/2026-10-31-workflow-authorization-current-recheck.json",
+      "content_digest": "sha256:6b7c4aca24aad1a65db082ab6499004e5f45db7975edae8506d1d1b875a276b1",
+      "created_at": "2026-10-31T15:27:41+08:00",
+      "requirement_ids": [
+        "REQ-001",
+        "REQ-002",
+        "REQ-003",
+        "REQ-004",
+        "REQ-005",
+        "REQ-008",
+        "REQ-011"
+      ],
+      "hypothesis_ids": [
+        "HYP-001",
+        "HYP-002",
+        "HYP-004"
+      ],
+      "scenario_ids": [],
+      "measure_ids": [
+        "MET-001",
+        "MET-002",
+        "MET-003",
+        "MET-004",
+        "MET-007"
+      ],
+      "result": "pass",
+      "truth": "real",
+      "notes": "同一当前执行以 EVD-AP-015 记录 L1 命令通过，本记录只回答 L2 可观察文件、状态和失败恢复行为；两个记录不混淆证明层级。",
+      "producer": {
+        "type": "command",
+        "identity": "Codex bundled Node real-file asset-pipeline fixture execution"
+      },
+      "environment": "macOS local real-file fixtures, schema v5 catalogs and current sealed implementation",
+      "revision": "tree:sha256:6a332b5157beaf93dd2f71a8adcc40816f7fc3c4c88ae19d0ef4df434d026083",
+      "build_fingerprint": "sha256:7a1f6a433825268457b6786d0494937359a47dd0774e968109d11a8df5dc47b0"
+    },
+    {
+      "id": "EVD-AP-018",
+      "proof_layer": "L2",
+      "kind": "runtime_log",
+      "claim": "五个准确 r2 的当前底图字节、视觉批准、10/10 自动检查、4/4 测试图、5/5 人工检查、QA 摘要和正式提升记录仍逐项一致。",
+      "locator": "docs/evidence/asset-pipeline/2026-10-31-current-r2-qa-binding-verification.json",
+      "content_digest": "sha256:d222bceee4762ee03c52678d4858220775c7592cbce4dc303e2cad33d55d0e26",
+      "created_at": "2026-10-31T15:27:41+08:00",
+      "requirement_ids": [
+        "REQ-008",
+        "REQ-009",
+        "REQ-010"
+      ],
+      "hypothesis_ids": [
+        "HYP-004"
+      ],
+      "scenario_ids": [],
+      "measure_ids": [
+        "MET-008"
+      ],
+      "result": "pass",
+      "truth": "real",
+      "notes": "这是对五个既有 r2 的精确字节和既有人工决定的当前适用性复核，不新增或推断任何人类视觉批准。",
+      "producer": {
+        "type": "system",
+        "identity": "Codex exact-byte QA and approval binding verification"
+      },
+      "environment": "current schema v5 testing and production catalogs, Renderer 2.4.0, five promoted r2 assets",
+      "revision": "tree:sha256:6a332b5157beaf93dd2f71a8adcc40816f7fc3c4c88ae19d0ef4df434d026083",
+      "build_fingerprint": "sha256:7a1f6a433825268457b6786d0494937359a47dd0774e968109d11a8df5dc47b0"
+    },
+    {
+      "id": "EVD-AP-019",
+      "proof_layer": "L4",
+      "kind": "user_research",
+      "claim": "决定人在真实项目中只完成权利、合同、视觉、正式入库和工作流纠正决定；命名、分类、摘要、清单、QA、隔离和提升均由执行系统完成。",
+      "locator": "docs/evidence/asset-pipeline/2026-10-31-human-touchpoint-observation.json",
+      "content_digest": "sha256:d63696729491b85e880b076da74f71a8bdcb4fd0f776780467f346bf746ed8c3",
+      "created_at": "2026-10-31T15:27:41+08:00",
+      "requirement_ids": [
+        "REQ-003",
+        "REQ-004",
+        "REQ-011"
+      ],
+      "hypothesis_ids": [
+        "HYP-003",
+        "HYP-005"
+      ],
+      "scenario_ids": [],
+      "measure_ids": [
+        "MET-005",
+        "MET-009"
+      ],
+      "result": "pass",
+      "truth": "real",
+      "notes": "真实参与者行为及其五份视觉批准、五份正式入库批准和工作流纠正决定均有持久记录；本证据不覆盖新对话恢复。",
+      "producer": {
+        "type": "system",
+        "identity": "Codex observation of actual decision-owner workflow and durable approval records"
+      },
+      "environment": "current local project workflow with Wang Zhentao as intended product, visual and release decision owner",
+      "revision": "tree:sha256:6a332b5157beaf93dd2f71a8adcc40816f7fc3c4c88ae19d0ef4df434d026083",
+      "build_fingerprint": "sha256:7a1f6a433825268457b6786d0494937359a47dd0774e968109d11a8df5dc47b0"
+    },
+    {
+      "id": "EVD-AP-020",
+      "proof_layer": "L2",
+      "kind": "screenshot",
+      "claim": "决定人在真实 Figma 宿主中证明旧构建同时违反悬停几何稳定、单边严格单轴、唯一边界、屏幕内容来源和无彩色泄漏不变量。",
+      "locator": "docs/evidence/asset-pipeline/2026-10-31-plugin-regression-user-evidence.json",
+      "content_digest": "sha256:c7b1f03c5a86efdc861cd8a2c64a2288c08d0b5791f66acb3fae92f5096d4f99",
+      "created_at": "2026-10-31T16:14:05+08:00",
+      "requirement_ids": [
+        "REQ-012"
+      ],
+      "hypothesis_ids": [
+        "HYP-004"
+      ],
+      "scenario_ids": [
+        "SCN-023",
+        "SCN-024"
+      ],
+      "measure_ids": [
+        "MET-007",
+        "MET-008"
+      ],
+      "result": "fail",
+      "truth": "real",
+      "notes": "六张决定人截图已按原始字节保存并逐个记录 SHA-256；本证据反驳“99/99 自动检查足以验收旧构建”，但不自动证明新构建合格。",
+      "producer": {
+        "type": "human",
+        "identity": "Wang Zhentao"
+      },
+      "environment": "Figma+EX local plugin build DEV-EE4E61CF1965",
+      "revision": "tree:sha256:6a332b5157beaf93dd2f71a8adcc40816f7fc3c4c88ae19d0ef4df434d026083",
+      "build_fingerprint": "sha256:7a1f6a433825268457b6786d0494937359a47dd0774e968109d11a8df5dc47b0"
+    }
+  ],
+  "convergence": {
+    "findings": [
+      {
+        "id": "FND-AP-001",
+        "gap_type": "contradicts",
+        "severity": "critical",
+        "status": "resolved",
+        "description": "迁移前四个正式底图、新候选 r1、catalog schema v4、共享渲染器 2.3.0 和相关 QA/发布规则均依赖绿幕色键，直接违反 PD-007；旧视觉批准和旧工程证据不能继续授权流转。",
+        "source_ref": "PD-007",
+        "implementation_ref": "shared/mockup-renderer.js",
+        "evidence_ids": [
+          "EVD-AP-005",
+          "EVD-AP-006",
+          "EVD-AP-007",
+          "EVD-AP-008",
+          "EVD-AP-009"
+        ],
+        "disposition": "schema v5、显式孔径渲染器、五个 r2、活动 r1 隔离、逐项视觉批准、技术 QA、正式入库批准、production 2026.10.31.4、共享插件目录验证和回滚快照均已完成并由 EVD-AP-009 复核。原 TASK-010 已因未经用户委托而通过 CHG-004 正式移除。"
+      },
+      {
+        "id": "FND-AP-002",
+        "gap_type": "unrequested",
+        "severity": "critical",
+        "status": "resolved",
+        "description": "旧合同将内部验收目标 TASK-010 升级为必须生产的全新候选，旧程序又将参考权利声明当成创作授权，导致 limestone-ultrawide-front r1 在没有当次用户委托时进入活动 testing。",
+        "source_ref": "PD-008",
+        "implementation_ref": "scripts/lib/asset-pipeline.mjs",
+        "evidence_ids": [
+          "EVD-AP-010",
+          "EVD-AP-011",
+          "EVD-AP-012"
+        ],
+        "disposition": "CHG-004 从合同移除 TASK-010 并将完成标准改为无委托时稳定停止；政策和程序新增单次人类委托、参考摘要绑定、消耗计数和复用授权；错误候选已标记 REJECTED 并从活动 testing 撤下，隔离摘要与原文件一致，五个 production r2 未变。"
+      },
+      {
+        "id": "FND-AP-003",
+        "gap_type": "contradicts",
+        "severity": "high",
+        "status": "resolved",
+        "description": "真实 Figma 插件 iframe 为 null origin，SubtleCrypto 不可用，旧实现因而在素材字节已成功下载时错误报告“素材服务未启动”。",
+        "source_ref": "SCN-016",
+        "implementation_ref": "plugin/ui.js",
+        "evidence_ids": [
+          "EVD-AP-013",
+          "EVD-AP-014"
+        ],
+        "disposition": "保留完整 SHA-256 校验；有 WebCrypto 时优先使用，真实 Figma 宿主中退回到通过标准向量、边界长度和真实素材摘要测试的便携 SHA-256，未降级信任门禁。"
+      },
+      {
+        "id": "FND-AP-004",
+        "gap_type": "contradicts",
+        "severity": "high",
+        "status": "resolved",
+        "description": "画面调整控件旧实现修改物理内容孔径并立即把孔径约束到自身，导致缩放大于 100% 和默认全帧下的位移被锁死，与可见控件承诺相矛盾。",
+        "source_ref": "SCN-017",
+        "implementation_ref": "shared/mockup-renderer.js",
+        "evidence_ids": [
+          "EVD-AP-013",
+          "EVD-AP-014"
+        ],
+        "disposition": "将物理孔径与源图变换分离；控件只调整必然覆盖孔径的源图帧，并从同一源图帧反向同步数值。单元测试与真实 Figma 宿主均确认缩放、水平、垂直和旋转有效。"
+      },
+      {
+        "id": "FND-AP-005",
+        "gap_type": "contradicts",
+        "severity": "critical",
+        "status": "open",
+        "description": "真实 Figma 回归证明旧悬停设计改变命中几何、单边裁切被通用约束改成双轴缩放、固定外层圆角制造第二边界、旧迁移和运行时生成未经授权的蓝紫默认界面，且旧 QA 未验证屏幕内容来源。",
+        "source_ref": "PD-009",
+        "implementation_ref": "shared/mockup-renderer.js",
+        "evidence_ids": [
+          "EVD-AP-020"
+        ],
+        "disposition": "代码与政策根因替换、43/43 聚焦测试和真实 Figma+EX 交互复测已完成；五个 neutral-off r3 仍需决定人逐项视觉批准，随后才能运行技术 QA、正式入库批准和 production 替换。"
+      }
+    ],
+    "structural_validation": {
+      "status": "not_run",
+      "run_at": "",
+      "contract_fingerprint": "",
+      "report_path": ""
+    },
+    "engineering_execution": {
+      "status": "partial",
+      "checked_at": "2026-10-31T17:10:00+08:00",
+      "evidence_ids": []
+    },
+    "semantic_review": {
+      "status": "reconciled",
+      "reviewer": {
+        "type": "agent",
+        "identity": "Codex",
+        "role": "contract-to-implementation semantic reviewer"
+      },
+      "reviewed_at": "",
+      "evidence_ids": []
+    },
+    "hypothesis_reviews": [],
+    "measure_results": [
+      {
+        "id": "MR-AP-001",
+        "measure_id": "MET-001",
+        "observed_value": "当前真实文件 fixture 的候选包字段、尺寸、缩略图、分类、revision 和 SHA-256 全部一致，testing catalog 检查通过。",
+        "outcome": "met",
+        "evidence_ids": [
+          "EVD-AP-017"
+        ]
+      },
+      {
+        "id": "MR-AP-002",
+        "measure_id": "MET-002",
+        "observed_value": "缺失或不兼容权利、未知分类、非法标识、不可变路径冲突、委托缺失或重复消耗均在写入前失败，既有目录保持不变。",
+        "outcome": "met",
+        "evidence_ids": [
+          "EVD-AP-017"
+        ]
+      },
+      {
+        "id": "MR-AP-003",
+        "measure_id": "MET-003",
+        "observed_value": "技术 QA、人类 release approval 与提升目标必须绑定同一 assetId、revision、itemSha256 和 qaReportSha256；错配 fixture 被拒绝。",
+        "outcome": "met",
+        "evidence_ids": [
+          "EVD-AP-017"
+        ]
+      },
+      {
+        "id": "MR-AP-004",
+        "measure_id": "MET-004",
+        "observed_value": "复制冲突与摘要漂移注入后旧正式 manifest 保持可用，修复后从明确状态安全重试并保留回滚库存。",
+        "outcome": "met",
+        "evidence_ids": [
+          "EVD-AP-017"
+        ]
+      },
+      {
+        "id": "MR-AP-005",
+        "measure_id": "MET-005",
+        "observed_value": "决定人实际只完成权利、合同、五个视觉、五个正式入库和工作流纠正决定；未被要求手工编辑清单、路径、分类、摘要或运行发布脚本。",
+        "outcome": "met",
+        "evidence_ids": [
+          "EVD-AP-019"
+        ]
+      },
+      {
+        "id": "MR-AP-007",
+        "measure_id": "MET-007",
+        "observed_value": "schema v5、Renderer 2.4.0、testing/production 十个活动项及最终插件构建通过零色键检查；真实 Figma 宿主以显式孔径完成渲染和导出。",
+        "outcome": "met",
+        "evidence_ids": [
+          "EVD-AP-014"
+        ]
+      },
+      {
+        "id": "MR-AP-008",
+        "measure_id": "MET-008",
+        "observed_value": "五个准确 r2 的当前底图字节仍匹配人类视觉批准；每项保持 10/10 自动检查、4/4 测试图、5/5 人工检查、准确 QA 摘要和 PROMOTED 状态。",
+        "outcome": "met",
+        "evidence_ids": [
+          "EVD-AP-018"
+        ]
+      },
+      {
+        "id": "MR-AP-009",
+        "measure_id": "MET-009",
+        "observed_value": "决定人拒绝无委托候选并要求根因纠正；当前机器门禁拒绝缺失、已消耗、摘要错配和未授权复用，limestone r1 保持 REJECTED 隔离且五个 production r2 不变。",
+        "outcome": "met",
+        "evidence_ids": [
+          "EVD-AP-019"
+        ]
+      }
+    ],
+    "final_acceptance": {
+      "status": "not_ready",
+      "actor": {
+        "type": "human",
+        "identity": "",
+        "role": ""
+      },
+      "accepted_at": "",
+      "fingerprint": "",
+      "attestation": {
+        "method": "local"
+      }
+    }
+  },
+  "changes": [
+    {
+      "id": "CHG-001",
+      "contract_version": 2,
+      "operation": "modified",
+      "status": "reconciled",
+      "reason": "将会变化的实现文件从不可变来源证据改为独立实施前仓库基线，并补齐依赖、UI、目录验证、文档和回归测试文件的实施封印范围。",
+      "source_ids": [
+        "SRC-001"
+      ],
+      "impacted_ids": [
+        "SRC-004",
+        "SRC-005",
+        "SRC-006",
+        "SRC-007",
+        "REQ-001",
+        "REQ-002",
+        "REQ-003",
+        "REQ-004",
+        "REQ-005",
+        "REQ-006",
+        "REQ-007",
+        "TASK-001",
+        "TASK-002",
+        "TASK-003",
+        "TASK-004",
+        "TASK-005",
+        "TASK-006"
+      ],
+      "superseded_ids": [],
+      "author": {
+        "type": "agent",
+        "identity": "Codex",
+        "role": "实施与合同维护者"
+      },
+      "changed_at": "2026-10-31T12:08:00+08:00",
+      "approval_impact": "baseline_and_build"
+    },
+    {
+      "id": "CHG-002",
+      "contract_version": 3,
+      "operation": "modified",
+      "status": "reconciled",
+      "reason": "决定人将零绿幕和完整样机提升为绝对硬规则；只读审计证明问题横跨所有活动底图、catalog schema、共享渲染器、质检与发布链，因此必须从最高层统一替换色键架构并迁移全部活动 revision。",
+      "source_ids": [
+        "SRC-008",
+        "SRC-009"
+      ],
+      "impacted_ids": [
+        "OUT-004",
+        "PD-007",
+        "CON-004",
+        "HYP-004",
+        "MET-007",
+        "MET-008",
+        "CAP-006",
+        "REQ-002",
+        "REQ-003",
+        "REQ-004",
+        "REQ-005",
+        "REQ-006",
+        "REQ-008",
+        "REQ-009",
+        "REQ-010",
+        "TP-001",
+        "TP-002",
+        "TP-003",
+        "TP-004",
+        "TP-005",
+        "TP-007",
+        "TASK-002",
+        "TASK-003",
+        "TASK-004",
+        "TASK-005",
+        "TASK-006",
+        "TASK-007",
+        "TASK-008",
+        "TASK-009",
+        "TASK-010",
+        "FND-AP-001"
+      ],
+      "superseded_ids": [],
+      "author": {
+        "type": "human",
+        "identity": "Wang Zhentao",
+        "role": "产品决定人、视觉审核人、正式入库决定人"
+      },
+      "changed_at": "2026-10-31T12:39:19+08:00",
+      "approval_impact": "baseline_and_build"
+    },
+    {
+      "id": "CHG-003",
+      "contract_version": 3,
+      "operation": "modified",
+      "status": "reconciled",
+      "reason": "修正合同来源绑定漏洞：活动机器政策是本次实施的明确修改对象，不能同时充当不可变批准来源；将其替换为实施前冻结基线，不改变零绿幕目标、范围、需求、任务或验收门槛。",
+      "source_ids": [
+        "SRC-003"
+      ],
+      "impacted_ids": [
+        "SRC-003",
+        "HYP-001",
+        "MET-001",
+        "MET-002",
+        "MET-003",
+        "MET-004"
+      ],
+      "superseded_ids": [],
+      "author": {
+        "type": "agent",
+        "identity": "Codex",
+        "role": "实施与合同维护者"
+      },
+      "changed_at": "2026-10-31T12:54:30+08:00",
+      "approval_impact": "build"
+    },
+    {
+      "id": "CHG-004",
+      "contract_version": 4,
+      "operation": "removed",
+      "status": "reconciled",
+      "reason": "决定人指出了根本工作流程错误：旧合同将内部闭环测试升级为必须生产的真实新候选，旧状态机又没有独立的单次人类创作委托。因此必须移除 TASK-010，并从合同、政策、状态机、程序和验收证据统一改为“无委托即停止”。",
+      "source_ids": [
+        "SRC-010"
+      ],
+      "impacted_ids": [
+        "OUT-001",
+        "PD-008",
+        "CON-005",
+        "Q-002",
+        "HYP-001",
+        "HYP-003",
+        "HYP-005",
+        "MET-001",
+        "MET-002",
+        "MET-005",
+        "MET-009",
+        "CAP-001",
+        "CAP-007",
+        "REQ-001",
+        "REQ-002",
+        "REQ-006",
+        "REQ-011",
+        "TP-001",
+        "TP-003",
+        "TP-005",
+        "TP-006",
+        "TASK-010",
+        "TASK-011",
+        "EVD-AP-010",
+        "EVD-AP-011",
+        "FND-AP-002"
+      ],
+      "superseded_ids": [
+        "TASK-010"
+      ],
+      "author": {
+        "type": "human",
+        "identity": "Wang Zhentao",
+        "role": "产品决定人、视觉审核人、正式入库决定人"
+      },
+      "changed_at": "2026-10-31T14:23:59+08:00",
+      "approval_impact": "baseline_and_build"
+    },
+    {
+      "id": "CHG-005",
+      "contract_version": 5,
+      "operation": "modified",
+      "status": "reconciled",
+      "reason": "决定人的真实 Figma 截图证明旧验收没有覆盖悬停命中几何、单边裁切轴向、画布圆角、屏幕内容来源和最终彩色角块；本次从共享不变量、素材 revision 和 QA 门禁统一纠正，旧 r2 批准不能授权 r3。",
+      "source_ids": [
+        "SRC-011"
+      ],
+      "impacted_ids": [
+        "PD-009",
+        "OUT-005",
+        "CON-006",
+        "CAP-008",
+        "REQ-008",
+        "REQ-009",
+        "REQ-010",
+        "REQ-012",
+        "TP-002",
+        "TP-005",
+        "TP-007",
+        "TASK-012",
+        "FND-AP-005"
+      ],
+      "superseded_ids": [],
+      "author": {
+        "type": "human",
+        "identity": "Wang Zhentao",
+        "role": "产品决定人、视觉审核人、正式入库决定人"
+      },
+      "changed_at": "2026-10-31T17:10:00+08:00",
+      "approval_impact": "baseline_and_build"
+    }
+  ]
+}

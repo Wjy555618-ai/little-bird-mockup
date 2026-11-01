@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "EVD-AP-019",
+  "observedAt": "2026-10-31T15:27:41+08:00",
+  "participant": {
+    "type": "human",
+    "identity": "Wang Zhentao",
+    "role": "产品与视觉决定人、正式入库决定人"
+  },
+  "intendedTask": "Operate the mockup workflow only through product decisions while the execution agent performs naming, classification, manifest, digest, QA and promotion operations.",
+  "observedHumanActions": [
+    "Declared the supplied reference image rights mode.",
+    "Issued exact fingerprint-bound contract approvals.",
+    "Approved five exact r2 visual candidate digests and explicitly confirmed complete zero-green-screen mockups.",
+    "Approved five exact itemSha256 plus qaReportSha256 pairs for local production admission.",
+    "Identified the unrequested-candidate failure, required a root-cause workflow correction, and approved the exact corrected baseline and build fingerprints."
+  ],
+  "operationsNotRequiredFromParticipant": [
+    "Manual manifest editing",
+    "Manual file naming or path selection",
+    "Manual category creation",
+    "Manual SHA-256 calculation",
+    "Running QA or promotion commands",
+    "External publication"
+  ],
+  "durableRecordsInspected": {
+    "visualApprovalCount": 5,
+    "releaseApprovalCount": 5,
+    "actorIdentityMatches": true,
+    "digestBindingsCurrent": true,
+    "productionState": "five r2 assets PROMOTED"
+  },
+  "workflowCorrectionObservation": {
+    "humanEvaluationOccurred": true,
+    "unrequestedCandidateAccepted": false,
+    "rootCauseCorrectionRequired": true,
+    "correctedContractApproved": true,
+    "currentMachineRecheck": "EVD-AP-015"
+  },
+  "result": "met",
+  "limitation": "This observation supports the human-touchpoint and unauthorized-candidate workflow measures. A separate fresh-context recovery observation is still required before the workflow-continuity hypothesis can be decided."
+}

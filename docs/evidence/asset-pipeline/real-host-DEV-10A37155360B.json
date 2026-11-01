@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "evidenceType": "real-figma-host-regression",
+  "status": "passed",
+  "recordedAt": "2026-10-31T18:38:31+08:00",
+  "buildFingerprint": "DEV-10A37155360B",
+  "host": {
+    "application": "Figma+EX",
+    "document": "Untitled",
+    "plugin": "样机工作室 · Mockup Studio"
+  },
+  "scope": {
+    "catalog": "testing",
+    "assetCount": 5,
+    "selectedFigmaLayer": "IMG_2613 1",
+    "hoverTargets": ["studio-display-front", "rock-phone-front"]
+  },
+  "results": {
+    "pluginOpened": {
+      "passed": true,
+      "evidence": "从 Figma+EX 的 Plugins → Development 重新打开插件，真实窗口显示构建指纹 DEV-10A37155360B，并读取到 5 个 testing 样机。"
+    },
+    "selectedFigmaImageImported": {
+      "passed": true,
+      "evidence": "通过“添加画面 → 读取 Figma 选区 IMG_2613 1”导入真实中文清单图；预览显示该选区内容，没有回退到未授权的插件自造界面。"
+    },
+    "hoverStable": {
+      "passed": true,
+      "evidence": "工作室显示器卡片首次真实移入后产生一个轻微旋转，停留期间连续两次截取视觉状态无变化；移到卡片外后恢复正位，再次移入重新采样为相反方向。随后用非主键将指针放到未选中的岩石手机卡片：内层视觉旋转，外层网格槽位固定，没有新增悬停描边、位移或抖动。"
+    },
+    "rightEdgeHorizontalOnly": {
+      "passed": true,
+      "evidence": "在真实裁切模式中，将右侧中点从约 x=2020 拖到 x=1945；只有右边界变化，左边界 x≈1358、上边界 y≈738 和下边界 y≈1106 保持不变。"
+    },
+    "bottomEdgeVerticalOnly": {
+      "passed": true,
+      "evidence": "在前一步的窄化裁切框上，将下方中点从约 y=1106 拖到 y=1045；只有下边界变化，左右边界和上边界保持不变。"
+    },
+    "noCornerOrApertureLeak": {
+      "passed": true,
+      "evidence": "真实宿主中的显示器孔径边界连续；黑色物理边框、白色导入画面和裁切控制框职责分离，四角没有紫/粉三角、彩边或孔径外泄漏。"
+    },
+    "resetRestoresDefault": {
+      "passed": true,
+      "evidence": "完成横向与纵向裁切回归后点击“复位”，真实插件出现“已恢复默认画面”，裁切框退出并恢复初始构图。"
+    }
+  },
+  "assetQa": [
+    {
+      "assetId": "studio-display-front",
+      "revision": 3,
+      "automatic": "10/10",
+      "patterns": "4/4",
+      "manual": "5/5",
+      "qaReportSha256": "f14c8613b3b318aaa1f212a9a68cd697e4da8d06e2d5a0197da4760d8d1f1ff8"
+    },
+    {
+      "assetId": "rock-phone-front",
+      "revision": 3,
+      "automatic": "10/10",
+      "patterns": "4/4",
+      "manual": "5/5",
+      "qaReportSha256": "3429eb7bd87eaa9beba1bc6152768e30dfdeca0c218ad7c500e00784e00521a6"
+    },
+    {
+      "assetId": "rail-phone-angle",
+      "revision": 3,
+      "automatic": "10/10",
+      "patterns": "4/4",
+      "manual": "5/5",
+      "qaReportSha256": "8982ba07281c73373d052bd1bce509f68f7b7ccb29681fa0b3ae77eb529a2060"
+    },
+    {
+      "assetId": "graphite-laptop-angle",
+      "revision": 3,
+      "automatic": "10/10",
+      "patterns": "4/4",
+      "manual": "5/5",
+      "qaReportSha256": "e660b5847d6fce485dc24c51049305fececfcc13ccc5c7ec081fb29fc6adce16"
+    },
+    {
+      "assetId": "workstation-display-three-quarter",
+      "revision": 3,
+      "automatic": "10/10",
+      "patterns": "4/4",
+      "manual": "5/5",
+      "qaReportSha256": "331fb99f1c602bdaa26a138c6f374860519c183eb45e123e1a8c99f259a81b38"
+    }
+  ],
+  "automation": {
+    "pluginSuite": "39/39 passed",
+    "contractGate": "passed",
+    "fullSuiteBeforePromotion": "100/103 passed",
+    "expectedPrePromotionBlockers": [
+      "catalog migration check: production r2 lacks screen.presentation",
+      "production catalog contract: production r2 lacks screen.presentation",
+      "release pipeline: production r2 lacks screen.presentation"
+    ],
+    "interpretation": "三个失败全部是旧正式库 r2 的预期失败关闭门禁；未经决定人对新最终批次作一次批准，不得用 testing r3 覆盖正式库。批准并原子入库后必须重跑全量测试。"
+  },
+  "limitations": [
+    "真实指针坐标通过主键和中键点击落到指定位置，以触发真实 pointerover/pointerout；稳定性由同一停留期间的两次独立视觉状态确认，还未使用高帧率指针轨迹采样。",
+    "本证据只证明当前本机 Figma+EX、DEV-10A37155360B 构建与 testing 目录；不证明 GitHub、Netlify、Figma 社区发布或其他电脑环境。"
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "requestType": "candidate-creation",
+  "requestId": "request-rail-phone-angle-c7e86b9bb861",
+  "operation": "create-one-candidate",
+  "assetId": "rail-phone-angle",
+  "name": "支架手机 · 倾斜",
+  "category": "phone",
+  "reference": {
+    "path": "catalog/workflow/references/requests/request-rail-phone-angle-c7e86b9bb861.png",
+    "sha256": "ecbda0cd99076c12005bb7043895a06ce4faca1794c9e9cab9d280a27394f090",
+    "rightsMode": "owned",
+    "reuseAuthorized": false
+  },
+  "constraints": {
+    "maximumCandidates": 1
+  },
+  "requestText": "修复现有已发布样机：移除未经授权的合成界面和紫色圆角泄漏，制作中性关屏 r3 修订候选；不创建新的 assetId。",
+  "actor": {
+    "type": "human",
+    "identity": "Wang Zhentao",
+    "role": "产品决定人、视觉审核人、正式入库决定人"
+  },
+  "authorizedAt": "2026-10-31T07:56:11.282Z",
+  "attestation": {
+    "method": "local",
+    "confirmedByHuman": true
+  },
+  "recordedBy": "Codex 工程执行代理"
+}

@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "pluginVersion": "0.1.0",
+  "catalogContract": {
+    "schemaVersion": 5,
+    "rendererVersion": "2.4.0",
+    "cacheKey": "mockup-studio-catalog-v6",
+    "maxOfflineAgeHours": 168,
+    "maxItems": 500,
+    "maxManifestBytes": 2097152,
+    "maxAssetBytes": 33554432,
+    "maxSelectionLayers": 50,
+    "maxSelectionExportBytes": 83886080,
+    "maxLocalFileBytes": 83886080
+  },
+  "environments": {
+    "development": {
+      "pluginId": "0000000000000000000",
+      "catalogUrl": "http://localhost:4173/catalog/testing/v1/manifest.json",
+      "catalogEnvironment": "testing"
+    },
+    "pilot": {
+      "pluginId": "0000000000000000001",
+      "catalogUrl": "https://unrivaled-cat-56bfe7.netlify.app/v1/manifest.json",
+      "catalogEnvironment": "production"
+    },
+    "production": {
+      "pluginId": "",
+      "catalogUrl": "https://unrivaled-cat-56bfe7.netlify.app/v1/manifest.json",
+      "catalogEnvironment": "production"
+    }
+  }
+}

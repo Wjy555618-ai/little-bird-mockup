@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "EVD-AP-012",
+  "createdAt": "2026-10-31T14:44:16+08:00",
+  "scope": "full local regression after activating and sealing the corrected candidate-creation workflow",
+  "command": "env PATH=/Users/wangzhentao/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin:$PATH pnpm check",
+  "workingDirectory": "/Users/wangzhentao/Documents/一百万计划/mockup-studio-cn",
+  "exitCode": 0,
+  "result": "pass",
+  "approvedBaselineFingerprint": "sha256:3a6ff63261aee390ff6ae760fd7701b2d0a5d78bb0a5f77943d56639488f2db2",
+  "approvedBuildFingerprint": "sha256:7a1f6a433825268457b6786d0494937359a47dd0774e968109d11a8df5dc47b0",
+  "implementationRevision": "tree:sha256:f968a03c4c1c5e7c99601dfbc5ffd37a924d07594fdd236c31bf9145992ef910",
+  "observations": {
+    "developmentContract": "PASS: 17 blocking gates and 4 claim levels",
+    "assetPipelineContract": "PASS: 10 fail-closed gates and 3 controlled categories",
+    "ciContract": "PASS: least privilege, immutable actions, weekly refresh, dependency updates, blocking checks, and retained REL bundle",
+    "staticAccessibility": "PASS: semantics, focus visibility, and text contrast >= 4.5:1",
+    "zeroChroma": {
+      "result": "pass",
+      "activeItemsChecked": 10,
+      "catalogSchema": 5,
+      "rendererVersion": "2.4.0"
+    },
+    "testingCatalog": {
+      "result": "pass",
+      "version": "2026.10.31.4",
+      "itemCount": 5,
+      "manifestSha256": "e2770fd4d0cdd20943a64dfa1e82e5b04a90194e7692766beafd0e3be6d51870"
+    },
+    "productionCatalog": {
+      "result": "pass",
+      "version": "2026.10.31.4",
+      "itemCount": 5,
+      "manifestSha256": "c8e53f7730c64398e26f01aeb933502b2b59796971971c31119a5f3af21f6712"
+    },
+    "catalogRollbackInventory": "PASS: 2026.10.31.4",
+    "browserScaleSmoke": {
+      "result": "pass",
+      "catalogItems": 500,
+      "initialRenderMs": 205.8,
+      "searchP95Ms": 4.2,
+      "searchSamples": 30
+    },
+    "nodeTests": {
+      "total": 97,
+      "passed": 97,
+      "failed": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "durationMs": 5952.913792
+    },
+    "workflow": {
+      "state": "WAITING_FOR_USER_INPUT",
+      "authorizedRequestCount": 0,
+      "unauthorizedCandidateActive": false,
+      "nextAction": "Wait for the decision owner to provide a new reference image and explicitly request one candidate."
+    }
+  },
+  "limitations": [
+    "This is local engineering evidence, not external deployment, market success, or commercial maturity proof.",
+    "The 500-item browser smoke is a local Chrome development check and does not replace minimum-device Figma REL evidence.",
+    "No GitHub, Netlify, Figma Community, CDN, or other external deployment was performed.",
+    "A preliminary shell invocation without the pinned Node runtime stopped before any project check because node was not on the default PATH; it is not counted as a product or gate result."
+  ]
+}

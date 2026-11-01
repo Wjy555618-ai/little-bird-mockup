@@ -1,0 +1,191 @@
+{
+  "schemaVersion": 2,
+  "policyId": "MOCKUP-ASSET-PIPELINE-1",
+  "policyRevision": 5,
+  "status": "active",
+  "decisionSource": "docs/ASSET_PIPELINE_AUTHORITY_2026-10-31.md",
+  "deliveryContract": "docs/ASSET_PIPELINE_DEVELOPMENT_CONTRACT.md",
+  "workflowSimplificationSource": "docs/ASSET_PIPELINE_WORKFLOW_SIMPLIFICATION_2026-10-31.md",
+  "historicalDemoHandoff": ".spec-to-demo/mockup-asset-pipeline/handoff.json",
+  "contractSources": [
+    {
+      "path": "docs/ASSET_PIPELINE_AUTHORITY_2026-10-31.md",
+      "sha256": "77cf526c5c63c204fa87b9bccb051a3472e7ee6b31063e1d13d9336455384e43"
+    },
+    {
+      "path": "docs/ASSET_PIPELINE_DEVELOPMENT_CONTRACT.md",
+      "sha256": "97bb7cb78d58e30a7a2b99eb7dfdacedf6d2aa2e0172319534466dcc9eb849a0"
+    },
+    {
+      "path": "docs/ASSET_PIPELINE_WORKFLOW_SIMPLIFICATION_2026-10-31.md",
+      "sha256": "a952c3a6ba0badebf42150a0e7bc3bd4639a81a43d6a963752ad68f6e25646a3"
+    }
+  ],
+  "scope": {
+    "environment": "local-asset-control-plane",
+    "externalDeploymentAllowed": false,
+    "externalDeploymentGovernedBySeparateContract": true,
+    "externalDeploymentAuthority": "quality/remote-catalog-contract.json",
+    "githubPublicationAllowed": false,
+    "netlifyDeploymentAllowed": false,
+    "figmaCommunityPublicationAllowed": false
+  },
+  "identity": {
+    "assetIdPattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+    "minimumRevision": 1,
+    "immutableFilePattern": "^[a-z0-9]+(?:-[a-z0-9]+)*-r[1-9][0-9]*\\.(?:png|jpg|jpeg|webp)$",
+    "approvalBindingFields": ["assetId", "revision", "itemSha256"]
+  },
+  "rightsModes": ["owned", "authorized", "reference-only"],
+  "candidateAuthorization": {
+    "required": true,
+    "requestType": "candidate-creation",
+    "operation": "create-one-candidate",
+    "maximumCandidatesPerRequest": 1,
+    "singleUse": true,
+    "bindingFields": ["requestId", "assetId", "category", "reference.sha256", "reference.rightsMode", "constraints.maximumCandidates", "actor", "authorizedAt"],
+    "rightsDeclarationIsCreationAuthorization": false,
+    "referenceReuseRequiresExplicitAuthorization": true
+  },
+  "taxonomy": {
+    "allowUnknown": false,
+    "allowAutomaticCreation": false,
+    "categories": [
+      {"id": "display", "label": "显示器", "aliases": ["monitor", "desktop-display"]},
+      {"id": "phone", "label": "手机", "aliases": ["mobile", "smartphone"]},
+      {"id": "laptop", "label": "笔记本", "aliases": ["notebook", "computer"]}
+    ]
+  },
+  "workflow": {
+    "initialState": "REQUEST_AUTHORIZED",
+    "terminalStates": ["PROMOTED", "REJECTED"],
+    "states": [
+      "NEEDS_RIGHTS_DECISION",
+      "REQUEST_AUTHORIZED",
+      "REFERENCE_RECORDED",
+      "CANDIDATE_READY",
+      "TESTING",
+      "QA_PASSED",
+      "FINAL_APPROVED",
+      "PROMOTED",
+      "NEEDS_REVISION",
+      "QA_FAILED",
+      "BLOCKED",
+      "REJECTED"
+    ],
+    "transitions": [
+      ["REQUEST_AUTHORIZED", "REFERENCE_RECORDED"],
+      ["NEEDS_RIGHTS_DECISION", "REFERENCE_RECORDED"],
+      ["REFERENCE_RECORDED", "CANDIDATE_READY"],
+      ["CANDIDATE_READY", "TESTING"],
+      ["CANDIDATE_READY", "NEEDS_REVISION"],
+      ["NEEDS_REVISION", "CANDIDATE_READY"],
+      ["TESTING", "QA_PASSED"],
+      ["TESTING", "QA_FAILED"],
+      ["QA_FAILED", "NEEDS_REVISION"],
+      ["QA_PASSED", "FINAL_APPROVED"],
+      ["QA_PASSED", "NEEDS_REVISION"],
+      ["QA_PASSED", "REJECTED"],
+      ["FINAL_APPROVED", "PROMOTED"]
+    ]
+  },
+  "quality": {
+    "catalogSchemaVersion": 5,
+    "rendererVersion": "2.4.0",
+    "requiredPatterns": ["grid", "landscape", "portrait", "edge"],
+    "requiredAutomaticChecks": ["schema", "renderer", "dimensions", "recommendedSize", "geometry", "aperture", "completeBase", "noChroma", "provenance", "integrity"],
+    "requiredManualChecks": ["frameFit", "perspective", "edgeMask", "imageQuality", "allPatterns"],
+    "completeness": {
+      "requiredRenderer": "static-screen-v5",
+      "requiredCompositingMode": "aperture-mask",
+      "maximumDominantGreenRatio": 0.85,
+      "maximumNeutralMeanChroma": 20,
+      "allowedScreenPresentationModes": ["neutral-off", "reference-bound"],
+      "requireReferenceDigestForBoundPresentation": true,
+      "naturalGreenResolution": "final-batch-decision-bound-to-item-and-qa-digests",
+      "forbiddenFields": ["chromaKey", "screen.underlap", "screen.bleed", "screen.compositing.maxEdgeExtension"],
+      "requireCompleteBase": true
+    }
+  },
+  "approvals": {
+    "technicalQa": {
+      "actorType": "system",
+      "requiredAfterState": "CANDIDATE_READY",
+      "bindingFields": ["assetId", "revision", "itemSha256", "rendererVersion", "qaReportSha256"]
+    },
+    "finalBatch": {
+      "actorType": "human",
+      "requiredAfterState": "QA_PASSED",
+      "maximumHumanDecisions": 1,
+      "bindingFields": ["batchFingerprint", "buildFingerprint", "hostEvidenceSha256", "items.assetId", "items.revision", "items.itemSha256", "items.qaReportSha256", "decision", "decidedAt", "actor"]
+    }
+  },
+  "gates": [
+    {
+      "id": "AP-G00",
+      "name": "单次创作委托",
+      "passCondition": "候选创建前存在不可变的人类委托，绑定准确参考摘要、assetId、分类、权利模式和最多一个候选；权利声明本身不构成创作委托，委托不可重复消费，参考图复用必须当次明确授权。",
+      "failClosed": true
+    },
+    {
+      "id": "AP-G01",
+      "name": "参考与权利",
+      "passCondition": "已获单次创作委托的参考文件摘要存在，权利模式由人类明确声明，reference-only 不复用参考图字节。",
+      "failClosed": true
+    },
+    {
+      "id": "AP-G02",
+      "name": "候选包完整性",
+      "passCondition": "基础图和缩略图本身是完整样机；尺寸、显式孔径几何、推荐尺寸、屏幕展示来源和全部文件摘要完整且相互一致；不存在色键字段、占位板或未经参考绑定的合成界面。",
+      "failClosed": true
+    },
+    {
+      "id": "AP-G03",
+      "name": "身份与分类",
+      "passCondition": "assetId、revision 和不可变文件名合法且无字节冲突，分类只能来自受控 taxonomy。",
+      "failClosed": true
+    },
+    {
+      "id": "AP-G04",
+      "name": "无人工前置的技术质检",
+      "passCondition": "候选完整写入后自动进入 TESTING；技术 QA 不以视觉批准、基线指纹或构建指纹作为前置条件。",
+      "failClosed": true
+    },
+    {
+      "id": "AP-G05",
+      "name": "技术质检",
+      "passCondition": "十项自动检查、四种测试图、五项人工检查、屏幕内容来源、显式孔径边界、彩色角块泄漏和零绿幕门禁全部通过，并生成绑定当前 itemSha256 的 QA 报告。",
+      "failClosed": true
+    },
+    {
+      "id": "AP-G06",
+      "name": "单次最终批次决定",
+      "passCondition": "技术 QA 和真实宿主证据完成后，确定的人类只对一个准确批次做一次通过并入库或不通过决定；系统内部绑定所有逐项摘要。",
+      "failClosed": true
+    },
+    {
+      "id": "AP-G07",
+      "name": "原子提升",
+      "passCondition": "先快照和复制校验全部不可变文件，最后原子更新正式 manifest；失败时旧正式库保持可用。",
+      "failClosed": true
+    },
+    {
+      "id": "AP-G08",
+      "name": "交接连续性",
+      "passCondition": "仓库状态能报告每个素材的状态、摘要、阻塞原因和唯一下一动作；新执行者不依赖聊天记忆。",
+      "failClosed": true
+    },
+    {
+      "id": "AP-G09",
+      "name": "发布边界",
+      "passCondition": "资产流水线不自行授权外部发布；任何线上目录只能由独立远程目录合同按精确站点、白名单和逐次人工授权管理，GitHub 与 Figma 社区仍保持关闭。",
+      "failClosed": true
+    },
+    {
+      "id": "AP-G10",
+      "name": "交互与几何不变量",
+      "passCondition": "素材卡片悬停不改变命中几何；单边裁切只改变对应轴并固定对边；鼠标与键盘共用同一约束；裁切框、物理孔径和外层画布不混用圆角；当前真实 Figma 宿主复测通过。",
+      "failClosed": true
+    }
+  ]
+}

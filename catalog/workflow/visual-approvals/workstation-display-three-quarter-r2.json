@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "approvalType": "visual",
+  "decision": "approved",
+  "assetId": "workstation-display-three-quarter",
+  "revision": 2,
+  "candidateSha256": "909b5430c7d07f4634d7550222cd10e2a74b8b405a7abfe71e35b1b0ff8a0497",
+  "completeBaseConfirmed": true,
+  "actor": {
+    "type": "human",
+    "identity": "Wang Zhentao",
+    "role": "产品与视觉决定人"
+  },
+  "decidedAt": "2026-10-31T05:39:50.619Z",
+  "attestation": {
+    "method": "local",
+    "confirmedByHuman": true
+  }
+}

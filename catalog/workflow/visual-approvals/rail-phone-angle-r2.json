@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "approvalType": "visual",
+  "decision": "approved",
+  "assetId": "rail-phone-angle",
+  "revision": 2,
+  "candidateSha256": "ecbda0cd99076c12005bb7043895a06ce4faca1794c9e9cab9d280a27394f090",
+  "completeBaseConfirmed": true,
+  "actor": {
+    "type": "human",
+    "identity": "Wang Zhentao",
+    "role": "产品与视觉决定人"
+  },
+  "decidedAt": "2026-10-31T05:39:49.966Z",
+  "attestation": {
+    "method": "local",
+    "confirmedByHuman": true
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "EVD-AP-006",
+  "createdAt": "2026-10-31T13:54:00+08:00",
+  "buildFingerprint": "sha256:c19896566bfe475753cc3e99b3743a4b88ad4582fbd9d212040966de462102e3",
+  "implementationRevision": "tree:sha256:dde314c870ba2ff34b230d93e2699750542be1b38f8d83d762fd5fce62e91038",
+  "result": "pass",
+  "claim": "零绿幕 v5 工程实现、五个 r2 正式提升、活动 r1 隔离、回滚快照和全量本地门禁均通过。",
+  "commands": [
+    { "command": "pnpm check", "exitCode": 0, "testsPassed": 96, "testsFailed": 0 },
+    { "command": "pnpm performance:smoke && pnpm performance:smoke", "exitCode": 0, "runsPassed": 2, "itemsPerRun": 500 },
+    { "command": "pnpm no-chroma:check", "exitCode": 0, "activeItemsChecked": 11 },
+    { "command": "pnpm catalog:check:testing", "exitCode": 0, "items": 6, "catalogVersion": "2026.10.31.3" },
+    { "command": "pnpm catalog:check", "exitCode": 0, "items": 5, "catalogVersion": "2026.10.31.4" },
+    { "command": "pnpm catalog:history:check", "exitCode": 0, "catalogVersion": "2026.10.31.4" }
+  ],
+  "activeCatalog": {
+    "schemaVersion": 5,
+    "rendererVersion": "2.4.0",
+    "testingItems": 6,
+    "productionItems": 5,
+    "oldR1HttpStatus": 404,
+    "currentR2HttpStatus": 200,
+    "productionCatalogVersion": "2026.10.31.4",
+    "productionManifestSha256": "c8e53f7730c64398e26f01aeb933502b2b59796971971c31119a5f3af21f6712",
+    "rollbackSnapshotSha256": "c8e53f7730c64398e26f01aeb933502b2b59796971971c31119a5f3af21f6712"
+  },
+  "naturalGreenResolution": {
+    "rule": "A high dominant-green ratio is suspicion, not proof of chroma intent.",
+    "automaticDisposition": "The candidate remains CANDIDATE_READY and cannot enter technical QA.",
+    "onlyResolution": "A human visual approval with completeBaseConfirmed=true bound to the exact candidateSha256.",
+    "negativeTests": "Missing or mismatched candidate SHA is rejected; exact SHA-bound human confirmation is accepted for a legitimate complete natural-green design."
+  },
+  "assets": [
+    { "assetId": "studio-display-front", "revision": 2, "baseSha256": "6e6271a4893a6c5ca54ab27513dcc71198c9b97e0cbb61e81395374ec3523f3b", "thumbnailSha256": "2c56ee6eaee9185ede5a89b40c2934d40e706d669d1e7757a4e4188c315a9d00", "greenDominantRatio": 0, "automaticResult": "pass" },
+    { "assetId": "rock-phone-front", "revision": 2, "baseSha256": "2044a3d5ee3b5e84cd47ba70d1fbe6f2af08b9a1dbc7ff43bc540835b64e7000", "thumbnailSha256": "4a1a8fa4d72f80cfb114cd725f7402ff698eb8c90fe2640acb59104dee5a25df", "greenDominantRatio": 0, "automaticResult": "pass" },
+    { "assetId": "rail-phone-angle", "revision": 2, "baseSha256": "ecbda0cd99076c12005bb7043895a06ce4faca1794c9e9cab9d280a27394f090", "thumbnailSha256": "c797e339ee8aa13285bcc05af553023ba2e626ecc2fd6551084dc661aaae4ee5", "greenDominantRatio": 0, "automaticResult": "pass" },
+    { "assetId": "graphite-laptop-angle", "revision": 2, "baseSha256": "2dac4b02e6751378c71580b4158cf0f8d4edd7d4cb7f5316b05059e8b868af51", "thumbnailSha256": "7ae45fba859085f8417255c8d4d143508f7be9f2cd33aba627822938ba46469c", "greenDominantRatio": 0, "automaticResult": "pass" },
+    { "assetId": "workstation-display-three-quarter", "revision": 2, "baseSha256": "909b5430c7d07f4634d7550222cd10e2a74b8b405a7abfe71e35b1b0ff8a0497", "thumbnailSha256": "2c1aca96a02e9a3646f71e5a28a8eea43934be043c54340a5e8b24d622af6017", "greenDominantRatio": 0, "automaticResult": "pass" }
+  ],
+  "limitations": [
+    "自动门禁证明活动代码、协议、引用和典型绿色占位检测通过；高绿色只能标记疑似风险，不能替代决定人对准确 SHA 的视觉判断。",
+    "五个 r2 已取得各自的视觉批准、技术 QA 与正式入库批准，并进入本地 production。",
+    "TASK-010 的全新非迁移候选已进入 CANDIDATE_READY，仍需决定人视觉批准和后续 QA/正式批准。",
+    "未执行 GitHub、Netlify、Figma 社区或其他外部发布。"
+  ]
+}

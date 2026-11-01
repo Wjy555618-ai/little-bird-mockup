@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 2,
+  "approvalType": "release",
+  "decision": "approved",
+  "assetId": "rock-phone-front",
+  "revision": 3,
+  "itemSha256": "3f26b9b70ddf1f044150ffaefa0dc16164567890eb3e95cef5a6d24a5eaeada1",
+  "qaReportSha256": "3429eb7bd87eaa9beba1bc6152768e30dfdeca0c218ad7c500e00784e00521a6",
+  "candidateSha256": "2313811aa87feb318f14119087c493192049282d693dde1d6dcdda557e4bd377",
+  "completeBaseConfirmed": true,
+  "batchFingerprint": "sha256:83ed6a2f35380af2da821cf5722aaccc06a9bc2820eb9398d6a7fbc355b1e75f",
+  "reviewPacketPath": "catalog/workflow/final-review-packets/83ed6a2f35380af2da821cf5722aaccc06a9bc2820eb9398d6a7fbc355b1e75f.json",
+  "reviewPacketSha256": "be77b5bcbd306f0c83546a8b4e21384cdf8e571e84d2a530ad3c3df04cd8898f",
+  "buildFingerprint": "DEV-10A37155360B",
+  "hostEvidencePath": "docs/evidence/asset-pipeline/real-host-DEV-10A37155360B.json",
+  "hostEvidenceSha256": "1efe18a62096c368711972f18396c526655172036829340d8c84611796ba2c4c",
+  "actor": {
+    "type": "human",
+    "identity": "Wang Zhentao",
+    "role": "最终视觉与本地入库决定人"
+  },
+  "decidedAt": "2026-10-31T10:56:36.958Z",
+  "attestation": {
+    "method": "local",
+    "confirmedByHuman": true,
+    "batchDecisionPath": "catalog/workflow/final-approvals/83ed6a2f35380af2da821cf5722aaccc06a9bc2820eb9398d6a7fbc355b1e75f.json"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "requestType": "candidate-creation",
+  "requestId": "request-rock-phone-front-c56f9e6a263d",
+  "operation": "create-one-candidate",
+  "assetId": "rock-phone-front",
+  "name": "岩石手机 · 正面",
+  "category": "phone",
+  "reference": {
+    "path": "catalog/workflow/references/requests/request-rock-phone-front-c56f9e6a263d.png",
+    "sha256": "2044a3d5ee3b5e84cd47ba70d1fbe6f2af08b9a1dbc7ff43bc540835b64e7000",
+    "rightsMode": "owned",
+    "reuseAuthorized": false
+  },
+  "constraints": {
+    "maximumCandidates": 1
+  },
+  "requestText": "修复现有已发布样机：移除未经授权的合成界面和紫色圆角泄漏，制作中性关屏 r3 修订候选；不创建新的 assetId。",
+  "actor": {
+    "type": "human",
+    "identity": "Wang Zhentao",
+    "role": "产品决定人、视觉审核人、正式入库决定人"
+  },
+  "authorizedAt": "2026-10-31T07:56:11.168Z",
+  "attestation": {
+    "method": "local",
+    "confirmedByHuman": true
+  },
+  "recordedBy": "Codex 工程执行代理"
+}

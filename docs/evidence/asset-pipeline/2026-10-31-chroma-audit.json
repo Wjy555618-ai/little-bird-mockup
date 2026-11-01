@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "auditId": "ASSET-PIPELINE-CHROMA-AUDIT-2026-10-31",
+  "performedAt": "2026-10-31T12:39:19+08:00",
+  "mode": "read-only",
+  "result": "contradicts-zero-chroma-decision",
+  "decisionSource": "docs/ASSET_PIPELINE_NO_GREENSCREEN_DECISION_2026-10-31.md",
+  "observations": {
+    "activeGreenScreenBases": [
+      "catalog/production/v1/assets/studio-display-front-r1.png",
+      "catalog/production/v1/assets/rock-phone-front-r1.png",
+      "catalog/production/v1/assets/rail-phone-angle-r1.png",
+      "catalog/production/v1/assets/graphite-laptop-angle-r1.png",
+      "catalog/testing/v1/assets/workstation-display-three-quarter-r1.png"
+    ],
+    "runtimeDependencies": [
+      "shared/mockup-renderer.js requires static-screen-v4",
+      "shared/mockup-renderer.js requires screen.compositing.mode=chroma-edge",
+      "shared/mockup-renderer.js requires chromaKey.enabled",
+      "shared/mockup-renderer.js infers seam coverage from green-dominant source pixels",
+      "scripts/serve-catalog.mjs rejects non-chroma testing items",
+      "scripts/catalog-release.mjs rejects non-chroma catalog items",
+      "scripts/lib/asset-pipeline.mjs creates chroma-enabled manifest items"
+    ],
+    "catalogDependencies": [
+      "catalog/testing/v1/manifest.json contains static-screen-v4, chromaKey and chroma-edge",
+      "catalog/production/v1/manifest.json contains static-screen-v4, chromaKey and chroma-edge",
+      "current QA approval reports record chroma-edge mode"
+    ]
+  },
+  "conclusion": "The defect is architectural and catalog-wide. Replacing one thumbnail or recoloring one base would leave the governing schema, runtime, current production assets and approvals dependent on chroma keying. A single aperture-mask schema/renderer migration plus new revisions for every active asset is required.",
+  "limitations": "This audit proves the current green-screen dependency and active visible green plates. It does not prove the future aperture-mask implementation or migrated visual quality."
+}

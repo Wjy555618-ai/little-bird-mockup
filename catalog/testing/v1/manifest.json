@@ -1,9 +1,9 @@
 {
-  "schemaVersion": 4,
-  "catalogVersion": "2026.10.30.1",
-  "publishedAt": "2026-10-30T14:56:42.034Z",
+  "schemaVersion": 5,
+  "catalogVersion": "2026.10.31.9",
+  "publishedAt": "2026-10-31T07:56:48.876Z",
   "environment": "testing",
-  "rendererVersion": "2.3.0",
+  "rendererVersion": "2.4.0",
   "minimumPluginVersion": "0.1.0",
   "categories": [
     {
@@ -22,7 +22,7 @@
   "items": [
     {
       "id": "studio-display-front",
-      "revision": 1,
+      "revision": 3,
       "status": "testing",
       "name": "工作室显示器 · 正面",
       "category": "display",
@@ -33,17 +33,7 @@
         "金属",
         "monitor"
       ],
-      "renderer": "static-screen-v4",
-      "chromaKey": {
-        "enabled": true,
-        "minimumGreen": 65,
-        "dominance": 1.18,
-        "replacement": [
-          16,
-          16,
-          16
-        ]
-      },
+      "renderer": "static-screen-v5",
       "canvas": {
         "width": 1448,
         "height": 1086
@@ -99,28 +89,45 @@
           ]
         },
         "compositing": {
-          "mode": "chroma-edge",
-          "maxEdgeExtension": 12
+          "mode": "aperture-mask"
         },
-        "underlap": 16,
+        "presentation": {
+          "mode": "neutral-off"
+        },
         "defaultFit": "cover"
       },
       "layers": {
-        "base": "assets/studio-display-front-r1.png"
+        "base": "assets/studio-display-front-r3.png"
       },
-      "thumbnail": "thumbnails/studio-display-front-r1.png",
+      "thumbnail": "thumbnails/studio-display-front-r3.png",
       "provenance": {
         "kind": "generated-in-house",
-        "usage": "temporary-test"
+        "usage": "candidate",
+        "pipelinePolicyId": "MOCKUP-ASSET-PIPELINE-1",
+        "referenceRightsMode": "owned",
+        "referenceSha256": "6e6271a4893a6c5ca54ab27513dcc71198c9b97e0cbb61e81395374ec3523f3b",
+        "candidateRequestId": "request-studio-display-front-e037f79f8f77",
+        "candidateRequestSha256": "a71a01d3682f9048a0bab7f9e77c4ee048252ac91e24d415f89b569979d17930",
+        "generationNote": "Corrective revision of the existing in-house asset: removed reference-unbound synthetic UI and replaced the screen with a neutral device-off surface. Explicit aperture geometry remains the only runtime replacement boundary.",
+        "presentationState": "complete",
+        "completenessHeuristic": {
+          "result": "passed",
+          "detector": "complete-screen-provenance-v2",
+          "greenDominantRatio": 0,
+          "maximumGreenRatio": 0.85,
+          "presentationMode": "neutral-off",
+          "meanChroma": 4.5,
+          "maximumNeutralMeanChroma": 20
+        }
       },
       "integrity": {
-        "baseSha256": "9af4efe18bbbc3a899d57902e71960a4d9f135389da99833a7b0e922764b0eeb",
-        "thumbnailSha256": "8b89c8fcb8c0d93d7f5226687c73dfb6e919e021c3aac025f046172878843045"
+        "baseSha256": "4ee83fb16051d82bc7eb297b855763389e396d2352e8e56ace904a7c09c78ae4",
+        "thumbnailSha256": "7b440cf4f424e9e14db0535a3398b83b72cdea0c1b140113dfe457d48de5ac60"
       }
     },
     {
       "id": "rock-phone-front",
-      "revision": 1,
+      "revision": 3,
       "status": "testing",
       "name": "岩石手机 · 正面",
       "category": "phone",
@@ -131,17 +138,7 @@
         "正面",
         "phone"
       ],
-      "renderer": "static-screen-v4",
-      "chromaKey": {
-        "enabled": true,
-        "minimumGreen": 65,
-        "dominance": 1.18,
-        "replacement": [
-          16,
-          16,
-          16
-        ]
-      },
+      "renderer": "static-screen-v5",
       "canvas": {
         "width": 1448,
         "height": 1086
@@ -197,28 +194,45 @@
           ]
         },
         "compositing": {
-          "mode": "chroma-edge",
-          "maxEdgeExtension": 12
+          "mode": "aperture-mask"
         },
-        "underlap": 16,
+        "presentation": {
+          "mode": "neutral-off"
+        },
         "defaultFit": "cover"
       },
       "layers": {
-        "base": "assets/rock-phone-front-r1.png"
+        "base": "assets/rock-phone-front-r3.png"
       },
-      "thumbnail": "thumbnails/rock-phone-front-r1.png",
+      "thumbnail": "thumbnails/rock-phone-front-r3.png",
       "provenance": {
         "kind": "generated-in-house",
-        "usage": "temporary-test"
+        "usage": "candidate",
+        "pipelinePolicyId": "MOCKUP-ASSET-PIPELINE-1",
+        "referenceRightsMode": "owned",
+        "referenceSha256": "2044a3d5ee3b5e84cd47ba70d1fbe6f2af08b9a1dbc7ff43bc540835b64e7000",
+        "candidateRequestId": "request-rock-phone-front-c56f9e6a263d",
+        "candidateRequestSha256": "07ec9100c0b8077db09972b91e41d374d2c5a3a0cbb1a6a3a8883447a4073933",
+        "generationNote": "Corrective revision of the existing in-house asset: removed reference-unbound synthetic UI and replaced the screen with a neutral device-off surface. Explicit aperture geometry remains the only runtime replacement boundary.",
+        "presentationState": "complete",
+        "completenessHeuristic": {
+          "result": "passed",
+          "detector": "complete-screen-provenance-v2",
+          "greenDominantRatio": 0,
+          "maximumGreenRatio": 0.85,
+          "presentationMode": "neutral-off",
+          "meanChroma": 4.5,
+          "maximumNeutralMeanChroma": 20
+        }
       },
       "integrity": {
-        "baseSha256": "d530217efe71e4169a52e3b2db70237a74b6bcd9ded7d3f730217397177d5993",
-        "thumbnailSha256": "bf4a5a99f314cd649e09bda855d9bdd28e79a472c75f98e5b24550e5d37c4b69"
+        "baseSha256": "2313811aa87feb318f14119087c493192049282d693dde1d6dcdda557e4bd377",
+        "thumbnailSha256": "e16133994d3726f73a539552f0a7734c147618b43af5b69f21f587f0c0205c42"
       }
     },
     {
       "id": "rail-phone-angle",
-      "revision": 1,
+      "revision": 3,
       "status": "testing",
       "name": "支架手机 · 倾斜",
       "category": "phone",
@@ -229,17 +243,7 @@
         "透视",
         "phone"
       ],
-      "renderer": "static-screen-v4",
-      "chromaKey": {
-        "enabled": true,
-        "minimumGreen": 20,
-        "dominance": 1.02,
-        "replacement": [
-          2,
-          2,
-          2
-        ]
-      },
+      "renderer": "static-screen-v5",
       "canvas": {
         "width": 1448,
         "height": 1086
@@ -295,37 +299,45 @@
           ]
         },
         "compositing": {
-          "mode": "chroma-edge",
-          "maxEdgeExtension": 12
+          "mode": "aperture-mask"
         },
-        "underlap": 16,
-        "defaultFit": "cover",
-        "occlusions": [
-          {
-            "type": "circle",
-            "cx": 754,
-            "cy": 158,
-            "radius": 10,
-            "fill": "#080808"
-          }
-        ]
+        "presentation": {
+          "mode": "neutral-off"
+        },
+        "defaultFit": "cover"
       },
       "layers": {
-        "base": "assets/rail-phone-angle-r1.png"
+        "base": "assets/rail-phone-angle-r3.png"
       },
-      "thumbnail": "thumbnails/rail-phone-angle-r1.png",
+      "thumbnail": "thumbnails/rail-phone-angle-r3.png",
       "provenance": {
         "kind": "generated-in-house",
-        "usage": "temporary-test"
+        "usage": "candidate",
+        "pipelinePolicyId": "MOCKUP-ASSET-PIPELINE-1",
+        "referenceRightsMode": "owned",
+        "referenceSha256": "ecbda0cd99076c12005bb7043895a06ce4faca1794c9e9cab9d280a27394f090",
+        "candidateRequestId": "request-rail-phone-angle-c7e86b9bb861",
+        "candidateRequestSha256": "97508a93427f1b758ae758a8ade28eed868327c245c4675f627e3582a0032fcf",
+        "generationNote": "Corrective revision of the existing in-house asset: removed reference-unbound synthetic UI and replaced the screen with a neutral device-off surface. Explicit aperture geometry remains the only runtime replacement boundary.",
+        "presentationState": "complete",
+        "completenessHeuristic": {
+          "result": "passed",
+          "detector": "complete-screen-provenance-v2",
+          "greenDominantRatio": 0,
+          "maximumGreenRatio": 0.85,
+          "presentationMode": "neutral-off",
+          "meanChroma": 4.496733071979092,
+          "maximumNeutralMeanChroma": 20
+        }
       },
       "integrity": {
-        "baseSha256": "e09768963cb11b8f7769eae3241deca2add5df0cd23a59ee948aeffda68695c4",
-        "thumbnailSha256": "542e59b0fa8e863d4e2103577e716225e4d8a593beb955211f74fed46cb3b522"
+        "baseSha256": "3d757e35224160081c0a7baa4c2899ced21e7fbf417d6dcc5776b77cf00db425",
+        "thumbnailSha256": "af14d395590c457fc06797bc5b803c317bbff8716ed17b4ad1e49518d590638c"
       }
     },
     {
       "id": "graphite-laptop-angle",
-      "revision": 1,
+      "revision": 3,
       "status": "testing",
       "name": "石墨笔记本 · 倾斜",
       "category": "laptop",
@@ -336,17 +348,7 @@
         "透视",
         "laptop"
       ],
-      "renderer": "static-screen-v4",
-      "chromaKey": {
-        "enabled": true,
-        "minimumGreen": 65,
-        "dominance": 1.18,
-        "replacement": [
-          16,
-          16,
-          16
-        ]
-      },
+      "renderer": "static-screen-v5",
       "canvas": {
         "width": 1536,
         "height": 1024
@@ -402,23 +404,145 @@
           ]
         },
         "compositing": {
-          "mode": "chroma-edge",
-          "maxEdgeExtension": 12
+          "mode": "aperture-mask"
         },
-        "underlap": 16,
+        "presentation": {
+          "mode": "neutral-off"
+        },
         "defaultFit": "cover"
       },
       "layers": {
-        "base": "assets/graphite-laptop-angle-r1.png"
+        "base": "assets/graphite-laptop-angle-r3.png"
       },
-      "thumbnail": "thumbnails/graphite-laptop-angle-r1.png",
+      "thumbnail": "thumbnails/graphite-laptop-angle-r3.png",
       "provenance": {
         "kind": "generated-in-house",
-        "usage": "temporary-test"
+        "usage": "candidate",
+        "pipelinePolicyId": "MOCKUP-ASSET-PIPELINE-1",
+        "referenceRightsMode": "owned",
+        "referenceSha256": "2dac4b02e6751378c71580b4158cf0f8d4edd7d4cb7f5316b05059e8b868af51",
+        "candidateRequestId": "request-graphite-laptop-angle-d310b561a948",
+        "candidateRequestSha256": "f46b86f9829dfef8d54bc0b830b8d6076a5f4d689c5190ad64180e604d1e5ada",
+        "generationNote": "Corrective revision of the existing in-house asset: removed reference-unbound synthetic UI and replaced the screen with a neutral device-off surface. Explicit aperture geometry remains the only runtime replacement boundary.",
+        "presentationState": "complete",
+        "completenessHeuristic": {
+          "result": "passed",
+          "detector": "complete-screen-provenance-v2",
+          "greenDominantRatio": 0,
+          "maximumGreenRatio": 0.85,
+          "presentationMode": "neutral-off",
+          "meanChroma": 4.616300583519142,
+          "maximumNeutralMeanChroma": 20
+        }
       },
       "integrity": {
-        "baseSha256": "893687802f9c1b42522cffeb2e1a361ae6dd4962da31114d2f6221c63220c66c",
-        "thumbnailSha256": "72e13c920fcda281f1d751be2c5087d025d7372c095d2a7728666f8ecd65b1fe"
+        "baseSha256": "cd1574100fb6e10f8b29c5c26247ed89adc182f0cd6556a9917438897b68d70d",
+        "thumbnailSha256": "c5a96a86d83da6e10b363ee35148e14536366a7b8b3be92d73f1fb9eefbfff7e"
+      }
+    },
+    {
+      "id": "workstation-display-three-quarter",
+      "revision": 3,
+      "status": "testing",
+      "name": "极简工作站显示器 · 右后三分之二视角",
+      "category": "display",
+      "tags": [
+        "display",
+        "workstation",
+        "three-quarter",
+        "dark",
+        "metal"
+      ],
+      "renderer": "static-screen-v5",
+      "canvas": {
+        "width": 1448,
+        "height": 1086
+      },
+      "screen": {
+        "quad": [
+          [
+            158,
+            203
+          ],
+          [
+            1053,
+            144
+          ],
+          [
+            1053,
+            708
+          ],
+          [
+            155,
+            715
+          ]
+        ],
+        "recommendedSize": {
+          "width": 2560,
+          "height": 1440,
+          "label": "16:9 显示器"
+        },
+        "aperture": {
+          "quad": [
+            [
+              158,
+              203
+            ],
+            [
+              1053,
+              144
+            ],
+            [
+              1053,
+              708
+            ],
+            [
+              155,
+              715
+            ]
+          ],
+          "cornerRadii": [
+            0.008,
+            0.008,
+            0.008,
+            0.008
+          ]
+        },
+        "compositing": {
+          "mode": "aperture-mask"
+        },
+        "presentation": {
+          "mode": "neutral-off"
+        },
+        "defaultFit": "cover"
+      },
+      "layers": {
+        "base": "assets/workstation-display-three-quarter-r3.png"
+      },
+      "thumbnail": "thumbnails/workstation-display-three-quarter-r3.png",
+      "provenance": {
+        "kind": "generated-in-house",
+        "usage": "candidate",
+        "pipelinePolicyId": "MOCKUP-ASSET-PIPELINE-1",
+        "referenceRightsMode": "owned",
+        "referenceSha256": "909b5430c7d07f4634d7550222cd10e2a74b8b405a7abfe71e35b1b0ff8a0497",
+        "candidateRequestId": "request-workstation-display-three-quarter-0ce137349a0d",
+        "candidateRequestSha256": "0eaa118f9d0998323bcff4dbb745563f48213f1147e03510c45064cb2331aaf1",
+        "generationNote": "Corrective revision of the existing in-house asset: removed reference-unbound synthetic UI and replaced the screen with a neutral device-off surface. Explicit aperture geometry remains the only runtime replacement boundary.",
+        "presentationState": "complete",
+        "completenessHeuristic": {
+          "result": "passed",
+          "detector": "complete-screen-provenance-v2",
+          "greenDominantRatio": 0,
+          "maximumGreenRatio": 0.85,
+          "presentationMode": "neutral-off",
+          "meanChroma": 4.388827639944627,
+          "maximumNeutralMeanChroma": 20
+        }
+      },
+      "integrity": {
+        "baseSha256": "c2683895cdaebd69618376d73d1c2d27d05afd0391a6948d12310e369cff470f",
+        "thumbnailSha256": "5a4f9d588119e887b5f52121380598538ba74f9570dd3b9d62d752f080b03caf"
       }
     }
   ]

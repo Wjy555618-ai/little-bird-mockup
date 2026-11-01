@@ -3,4 +3,15 @@ node_modules/
 dist/
 coverage/
 .netlify/
+.env
+.env.*
+!.env.example
+*.log
+.idea/
+.vscode/
+.spec-to-demo/**/*.lock
+
+# Rejected historical brand experiments are retained locally only.
+docs/evidence/panda-brand-*.png
+docs/evidence/little-bird-wallpaper-brand-*.png
 

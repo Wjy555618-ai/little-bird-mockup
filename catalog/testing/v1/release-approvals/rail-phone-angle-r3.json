@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 2,
+  "approvalType": "release",
+  "decision": "approved",
+  "assetId": "rail-phone-angle",
+  "revision": 3,
+  "itemSha256": "c71250be429e8f416a0b89563f8a47c5563bf66c3c3da2a7a9ae11d8bde29bcf",
+  "qaReportSha256": "8982ba07281c73373d052bd1bce509f68f7b7ccb29681fa0b3ae77eb529a2060",
+  "candidateSha256": "3d757e35224160081c0a7baa4c2899ced21e7fbf417d6dcc5776b77cf00db425",
+  "completeBaseConfirmed": true,
+  "batchFingerprint": "sha256:83ed6a2f35380af2da821cf5722aaccc06a9bc2820eb9398d6a7fbc355b1e75f",
+  "reviewPacketPath": "catalog/workflow/final-review-packets/83ed6a2f35380af2da821cf5722aaccc06a9bc2820eb9398d6a7fbc355b1e75f.json",
+  "reviewPacketSha256": "be77b5bcbd306f0c83546a8b4e21384cdf8e571e84d2a530ad3c3df04cd8898f",
+  "buildFingerprint": "DEV-10A37155360B",
+  "hostEvidencePath": "docs/evidence/asset-pipeline/real-host-DEV-10A37155360B.json",
+  "hostEvidenceSha256": "1efe18a62096c368711972f18396c526655172036829340d8c84611796ba2c4c",
+  "actor": {
+    "type": "human",
+    "identity": "Wang Zhentao",
+    "role": "最终视觉与本地入库决定人"
+  },
+  "decidedAt": "2026-10-31T10:56:36.958Z",
+  "attestation": {
+    "method": "local",
+    "confirmedByHuman": true,
+    "batchDecisionPath": "catalog/workflow/final-approvals/83ed6a2f35380af2da821cf5722aaccc06a9bc2820eb9398d6a7fbc355b1e75f.json"
+  }
+}

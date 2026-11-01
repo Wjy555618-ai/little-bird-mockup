@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "requestType": "candidate-creation",
+  "requestId": "request-workstation-display-three-quarter-0ce137349a0d",
+  "operation": "create-one-candidate",
+  "assetId": "workstation-display-three-quarter",
+  "name": "极简工作站显示器 · 右后三分之二视角",
+  "category": "display",
+  "reference": {
+    "path": "catalog/workflow/references/requests/request-workstation-display-three-quarter-0ce137349a0d.png",
+    "sha256": "909b5430c7d07f4634d7550222cd10e2a74b8b405a7abfe71e35b1b0ff8a0497",
+    "rightsMode": "owned",
+    "reuseAuthorized": false
+  },
+  "constraints": {
+    "maximumCandidates": 1
+  },
+  "requestText": "修复现有已发布样机：移除未经授权的合成界面和紫色圆角泄漏，制作中性关屏 r3 修订候选；不创建新的 assetId。",
+  "actor": {
+    "type": "human",
+    "identity": "Wang Zhentao",
+    "role": "产品决定人、视觉审核人、正式入库决定人"
+  },
+  "authorizedAt": "2026-10-31T07:56:11.511Z",
+  "attestation": {
+    "method": "local",
+    "confirmedByHuman": true
+  },
+  "recordedBy": "Codex 工程执行代理"
+}

@@ -1,23 +1,33 @@
 # Restrained motion system QA — 2026-10-30
 
+> Historical QA snapshot. Its original “hover never rotates” conclusion was
+> superseded on 2026-10-31 after the product requirement and hit-testing root
+> cause were re-established. The current binding hover contract is
+> `docs/CONTENT_LIFECYCLE_HOVER_ROOT_CAUSE_2026-10-31.md`; evidence and pass
+> counts below describe the older build only and cannot approve the current one.
+
 ## Motion contract
 
-- Motion character: short, stable, decelerating, non-random, and without bounce.
+- Motion character: short, stable, decelerating, and without bounce. Catalog
+  hover alone samples one random direction and magnitude per genuine entry;
+  the sampled value remains constant for the whole dwell.
 - Micro feedback: 120 ms.
 - Popovers and state changes: 180 ms.
 - Panels and content changes: 220 ms.
 - Direct manipulation stays one-to-one: stage pan, content drag, handles, ranges,
   resize, and trackpad input must not be eased or delayed.
 
-## Root cause
+## Superseded root-cause conclusion
 
-Catalog cards previously chose a random `-4deg` or `4deg` rotation on every
-pointer entry and also scaled down to 96%. Repeated boundary crossings therefore
-looked like uncontrolled shaking.
+This snapshot attributed the shaking to random rotation. The later root-cause
+audit showed the actual defect was applying the transform to the pointer hit
+target (plus scaling), which moved its own boundary. Random rotation remains a
+valid visual behavior when it is isolated on a pointer-transparent inner layer.
 
 ## Acceptance inventory
 
-- [x] Catalog hover never rotates, changes direction randomly, or moves its hit target.
+- [x] Historical build: catalog hover did not move its hit target. Its
+  no-rotation behavior is not a current acceptance requirement.
 - [x] Rapid pointer sweeps across all four cards remain visually stable.
 - [x] Mode changes use one restrained panel transition with no layout jump.
 - [x] All / Similar and category changes animate the new result set once.

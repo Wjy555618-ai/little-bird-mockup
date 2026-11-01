@@ -25,7 +25,7 @@
           <div><strong>测试库</strong><span id="catalogVersion">—</span></div>
           <span id="assetCount" class="count-pill">0</span>
         </header>
-        <p class="panel-note">仅用于验证流程的 4 个临时样机。正式资产须逐个通过本页后再发布。</p>
+        <p class="panel-note">临时回归素材与新候选会显示在这里。系统先完成全部技术 QA，最后只向决定人提交一次批次审阅。</p>
         <div id="assetList" class="asset-list" aria-label="待检样机"></div>
       </aside>
 
@@ -65,7 +65,7 @@
 
       <aside class="qa-panel">
         <section class="qa-section">
-          <header><strong>自动检查</strong><span id="automaticSummary">0 / 6</span></header>
+          <header><strong>自动检查</strong><span id="automaticSummary">0 / 10</span></header>
           <div id="automaticChecks" class="check-list"></div>
         </section>
         <section class="qa-section manual-section">
@@ -73,7 +73,7 @@
           <label><input type="checkbox" data-manual="frameFit" /> 画面与设备边框贴合</label>
           <label><input type="checkbox" data-manual="perspective" /> 透视方向与场景一致</label>
           <label><input type="checkbox" data-manual="edgeMask" /> 圆角与遮挡关系正确</label>
-          <label><input type="checkbox" data-manual="imageQuality" /> 无破图、重影或明显接缝</label>
+          <label><input type="checkbox" data-manual="imageQuality" /> 底图完整，无占位板、破图、重影或边界裂缝</label>
           <label><input type="checkbox" data-manual="allPatterns" /> 四种测试图均已查看</label>
         </section>
         <section class="qa-section visit-section">
@@ -81,8 +81,8 @@
           <div id="patternVisits" class="visit-grid"></div>
         </section>
         <div class="approval-card">
-          <div><strong id="approvalTitle">尚未达到发布条件</strong><span id="approvalHint">先完成自动检查、四种测试图和人工验收</span></div>
-          <button id="approveButton" class="approve-button" type="button" disabled>批准进入正式库</button>
+          <div><strong id="approvalTitle">尚未达到技术 QA 条件</strong><span id="approvalHint">这里记录技术 QA；最终只做一次批次决定</span></div>
+          <button id="approveButton" class="approve-button" type="button" disabled>记录技术 QA 通过</button>
         </div>
       </aside>
     </main>

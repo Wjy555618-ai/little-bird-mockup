@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 私密报告安全漏洞
+    url: https://github.com/Wjy555618-ai/little-bird-mockup/security/advisories/new
+    about: 不要在公开 Issue 中披露未修复漏洞。
+  - name: 使用与支持边界
+    url: https://github.com/Wjy555618-ai/little-bird-mockup/blob/main/SUPPORT.md
+    about: 提交问题前先确认支持范围与必要信息。

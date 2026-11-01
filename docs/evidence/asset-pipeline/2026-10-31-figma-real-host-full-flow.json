@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "EVD-AP-013-EVD-AP-014",
+  "createdAt": "2026-10-31T15:17:24+08:00",
+  "scope": "local real-host Figma plugin full-flow verification",
+  "approvedBuildFingerprint": "sha256:7a1f6a433825268457b6786d0494937359a47dd0774e968109d11a8df5dc47b0",
+  "sealedImplementationRevision": "tree:sha256:6a332b5157beaf93dd2f71a8adcc40816f7fc3c4c88ae19d0ef4df434d026083",
+  "pluginBuildFingerprint": "DEV-EE4E61CF1965",
+  "environment": {
+    "os": "macOS",
+    "figmaHost": "/Applications/Figma+EX.app",
+    "figmaFile": "Untitled",
+    "catalogUrl": "http://localhost:4173/catalog/testing/v1/manifest.json",
+    "catalogVersion": "2026.10.31.4",
+    "catalogSchemaVersion": 5,
+    "rendererVersion": "2.4.0",
+    "activeAssetCount": 5
+  },
+  "engineeringVerification": {
+    "command": "pnpm build && pnpm check",
+    "result": "pass",
+    "tests": {
+      "passed": 99,
+      "failed": 0,
+      "skipped": 0
+    },
+    "gates": [
+      "development contract",
+      "asset pipeline contract",
+      "CI contract",
+      "static accessibility",
+      "zero-chroma",
+      "testing catalog",
+      "production catalog",
+      "catalog rollback inventory",
+      "500-item browser performance smoke"
+    ]
+  },
+  "realHostObservations": [
+    {
+      "step": "catalog-sync-and-main-asset-integrity",
+      "result": "pass",
+      "observation": "Figma+EX loaded the local testing manifest and rendered the verified main PNG for studio-display-front without the previous asset-service error. The portable SHA-256 fallback preserved the existing integrity comparison in the null-origin plugin iframe."
+    },
+    {
+      "step": "figma-selection-import",
+      "result": "pass",
+      "observation": "The selected Figma RECTANGLE named image 2 was read as a 2048 x 1454 source and composited into the selected mockup."
+    },
+    {
+      "step": "adjustment-controls",
+      "result": "pass",
+      "observation": "Scale advanced from 100% to 101%; horizontal advanced from 0% to 1%; vertical changed from 0% to -1%; rotation advanced from 0 degrees to 1 degree. Values and rendered source transform changed without resizing the physical aperture."
+    },
+    {
+      "step": "free-perspective",
+      "result": "pass",
+      "observation": "Dragging the top-left perspective handle changed the projected quadrilateral and the UI state changed from default perspective to adjusted."
+    },
+    {
+      "step": "mockup-switch-retains-design",
+      "result": "pass",
+      "observation": "Switching from studio-display-front to rock-phone-front retained the imported design and produced a complete phone mockup; export and paste remained enabled."
+    },
+    {
+      "step": "paste-back-to-figma",
+      "result": "pass",
+      "observation": "The plugin created and selected a 1200 x 900 Figma image node named 岩石手机 · 正面 · 样机工作室 at node 335:9."
+    },
+    {
+      "step": "png-export",
+      "result": "pass",
+      "observation": "The plugin exported a real 1448 x 1086 RGB PNG. Visual inspection confirmed the imported design is composited inside the complete zero-green-screen phone mockup.",
+      "artifact": "docs/evidence/asset-pipeline/2026-10-31-figma-real-host-export-rock-phone.png",
+      "artifactSha256": "sha256:e0232bfb65566c05d9f1d717782b6b3566b154e58c016c74d3e57f5d67ba79c2",
+      "artifactBytes": 1273687
+    }
+  ],
+  "rootCauseCorrections": [
+    {
+      "problem": "Verified main assets failed only inside the real Figma plugin iframe.",
+      "rootCause": "The null-origin Figma iframe did not expose SubtleCrypto, while the integrity verifier assumed crypto.subtle was always available.",
+      "correction": "Use WebCrypto when available and a tested portable SHA-256 implementation otherwise; do not bypass or weaken the digest check."
+    },
+    {
+      "problem": "Scale and position sliders appeared available but were clamped back to their defaults.",
+      "rootCause": "The controls transformed the visible content aperture and then constrained that aperture to itself, making scale above 100% and movement at the default full-frame state impossible.",
+      "correction": "Keep the physical content aperture fixed and transform the covered source image independently; derive UI values from that same canonical source frame."
+    }
+  ],
+  "boundaries": {
+    "externalPublicationPerformed": false,
+    "newMockupCreated": false,
+    "productionCatalogModifiedByThisVerification": false,
+    "claim": "This evidence proves a local real-host engineering and functional pass for the named build. It does not prove public release readiness, external hosting, marketplace approval, product success, or final human acceptance."
+  }
+}

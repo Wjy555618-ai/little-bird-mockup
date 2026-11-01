@@ -1,0 +1,234 @@
+{
+  "schemaVersion": 1,
+  "contractId": "MOCKUP-REMOTE-CATALOG-CONTRACT-1",
+  "status": "phase-zero-netlify-static-catalog-pilot-authorized",
+  "decisionOwner": "Wang Zhentao",
+  "authorityDocument": "docs/REMOTE_CATALOG_ARCHITECTURE_CONTRACT_2026-10-31.md",
+  "decisionPack": "quality/remote-catalog-decision-pack.json",
+  "contractSources": [
+    {
+      "path": "docs/REMOTE_CATALOG_ARCHITECTURE_CONTRACT_2026-10-31.md",
+      "sha256": "11fccdf49858ce48aac412535392efdba620aa8d8a9690d006493d44109322bb"
+    },
+    {
+      "path": "docs/REMOTE_CATALOG_PROVIDER_COMPARISON_2026-10-31.md",
+      "sha256": "5f3b561710c42b88fe2ca206474946d390d2f066da66597c913ecc763d68c05f"
+    },
+    {
+      "path": "docs/ARCHITECTURE.md",
+      "sha256": "d79198cff44657b1c6d3071e052ba131a2176115c583d02a3776b96c1b2ca937"
+    },
+    {
+      "path": "config/plugin.config.json",
+      "sha256": "cf9994100162e67d3cf7e759f09f9046834773441e5dd9d6c099e344f59f29a5"
+    }
+  ],
+  "scope": {
+    "architectureAndGatesAuthorized": true,
+    "providerResearchAuthorized": true,
+    "providerSelectionAuthorized": false,
+    "domainBindingAuthorized": false,
+    "externalDeploymentAllowed": true,
+    "githubPublicationAllowed": false,
+    "netlifyDeploymentAllowed": true,
+    "figmaCommunityPublicationAllowed": false
+  },
+  "architecture": {
+    "model": "vendor-neutral-static-read-only-data-plane-with-private-control-plane",
+    "controlPlane": {
+      "privateOnly": true,
+      "writeCredentialsInPlugin": false,
+      "forbiddenPublishedSurfaces": [
+        "asset-lab",
+        "catalog/testing",
+        "catalog/workflow",
+        "source-code",
+        "reference-images",
+        "rights-records",
+        "deployment-credentials"
+      ]
+    },
+    "dataPlane": {
+      "appliesToStage": "long-term-production",
+      "publicReadOnly": true,
+      "canonicalCustomDomainRequired": true,
+      "providerDomainInPluginAllowed": false,
+      "protocol": "https:",
+      "manifestPath": "/v1/manifest.json",
+      "allowedMethods": ["GET", "HEAD", "OPTIONS"],
+      "allowedRuntimeContentTypes": ["application/json", "image/png", "image/jpeg", "image/webp"],
+      "remoteExecutableCodeAllowed": false,
+      "userDesignUploadAllowed": false,
+      "cookiesOrAuthorizationRequired": false,
+      "corsOrigin": "*"
+    }
+  },
+  "phaseZeroPilot": {
+    "authorized": true,
+    "purpose": "three-day-free-plugin-online-closed-loop",
+    "deadlineDays": 3,
+    "provider": "netlify",
+    "plan": "free-with-hard-credit-limit",
+    "providerDomainAllowed": true,
+    "customDomainRequired": false,
+    "exactSiteOriginRequired": true,
+    "wildcardNetlifyDomainAllowed": false,
+    "publicCatalogOnly": true,
+    "publishDirectory": "dist/netlify-catalog",
+    "manualDeployWithoutGit": true,
+    "githubConnectionAllowed": false,
+    "allowedPublishedContent": ["production-manifest", "active-revision-assets", "active-revision-thumbnails", "netlify-headers"],
+    "forbiddenPublishedContent": ["inactive-revisions", "approvals", "release-approvals", "asset-lab", "catalog-testing", "catalog-workflow", "source-code", "reference-images", "credentials"],
+    "pluginReleaseRequiredWhenMigratingOrigin": true,
+    "longTermProductionClaimsAllowed": false,
+    "communitySubmissionAuthorized": false
+  },
+  "phaseZeroDeployment": {
+    "status": "published-public-verification-in-progress",
+    "siteName": "unrivaled-cat-56bfe7",
+    "origin": "https://unrivaled-cat-56bfe7.netlify.app",
+    "manifestUrl": "https://unrivaled-cat-56bfe7.netlify.app/v1/manifest.json",
+    "deployId": "6ae5de9c8a03867857235639",
+    "candidateFingerprint": "sha256:4313d710fef431d7b4ff1dfee4a18306eddf69de2cc14687a1da14d26140c608",
+    "manifestSha256": "32f86945867503e8a7a3c84d32d1e9118daabaa9b554eefdc40a5958c68a2035",
+    "publishedFileCount": 12,
+    "manualWithoutGit": true,
+    "public": true,
+    "secondDeployRequiresNewHumanApproval": true,
+    "evidencePath": "docs/evidence/asset-pipeline/2026-10-31-netlify-phase-zero-deployment.json"
+  },
+  "compatibility": {
+    "schemaVersion": 5,
+    "rendererVersion": "2.4.0",
+    "compatibleAssetUpdatesRequirePluginRelease": false,
+    "domainSchemaRendererOrPermissionChangesRequirePluginRelease": true,
+    "maximumCatalogItems": 500,
+    "maximumManifestBytes": 2097152,
+    "maximumAssetBytes": 33554432
+  },
+  "cache": {
+    "manifestCacheControl": "no-store, max-age=0, must-revalidate",
+    "revisionedAssetCacheControl": "public, max-age=31536000, immutable",
+    "maximumOfflineAgeHours": 168,
+    "sameManifestUrlAndEnvironmentRequired": true,
+    "emergencyRevocationWindowDecisionRequiredBeforeDeployment": true,
+    "instantOfflineRevocationClaimAllowed": false
+  },
+  "updateProtocol": {
+    "activation": "atomic-manifest-last",
+    "sameRevisionOverwriteAllowed": false,
+    "requiredOrder": [
+      "freeze-approved-local-production-catalog",
+      "verify-isolated-deployment-candidate",
+      "record-candidate-manifest-and-file-digests",
+      "upload-immutable-revisioned-resources",
+      "verify-every-remote-resource",
+      "atomically-activate-manifest-last",
+      "verify-canonical-origin-manifest-byte-equality",
+      "record-deployment-evidence",
+      "start-controlled-observation-window"
+    ],
+    "remoteResourceChecks": ["status-200", "content-type", "content-length", "sha256"],
+    "manifestChecks": ["no-redirect", "content-type", "byte-equality", "schema", "environment", "renderer", "minimum-plugin-version"]
+  },
+  "failurePolicy": {
+    "invalidManifest": "reject-new-and-retain-current-valid-catalog",
+    "missingOrInvalidAsset": "preserve-current-selection-and-user-state-without-partial-commit",
+    "timeoutOrOffline": "use-same-origin-valid-cache-within-age-limit",
+    "noValidCache": "show-actionable-error-and-preserve-user-design-state",
+    "crossOriginOrRedirect": "reject",
+    "partialDeployment": "old-manifest-remains-active"
+  },
+  "rollback": {
+    "dryRunByDefault": true,
+    "explicitApplyRequired": true,
+    "restoreAsNewMonotonicCatalogVersion": true,
+    "immutableResourcesNeverOverwritten": true,
+    "maximumDetectionMinutes": 5,
+    "maximumRecoveryMinutes": 15,
+    "requiredFaults": [
+      "bad-manifest",
+      "missing-asset",
+      "wrong-sha256",
+      "timeout",
+      "provider-outage",
+      "partial-upload",
+      "wrong-content-type",
+      "unexpected-redirect",
+      "dns-or-certificate-failure"
+    ]
+  },
+  "providerSelection": {
+    "providerUndecided": true,
+    "primaryLongTermCandidate": "aliyun-oss-cdn",
+    "fallbackLongTermCandidate": "tencent-cos-cdn",
+    "comparisonDocument": "docs/REMOTE_CATALOG_PROVIDER_COMPARISON_2026-10-31.md",
+    "targetRegion": "Chinese mainland",
+    "plannedInitialCatalogItems": 100,
+    "maximumInitialCatalogItems": 200,
+    "technicalMaximumCatalogItems": 500,
+    "normalMonthlyCostTargetCny": 30,
+    "monthlyCostReviewThresholdCny": 50,
+    "preauthorizedMonthlyOperatingCeilingCny": 80,
+    "ownerDeclaredMaximumMonthlyBudgetCny": 200,
+    "monthlyCdnTrafficCapGb": 100,
+    "trafficAlertThresholdsGb": [20, 50, 80],
+    "catalogOrTrafficLimitIncreaseRequiresHumanDecision": true,
+    "futurePaidOrPrivateHorizonMonths": 12,
+    "futureEntitlementArchitectureRequired": true,
+    "requiredCapabilities": [
+      "project-owned-custom-https-domain",
+      "exact-cache-and-content-type-headers",
+      "no-forced-manifest-redirect",
+      "atomic-immutable-deployment-or-equivalent",
+      "verifiable-deployment-history-and-rollback",
+      "complete-file-and-metadata-export",
+      "availability-checks-and-alert-integration",
+      "configurable-log-access-retention-and-credential-rotation",
+      "target-region-availability-and-approved-cost-ceiling",
+      "isolated-fault-injection-pilot"
+    ],
+    "changeConditions": [
+      "paid-or-entitled-assets",
+      "private-team-catalogs",
+      "personalized-catalogs",
+      "more-than-200-initial-catalog-items",
+      "more-than-500-items",
+      "manifest-over-2MiB",
+      "asset-over-32MiB"
+    ]
+  },
+  "deploymentGates": [
+    { "id": "RC-G01", "name": "合同与摘要", "blocking": true, "evidenceRequired": "当前合同校验与来源摘要一致" },
+    { "id": "RC-G02", "name": "域名与 TLS", "blocking": true, "evidenceRequired": "自定义域名、证书、DNS 所有权和无重定向 manifest" },
+    { "id": "RC-G03", "name": "数据平面隔离", "blocking": true, "evidenceRequired": "公开部署清单不含质检台、测试库、源码、参考图或凭据" },
+    { "id": "RC-G04", "name": "远程字节一致", "blocking": true, "evidenceRequired": "manifest 与全部活动资源的 MIME、字节数和 SHA-256" },
+    { "id": "RC-G05", "name": "原子激活", "blocking": true, "evidenceRequired": "部分上传和并发读取时旧 manifest 始终可用" },
+    { "id": "RC-G06", "name": "缓存与故障降级", "blocking": true, "evidenceRequired": "在线、超时、断网、有效缓存、过期缓存和无缓存真实插件证据" },
+    { "id": "RC-G07", "name": "真实远程回滚", "blocking": true, "evidenceRequired": "发现不超过 5 分钟且恢复不超过 15 分钟" },
+    { "id": "RC-G08", "name": "隐私与安全", "blocking": true, "evidenceRequired": "无用户设计上传、远程代码、未声明域名或写凭据" },
+    { "id": "RC-G09", "name": "运营责任", "blocking": true, "evidenceRequired": "监控、告警、责任人、支持入口和事故记录位置" },
+    { "id": "RC-G10", "name": "供应商与撤回取舍", "blocking": true, "evidenceRequired": "供应商、费用、地区、日志保留和撤回窗口的人工决定记录" }
+  ],
+  "pilotDeploymentGates": [
+    { "id": "P0-G01", "name": "合同与候选摘要", "blocking": true, "evidenceRequired": "阶段零合同、活动文件白名单和候选 SHA-256 一致" },
+    { "id": "P0-G02", "name": "精确 Netlify 来源", "blocking": true, "evidenceRequired": "唯一固定 HTTPS netlify.app origin；禁止通配域名和重定向 manifest" },
+    { "id": "P0-G03", "name": "公开面隔离", "blocking": true, "evidenceRequired": "线上仅有 manifest、活动 revision 媒体和响应头；无旧 revision、批准文件、质检台、源码或凭据" },
+    { "id": "P0-G04", "name": "远程字节一致", "blocking": true, "evidenceRequired": "manifest 与全部活动媒体的状态、MIME、字节数和 SHA-256" },
+    { "id": "P0-G05", "name": "缓存与 CORS", "blocking": true, "evidenceRequired": "manifest no-store、活动媒体 immutable、CORS 和 nosniff 实测" },
+    { "id": "P0-G06", "name": "真实 Figma 闭环", "blocking": true, "evidenceRequired": "真实 Figma 中在线加载、换画面、编辑、导出、粘贴、断网缓存和失败保留状态" },
+    { "id": "P0-G07", "name": "手动部署可追溯", "blocking": true, "evidenceRequired": "无 Git 连接的 Netlify 站点、部署 ID、固定 URL、候选摘要和执行时间" },
+    { "id": "P0-G08", "name": "免费额度保护", "blocking": true, "evidenceRequired": "Free 计划硬额度已确认，监控入口已记录且未启用自动付费" }
+  ],
+  "unresolvedBeforePilotDeployment": [],
+  "unresolvedBeforeLongTermProduction": [
+    "hosting-provider",
+    "project-owned-production-domain",
+    "icp-filing-subject",
+    "provider-isolated-pilot-approval",
+    "figma-production-plugin-id",
+    "log-retention-and-access-roles",
+    "acceptable-emergency-revocation-window",
+    "monitoring-and-support-owners"
+  ]
+}

@@ -1,26 +1,67 @@
 {
-  "name": "mockup-studio-cn",
+  "name": "little-bird-mockup",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "description": "A Chinese-first Figma mockup plugin backed by an independently updated remote catalog.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Wjy555618-ai/little-bird-mockup.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Wjy555618-ai/little-bird-mockup/issues"
+  },
+  "homepage": "https://github.com/Wjy555618-ai/little-bird-mockup#readme",
+  "packageManager": "pnpm@10.20.0",
   "scripts": {
-    "build": "node scripts/build-plugin.mjs",
+    "build": "node scripts/build-plugin.mjs --mode development",
+    "build:pilot": "node scripts/build-plugin.mjs --mode pilot --out-dir dist/plugin-pilot",
+    "build:pilot:check": "node scripts/build-plugin.mjs --mode pilot --out-dir dist/plugin-pilot --check",
+    "build:production": "node scripts/verify-release.mjs --out-dir dist/plugin",
     "catalog": "node scripts/serve-catalog.mjs",
     "lab": "node scripts/serve-catalog.mjs",
     "catalog:check": "node scripts/catalog-release.mjs --check --library production",
     "catalog:check:testing": "node scripts/catalog-release.mjs --check --library testing",
     "catalog:release": "node scripts/catalog-release.mjs --library production",
+    "catalog:migrate-v5": "node scripts/migrate-chroma-catalog-v5.mjs",
     "catalog:promote": "node scripts/promote-mockup.mjs",
+    "asset:authorize-request": "node scripts/asset-pipeline.mjs authorize-request",
+    "asset:import": "node scripts/asset-pipeline.mjs import",
+    "asset:quarantine": "node scripts/asset-pipeline.mjs quarantine",
+    "asset:migrate-v4": "node scripts/asset-pipeline.mjs migrate-v4",
+    "asset:prepare-neutral-revisions": "node scripts/prepare-neutral-screen-corrections.mjs",
+    "asset:status": "node scripts/asset-pipeline.mjs status",
+    "asset:check": "node scripts/asset-pipeline.mjs check",
+    "asset:prepare-final-review": "node scripts/asset-pipeline.mjs prepare-final-review",
+    "asset:approve-final": "node scripts/asset-pipeline.mjs approve-final",
+    "asset:reject-final": "node scripts/asset-pipeline.mjs reject-final",
+    "asset:contract:check": "node scripts/verify-asset-pipeline-contract.mjs",
+    "remote:contract:check": "node scripts/verify-remote-catalog-contract.mjs",
+    "netlify:catalog:prepare": "node scripts/prepare-netlify-catalog.mjs",
+    "netlify:catalog:check": "node scripts/prepare-netlify-catalog.mjs --check",
+    "no-chroma:check": "node scripts/verify-no-chroma.mjs",
+    "catalog:history:check": "node scripts/verify-catalog-history.mjs",
+    "catalog:rollback": "node scripts/rollback-catalog.mjs",
     "catalog:bind": "node scripts/bind-catalog.mjs",
+    "contract:check": "node scripts/verify-contract.mjs",
+    "ci:check": "node scripts/verify-ci.mjs",
+    "accessibility:check": "node scripts/verify-accessibility.mjs",
+    "scale:check": "node --test tests/scale.test.mjs",
+    "performance:smoke": "node scripts/verify-performance-smoke.mjs",
+    "evidence:check": "node scripts/verify-evidence.mjs",
+    "evidence:draft": "node scripts/create-evidence-draft.mjs",
+    "security:check": "pnpm audit --audit-level high",
+    "release:check": "node scripts/verify-release.mjs",
+    "release:package": "node scripts/verify-release.mjs --out-dir dist/plugin",
     "test": "node --test tests/*.test.mjs",
-    "check": "node scripts/build-plugin.mjs --check && node --check plugin/code.js && node --check plugin/ui.js && node --check shared/mockup-renderer.js && node --check asset-lab/app.js && node --check scripts/serve-catalog.mjs && node --check scripts/promote-mockup.mjs && node scripts/catalog-release.mjs --check --library testing && node scripts/catalog-release.mjs --check --library production && node --test tests/*.test.mjs"
+    "check": "node scripts/verify-contract.mjs && node scripts/verify-asset-pipeline-contract.mjs && node scripts/verify-remote-catalog-contract.mjs && node scripts/verify-ci.mjs && node scripts/verify-accessibility.mjs && node scripts/build-plugin.mjs --mode development --check && node --check plugin/code.template.js && node --check plugin/code.js && node --check plugin/asset-card-hover.js && node --check plugin/ui.js && node --check shared/mockup-renderer.js && node --check shared/catalog-contract.js && node --check shared/resource-limits.js && node --check shared/bounded-response.js && node --check shared/user-error-policy.js && node --check asset-lab/app.js && node --check scripts/asset-pipeline.mjs && node --check scripts/verify-asset-pipeline-contract.mjs && node --check scripts/verify-remote-catalog-contract.mjs && node --check scripts/prepare-netlify-catalog.mjs && node --check scripts/lib/asset-pipeline.mjs && node --check scripts/lib/remote-catalog-contract.mjs && node --check scripts/lib/netlify-catalog-candidate.mjs && node --check scripts/lib/no-chroma.mjs && node --check scripts/migrate-chroma-catalog-v5.mjs && node --check scripts/verify-no-chroma.mjs && node --check scripts/build-plugin.mjs && node --check scripts/bind-catalog.mjs && node --check scripts/create-evidence-draft.mjs && node --check scripts/verify-release.mjs && node --check scripts/verify-evidence.mjs && node --check scripts/verify-ci.mjs && node --check scripts/lib/build-tokens.mjs && node --check scripts/lib/ci-contract.mjs && node --check scripts/lib/catalog-history.mjs && node --check scripts/lib/evidence-contract.mjs && node --check scripts/lib/http-contract.mjs && node --check scripts/lib/network-policy.mjs && node --check scripts/lib/release-artifact.mjs && node --check scripts/rollback-catalog.mjs && node --check scripts/verify-catalog-history.mjs && node --check scripts/verify-performance-smoke.mjs && node --check scripts/serve-catalog.mjs && node --check scripts/promote-mockup.mjs && node scripts/verify-no-chroma.mjs && node scripts/catalog-release.mjs --check --library testing && node scripts/catalog-release.mjs --check --library production && node scripts/prepare-netlify-catalog.mjs && node scripts/prepare-netlify-catalog.mjs --check && node scripts/verify-catalog-history.mjs && node scripts/verify-performance-smoke.mjs && node --test tests/*.test.mjs"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
-    "pdfjs-dist": "^6.4.299"
+    "pdfjs-dist": "^6.4.299",
+    "sharp": "^0.35.5"
   },
   "devDependencies": {
     "esbuild": "^0.28.2"

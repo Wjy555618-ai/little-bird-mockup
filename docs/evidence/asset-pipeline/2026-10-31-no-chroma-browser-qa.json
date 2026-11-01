@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "EVD-AP-007",
+  "createdAt": "2026-10-31T13:19:12+08:00",
+  "buildFingerprint": "sha256:c19896566bfe475753cc3e99b3743a4b88ad4582fbd9d212040966de462102e3",
+  "implementationRevision": "tree:sha256:f4d1258ba5a56643580715c0a7848edc75dfb7ab1f6b3de796a116a80cfc1a39",
+  "result": "pass",
+  "environment": "Codex in-app browser, http://127.0.0.1:4173/lab, 809x696 CSS pixels",
+  "functionalChecks": {
+    "catalogVersion": "2026.10.31.2",
+    "rendererVersion": "2.4.0",
+    "candidateCount": 5,
+    "eachCandidate": "r2 / static-screen-v5 / 10 of 10 automatic checks / dominant-green ratio 0.00% / automatic complete-base resolution / waiting for human visual approval",
+    "patternCycle": "grid, landscape, portrait and edge all visited; 4 of 4",
+    "approvalLock": "technical QA button remained disabled after all manual boxes were checked because visual approval is still missing",
+    "geometryLock": "save geometry remained disabled before visual approval",
+    "oldR1HttpStatus": 404,
+    "currentR2HttpStatus": 200
+  },
+  "viewportChecks": {
+    "horizontalDocumentScroll": false,
+    "verticalDocumentScroll": false,
+    "assetListFullyVisible": true,
+    "canvasFullyVisible": true,
+    "automaticChecksFullyVisible": true,
+    "approvalButtonFullyVisible": true
+  },
+  "visualEvidence": {
+    "contactSheet": "docs/evidence/asset-pipeline/2026-10-31-r2-contact-sheet.png",
+    "contactSheetSha256": "2c9dc5b0fe5f4efb75f0d899711dea9268db1daa4386e55524fcecc80a512866",
+    "inspection": "All five thumbnails show baked complete blue, purple or cyan interfaces inside the device screens; no green replacement panel is visible."
+  },
+  "limitations": [
+    "This is agent-performed browser and visual QA, not the decision maker's visual approval.",
+    "No geometry, QA report, release approval or production manifest was mutated during browser QA."
+  ]
+}

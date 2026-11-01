@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "approvalType": "release",
+  "decision": "approved",
+  "assetId": "graphite-laptop-angle",
+  "revision": 2,
+  "itemSha256": "47202fb1ce4db5b83c9b7ceb162340a1ff5d53fa0f2033f3a8f36a8db79048ca",
+  "qaReportSha256": "b97e47a6470abc94505e7d1c9e543cda775267e44c95aa3f66821de2b50dd752",
+  "actor": {
+    "type": "human",
+    "identity": "Wang Zhentao",
+    "role": "正式入库决定人"
+  },
+  "decidedAt": "2026-10-31T05:44:39.812Z",
+  "attestation": {
+    "method": "local",
+    "confirmedByHuman": true
+  }
+}

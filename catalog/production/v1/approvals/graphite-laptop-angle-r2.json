@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 3,
+  "assetId": "graphite-laptop-angle",
+  "revision": 2,
+  "status": "approved",
+  "rendererVersion": "2.4.0",
+  "itemSha256": "47202fb1ce4db5b83c9b7ceb162340a1ff5d53fa0f2033f3a8f36a8db79048ca",
+  "approvedAt": "2026-10-31T05:41:59.752Z",
+  "patternIds": [
+    "grid",
+    "landscape",
+    "portrait",
+    "edge"
+  ],
+  "automaticChecks": {
+    "schema": true,
+    "renderer": true,
+    "dimensions": true,
+    "recommendedSize": true,
+    "geometry": true,
+    "aperture": true,
+    "completeBase": true,
+    "noChroma": true,
+    "provenance": true,
+    "integrity": true
+  },
+  "apertureMetrics": {
+    "pass": true,
+    "mode": "aperture-mask",
+    "source": "explicit-geometry",
+    "exact": true,
+    "apertureArea": 337261,
+    "canvasArea": 1572864
+  },
+  "completeBaseMetrics": {
+    "pass": true,
+    "mode": "aperture-mask",
+    "detector": "dominant-green-aperture-v1",
+    "sampledPixels": 84316,
+    "greenDominantPixels": 0,
+    "greenDominantRatio": 0,
+    "maximumGreenRatio": 0.85,
+    "resolution": "automatic"
+  },
+  "manualChecks": {
+    "frameFit": true,
+    "perspective": true,
+    "edgeMask": true,
+    "imageQuality": true,
+    "allPatterns": true
+  }
+}

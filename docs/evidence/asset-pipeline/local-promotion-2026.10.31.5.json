@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "evidenceType": "local-production-promotion",
+  "status": "passed",
+  "recordedAt": "2026-10-31T18:58:52+08:00",
+  "buildFingerprint": "DEV-10A37155360B",
+  "batchFingerprint": "sha256:83ed6a2f35380af2da821cf5722aaccc06a9bc2820eb9398d6a7fbc355b1e75f",
+  "decision": {
+    "actor": "Wang Zhentao",
+    "type": "human",
+    "result": "approve-and-promote-local",
+    "approvalPath": "catalog/workflow/final-approvals/83ed6a2f35380af2da821cf5722aaccc06a9bc2820eb9398d6a7fbc355b1e75f.json",
+    "approvalSha256": "420733b119470fae186327cd822e5c68a297e7c3c4f85b3769055c6b451abd7a"
+  },
+  "review": {
+    "packetPath": "catalog/workflow/final-review-packets/83ed6a2f35380af2da821cf5722aaccc06a9bc2820eb9398d6a7fbc355b1e75f.json",
+    "packetSha256": "be77b5bcbd306f0c83546a8b4e21384cdf8e571e84d2a530ad3c3df04cd8898f",
+    "hostEvidencePath": "docs/evidence/asset-pipeline/real-host-DEV-10A37155360B.json",
+    "hostEvidenceSha256": "1efe18a62096c368711972f18396c526655172036829340d8c84611796ba2c4c"
+  },
+  "production": {
+    "catalogVersion": "2026.10.31.5",
+    "manifestPath": "catalog/production/v1/manifest.json",
+    "manifestSha256": "32f86945867503e8a7a3c84d32d1e9118daabaa9b554eefdc40a5958c68a2035",
+    "rollbackSnapshotPath": "catalog-history/production/2026.10.31.5/manifest.json",
+    "items": [
+      { "assetId": "studio-display-front", "revision": 3, "state": "PROMOTED" },
+      { "assetId": "rock-phone-front", "revision": 3, "state": "PROMOTED" },
+      { "assetId": "rail-phone-angle", "revision": 3, "state": "PROMOTED" },
+      { "assetId": "graphite-laptop-angle", "revision": 3, "state": "PROMOTED" },
+      { "assetId": "workstation-display-three-quarter", "revision": 3, "state": "PROMOTED" }
+    ]
+  },
+  "gates": {
+    "comprehensiveCommand": "pnpm check",
+    "comprehensiveResult": "passed",
+    "tests": { "passed": 103, "failed": 0, "skipped": 0 },
+    "testingCatalog": "passed",
+    "productionCatalog": "passed",
+    "zeroChroma": "passed",
+    "catalogHistory": "passed",
+    "performanceSmoke500Items": "passed",
+    "externalDeployment": "not-performed"
+  }
+}

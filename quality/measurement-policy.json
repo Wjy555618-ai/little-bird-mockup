@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "policyId": "MOCKUP-STUDIO-MEASUREMENT-POLICY-4",
+  "registeredAt": "2026-10-31T11:15:52+08:00",
+  "changeRule": "阈值只能在对应测量开始前通过独立决定记录修改；修改后旧证据全部失效。",
+  "evidenceSchema": {
+    "requiredReleaseFields": ["version", "fingerprint", "sourceRevision", "artifactSha256", "contractSha256", "catalogVersion", "catalogManifestSha256"],
+    "requiredScenarioFields": ["id", "status", "startedAt", "finishedAt", "environment", "input", "result", "measurements", "evidenceRefs"],
+    "requiredAttachmentRefFields": ["path", "bytes", "sha256"],
+    "allowedStatus": ["PASS"]
+  },
+  "gates": {
+    "G-100": {
+      "method": "在正式REL候选中逐项执行真实任务；每项必须有输入、输出、时间、宿主和至少一个原始附件。",
+      "scenarios": {
+        "catalog-online": {"assertions": [{"field": "taskCompleted", "operator": "eq", "value": true}, {"field": "outputVisible", "operator": "eq", "value": true}, {"field": "blockingDefects", "operator": "eq", "value": 0}]},
+        "catalog-offline-cache": {"assertions": [{"field": "taskCompleted", "operator": "eq", "value": true}, {"field": "cacheAgeWithinLimit", "operator": "eq", "value": true}, {"field": "blockingDefects", "operator": "eq", "value": 0}]},
+        "figma-selection": {"assertions": [{"field": "inputLayerCount", "operator": "gte", "value": 1}, {"field": "outputCreated", "operator": "eq", "value": true}, {"field": "outputBytes", "operator": "gte", "value": 1}, {"field": "blockingDefects", "operator": "eq", "value": 0}]},
+        "local-png": {"assertions": [{"field": "inputBytes", "operator": "gte", "value": 1}, {"field": "outputCreated", "operator": "eq", "value": true}, {"field": "outputBytes", "operator": "gte", "value": 1}, {"field": "blockingDefects", "operator": "eq", "value": 0}]},
+        "svg": {"assertions": [{"field": "inputBytes", "operator": "gte", "value": 1}, {"field": "outputCreated", "operator": "eq", "value": true}, {"field": "outputBytes", "operator": "gte", "value": 1}, {"field": "blockingDefects", "operator": "eq", "value": 0}]},
+        "pdf": {"assertions": [{"field": "pageCount", "operator": "gte", "value": 1}, {"field": "outputCreated", "operator": "eq", "value": true}, {"field": "outputBytes", "operator": "gte", "value": 1}, {"field": "blockingDefects", "operator": "eq", "value": 0}]},
+        "video-frame": {"assertions": [{"field": "frameTimestampSeconds", "operator": "gte", "value": 0}, {"field": "outputCreated", "operator": "eq", "value": true}, {"field": "outputBytes", "operator": "gte", "value": 1}, {"field": "blockingDefects", "operator": "eq", "value": 0}]},
+        "multi-selection": {"assertions": [{"field": "inputLayerCount", "operator": "gte", "value": 2}, {"field": "outputCreated", "operator": "eq", "value": true}, {"field": "outputBytes", "operator": "gte", "value": 1}, {"field": "blockingDefects", "operator": "eq", "value": 0}]},
+        "download": {"assertions": [{"field": "fileCreated", "operator": "eq", "value": true}, {"field": "fileBytes", "operator": "gte", "value": 1}, {"field": "decodable", "operator": "eq", "value": true}, {"field": "blockingDefects", "operator": "eq", "value": 0}]},
+        "paste-back": {"assertions": [{"field": "nodeCreated", "operator": "eq", "value": true}, {"field": "imageBytes", "operator": "gte", "value": 1}, {"field": "blockingDefects", "operator": "eq", "value": 0}]},
+        "error-recovery": {"assertions": [{"field": "actionableMessage", "operator": "eq", "value": true}, {"field": "taskStatePreserved", "operator": "eq", "value": true}, {"field": "blockingDefects", "operator": "eq", "value": 0}]}
+      }
+    },
+    "G-110": {
+      "method": "同一REL指纹分别在最低支持平台完成核心任务，不允许使用不同构建拼接矩阵。",
+      "scenarios": {
+        "macos-figma-desktop": {
+          "assertions": [
+            {"field": "coreTasksPassed", "operator": "eq", "value": true},
+            {"field": "blockingDefects", "operator": "eq", "value": 0}
+          ]
+        },
+        "windows-figma-desktop": {
+          "assertions": [
+            {"field": "coreTasksPassed", "operator": "eq", "value": true},
+            {"field": "blockingDefects", "operator": "eq", "value": 0}
+          ]
+        }
+      }
+    },
+    "G-120": {
+      "method": "在8GB内存的最低支持设备、关闭开发者工具、冷启动且受控50Mbps/40ms网络下测量；延迟使用同一场景至少10次的P95，搜索至少30次。",
+      "scenarios": {
+        "cold-start": {"assertions": [{"field": "sampleCount", "operator": "gte", "value": 10}, {"field": "interactiveP95Ms", "operator": "lte", "value": 2500}]},
+        "500-item-catalog": {"assertions": [{"field": "itemCount", "operator": "eq", "value": 500}, {"field": "searchSampleCount", "operator": "gte", "value": 30}, {"field": "searchP95Ms", "operator": "lte", "value": 100}, {"field": "initialRenderP95Ms", "operator": "lte", "value": 1500}]},
+        "rapid-switch-50": {"assertions": [{"field": "switchCount", "operator": "eq", "value": 50}, {"field": "latestSelectionCorrect", "operator": "eq", "value": true}, {"field": "failedTasks", "operator": "eq", "value": 0}]},
+        "large-image": {"assertions": [{"field": "megapixels", "operator": "gte", "value": 32}, {"field": "completionMs", "operator": "lte", "value": 5000}, {"field": "success", "operator": "eq", "value": true}]},
+        "large-pdf": {"assertions": [{"field": "fileBytes", "operator": "gte", "value": 52428800}, {"field": "pageCount", "operator": "gte", "value": 50}, {"field": "firstPageMs", "operator": "lte", "value": 5000}, {"field": "success", "operator": "eq", "value": true}]},
+        "memory-after-50-switches": {"assertions": [{"field": "switchCount", "operator": "eq", "value": 50}, {"field": "maxCatalogCacheEntries", "operator": "lte", "value": 8}, {"field": "retainedIncreaseMiB", "operator": "lte", "value": 150}, {"field": "crashes", "operator": "eq", "value": 0}]}
+      }
+    },
+    "G-130": {
+      "method": "按WCAG 2.2 AA在macOS VoiceOver和Windows NVDA中验证；键盘无陷阱、200%缩放无功能丢失、减少动态生效。",
+      "scenarios": {
+        "keyboard-only": {"assertions": [{"field": "blockingIssues", "operator": "eq", "value": 0}, {"field": "keyboardTrap", "operator": "eq", "value": false}]},
+        "screen-reader-names": {"assertions": [{"field": "unnamedControls", "operator": "eq", "value": 0}, {"field": "incorrectStates", "operator": "eq", "value": 0}]},
+        "focus-order": {"assertions": [{"field": "orderFailures", "operator": "eq", "value": 0}]},
+        "zoom-and-scaling": {"assertions": [{"field": "zoomPercent", "operator": "gte", "value": 200}, {"field": "lostFunctions", "operator": "eq", "value": 0}]},
+        "reduced-motion": {"assertions": [{"field": "respected", "operator": "eq", "value": true}]},
+        "contrast": {"assertions": [{"field": "minimumTextContrast", "operator": "gte", "value": 4.5}, {"field": "minimumNonTextContrast", "operator": "gte", "value": 3}]}
+      }
+    },
+    "G-140": {
+      "method": "以实际网络日志、制品内容、目录来源记录和公开文案交叉检查，不接受仅引用设计意图。",
+      "scenarios": {
+        "network-destinations": {"assertions": [{"field": "undeclaredDestinations", "operator": "eq", "value": 0}]},
+        "no-remote-code": {"assertions": [{"field": "remoteExecutableResources", "operator": "eq", "value": 0}]},
+        "selection-data-boundary": {"assertions": [{"field": "selectionDataTransmitted", "operator": "eq", "value": false}]},
+        "asset-provenance": {"assertions": [{"field": "unknownRightsAssets", "operator": "eq", "value": 0}]},
+        "privacy-copy": {"assertions": [{"field": "matchesImplementation", "operator": "eq", "value": true}]},
+        "support-contact": {"assertions": [{"field": "reachable", "operator": "eq", "value": true}]}
+      }
+    },
+    "G-150": {
+      "method": "在隔离环境真实注入错误目录、错误素材和超时；必须记录发现时间、阻断结果和回滚到上一已知良好版本的时间。",
+      "scenarios": {
+        "bad-manifest": {"assertions": [{"field": "rejected", "operator": "eq", "value": true}, {"field": "userTaskCorrupted", "operator": "eq", "value": false}]},
+        "bad-asset": {"assertions": [{"field": "rejected", "operator": "eq", "value": true}, {"field": "userTaskCorrupted", "operator": "eq", "value": false}]},
+        "catalog-timeout": {"assertions": [{"field": "fallbackWorked", "operator": "eq", "value": true}, {"field": "userTaskCorrupted", "operator": "eq", "value": false}]},
+        "rollback-to-previous-version": {"assertions": [{"field": "detectedWithinMinutes", "operator": "lte", "value": 5}, {"field": "recoveredWithinMinutes", "operator": "lte", "value": 15}, {"field": "previousVersionRestored", "operator": "eq", "value": true}]},
+        "user-visible-recovery": {"assertions": [{"field": "actionableMessage", "operator": "eq", "value": true}, {"field": "restartRequired", "operator": "eq", "value": false}]}
+      }
+    },
+    "G-200": {
+      "method": "至少20名与团队无雇佣或项目关系的目标用户独立完成真实任务；失败、退出和求助全部保留在分母中。",
+      "scenarios": {
+        "participant-definition": {"assertions": [{"field": "eligibleExternalParticipants", "operator": "integerGte", "value": 20}, {"field": "internalParticipants", "operator": "eq", "value": 0}]},
+        "first-success": {"assertions": [{"field": "eligibleParticipants", "operator": "integerGte", "value": 20}, {"field": "completedParticipants", "operator": "integerGte", "value": 0}, {"field": "completionRate", "operator": "ratio", "numeratorField": "completedParticipants", "denominatorField": "eligibleParticipants"}, {"field": "completionRate", "operator": "gte", "value": 0.8}, {"field": "completionRate", "operator": "lte", "value": 1}]},
+        "failure-reasons": {"assertions": [{"field": "totalFailures", "operator": "integerGte", "value": 0}, {"field": "unexplainedFailures", "operator": "eq", "value": 0}]},
+        "repeat-use": {"assertions": [{"field": "observationDays", "operator": "integerGte", "value": 7}, {"field": "eligibleParticipants", "operator": "integerGte", "value": 20}, {"field": "repeatUsers", "operator": "integerGte", "value": 0}, {"field": "repeatUseRate", "operator": "ratio", "numeratorField": "repeatUsers", "denominatorField": "eligibleParticipants"}, {"field": "repeatUseRate", "operator": "gte", "value": 0.3}, {"field": "repeatUseRate", "operator": "lte", "value": 1}]},
+        "support-incidents": {"assertions": [{"field": "totalIncidents", "operator": "integerGte", "value": 0}, {"field": "undispositionedIncidents", "operator": "eq", "value": 0}]}
+      }
+    },
+    "G-210": {
+      "method": "至少100名合格外部用户，覆盖完整28天观察窗；所有指标使用预先登记的固定分母，不得删除失败、未返回或支持事件。",
+      "scenarios": {
+        "activation": {"assertions": [{"field": "eligibleUsers", "operator": "integerGte", "value": 100}, {"field": "activatedUsers", "operator": "integerGte", "value": 0}, {"field": "rate", "operator": "ratio", "numeratorField": "activatedUsers", "denominatorField": "eligibleUsers"}, {"field": "rate", "operator": "gte", "value": 0.7}, {"field": "rate", "operator": "lte", "value": 1}]},
+        "time-to-first-success": {"assertions": [{"field": "sampleUsers", "operator": "integerGte", "value": 100}, {"field": "medianSeconds", "operator": "gte", "value": 0}, {"field": "medianSeconds", "operator": "lte", "value": 180}, {"field": "p90Seconds", "operator": "gte", "value": 0}, {"field": "p90Seconds", "operator": "lte", "value": 480}]},
+        "error-free-session": {"assertions": [{"field": "eligibleSessions", "operator": "integerGte", "value": 1}, {"field": "errorFreeSessions", "operator": "integerGte", "value": 0}, {"field": "rate", "operator": "ratio", "numeratorField": "errorFreeSessions", "denominatorField": "eligibleSessions"}, {"field": "rate", "operator": "gte", "value": 0.99}, {"field": "rate", "operator": "lte", "value": 1}]},
+        "retention": {"assertions": [{"field": "observationDays", "operator": "integerGte", "value": 28}, {"field": "eligibleUsers", "operator": "integerGte", "value": 100}, {"field": "day7RetainedUsers", "operator": "integerGte", "value": 0}, {"field": "day7Rate", "operator": "ratio", "numeratorField": "day7RetainedUsers", "denominatorField": "eligibleUsers"}, {"field": "day7Rate", "operator": "gte", "value": 0.25}, {"field": "day7Rate", "operator": "lte", "value": 1}, {"field": "day28RetainedUsers", "operator": "integerGte", "value": 0}, {"field": "day28Rate", "operator": "ratio", "numeratorField": "day28RetainedUsers", "denominatorField": "eligibleUsers"}, {"field": "day28Rate", "operator": "gte", "value": 0.15}, {"field": "day28Rate", "operator": "lte", "value": 1}]},
+        "repeat-use": {"assertions": [{"field": "eligibleUsers", "operator": "integerGte", "value": 100}, {"field": "day7RepeatUsers", "operator": "integerGte", "value": 0}, {"field": "day7Rate", "operator": "ratio", "numeratorField": "day7RepeatUsers", "denominatorField": "eligibleUsers"}, {"field": "day7Rate", "operator": "gte", "value": 0.35}, {"field": "day7Rate", "operator": "lte", "value": 1}]},
+        "support-rate": {"assertions": [{"field": "eligibleUsers", "operator": "integerGte", "value": 100}, {"field": "blockingIncidents", "operator": "integerGte", "value": 0}, {"field": "blockingIncidentRate", "operator": "ratio", "numeratorField": "blockingIncidents", "denominatorField": "eligibleUsers"}, {"field": "blockingIncidentRate", "operator": "gte", "value": 0}, {"field": "blockingIncidentRate", "operator": "lte", "value": 0.02}]},
+        "data-quality": {"assertions": [{"field": "expectedEvents", "operator": "integerGte", "value": 1}, {"field": "validEvents", "operator": "integerGte", "value": 0}, {"field": "eventCoverage", "operator": "ratio", "numeratorField": "validEvents", "denominatorField": "expectedEvents"}, {"field": "eventCoverage", "operator": "gte", "value": 0.95}, {"field": "eventCoverage", "operator": "lte", "value": 1}, {"field": "receivedEvents", "operator": "integerGte", "value": 1}, {"field": "duplicateEvents", "operator": "integerGte", "value": 0}, {"field": "duplicateRate", "operator": "ratio", "numeratorField": "duplicateEvents", "denominatorField": "receivedEvents"}, {"field": "duplicateRate", "operator": "gte", "value": 0}, {"field": "duplicateRate", "operator": "lte", "value": 0.01}, {"field": "unknownDenominators", "operator": "eq", "value": 0}]}
+      }
+    }
+  }
+}

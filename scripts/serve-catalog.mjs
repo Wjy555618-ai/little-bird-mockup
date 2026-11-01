@@ -1,8 +1,16 @@
-import { createHash } from "node:crypto";
 import { createServer } from "node:http";
-import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, stat } from "node:fs/promises";
 import { extname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { atomicWriteJson } from "./lib/catalog-history.mjs";
+import {
+  inspectWorkflow,
+  itemDigest,
+  sha256File,
+  updateWorkflowAfterGeometry,
+  updateWorkflowAfterQa
+} from "./lib/asset-pipeline.mjs";
+import { analyzeCompleteBase, assertCompleteBaseMetrics, assertNoChromaSchema } from "./lib/no-chroma.mjs";
 
 const projectRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const catalogRoot = resolve(projectRoot, "catalog");
@@ -16,7 +24,7 @@ const host = "127.0.0.1";
 
 const REQUIRED_PATTERNS = ["grid", "landscape", "portrait", "edge"];
 const MANUAL_KEYS = ["frameFit", "perspective", "edgeMask", "imageQuality", "allPatterns"];
-const AUTOMATIC_KEYS = ["schema", "renderer", "dimensions", "recommendedSize", "geometry", "aperture", "seam", "provenance", "integrity"];
+const AUTOMATIC_KEYS = ["schema", "renderer", "dimensions", "recommendedSize", "geometry", "aperture", "completeBase", "noChroma", "provenance", "integrity"];
 
 const contentTypes = {
   ".css": "text/css; charset=utf-8",
@@ -42,11 +50,7 @@ function safePath(root, relativePath) {
 }
 
 async function sha256(path) {
-  return createHash("sha256").update(await readFile(path)).digest("hex");
-}
-
-function itemDigest(item) {
-  return createHash("sha256").update(JSON.stringify(item)).digest("hex");
+  return sha256File(path);
 }
 
 function assertQuad(item, quad) {
@@ -75,20 +79,37 @@ async function readBody(request) {
 }
 
 async function verifyItem(manifest, item) {
-  if (manifest.schemaVersion !== 4 || manifest.rendererVersion !== "2.3.0") throw new Error("测试库规范或渲染器版本不匹配");
-  if (!item || item.status !== "testing" || item.renderer !== "static-screen-v4") throw new Error("素材不是可质检的静态样机");
+  if (manifest.schemaVersion !== 5 || manifest.rendererVersion !== "2.4.0") throw new Error("测试库规范或渲染器版本不匹配");
+  if (!item || item.status !== "testing") throw new Error("素材不是可质检的静态样机");
+  assertNoChromaSchema(item);
   if (!Number.isInteger(item.canvas?.width) || !Number.isInteger(item.canvas?.height)) throw new Error("画布尺寸无效");
   if (!Number.isInteger(item.screen?.recommendedSize?.width) || !Number.isInteger(item.screen?.recommendedSize?.height) || !item.screen.recommendedSize.label) throw new Error("推荐画面尺寸无效");
   assertQuad(item, item.screen?.quad);
   assertQuad(item, item.screen?.aperture?.quad);
   if (!Array.isArray(item.screen?.aperture?.cornerRadii) || item.screen.aperture.cornerRadii.length !== 4 || item.screen.aperture.cornerRadii.some((radius) => !Number.isFinite(radius) || radius < 0 || radius > 0.49)) throw new Error("可见孔径圆角无效");
-  if (item.screen?.compositing?.mode !== "chroma-edge" || !item.chromaKey?.enabled || !Number.isInteger(item.screen.compositing.maxEdgeExtension) || item.screen.compositing.maxEdgeExtension < 1 || item.screen.compositing.maxEdgeExtension > 12) throw new Error("接缝软边配置无效");
-  if (!Number.isFinite(item.screen?.underlap) || item.screen.underlap < item.screen.compositing.maxEdgeExtension || item.screen.underlap > 24 || Object.hasOwn(item.screen, "bleed")) throw new Error("隐藏衬底配置无效");
   if (item.provenance?.kind !== "generated-in-house") throw new Error("素材来源未标记为项目自制");
   const basePath = safePath(testingRoot, item.layers?.base);
   const thumbnailPath = safePath(testingRoot, item.thumbnail);
   const [baseDigest, thumbnailDigest] = await Promise.all([sha256(basePath), sha256(thumbnailPath)]);
   if (baseDigest !== item.integrity?.baseSha256 || thumbnailDigest !== item.integrity?.thumbnailSha256) throw new Error("素材哈希与清单不匹配");
+  const completeBaseMetrics = await analyzeCompleteBase(basePath, item);
+  return assertCompleteBaseMetrics(item, completeBaseMetrics, null, { allowPendingFinalDecision: true });
+}
+
+async function catalogPathIsActive(urlPath) {
+  const match = /^\/catalog\/(testing|production)\/v1\/(.+)$/.exec(urlPath);
+  if (!match) return true;
+  const [, library, relativePath] = match;
+  if (relativePath === "manifest.json") return true;
+  const manifest = JSON.parse(await readFile(resolve(catalogRoot, `${library}/v1/manifest.json`), "utf8"));
+  const allowed = new Set();
+  for (const item of manifest.items || []) {
+    allowed.add(item.thumbnail);
+    for (const path of Object.values(item.layers || {})) if (typeof path === "string") allowed.add(path);
+    if (item.qa?.report) allowed.add(item.qa.report);
+    if (item.release?.report) allowed.add(item.release.report);
+  }
+  return allowed.has(relativePath);
 }
 
 async function serveFile(request, response, filePath) {
@@ -127,6 +148,11 @@ async function currentApprovals() {
 }
 
 async function handleApi(request, response, url) {
+  if (request.method === "GET" && url.pathname === "/api/lab/workflow") {
+    json(response, 200, await inspectWorkflow(projectRoot));
+    return true;
+  }
+
   if (request.method === "GET" && url.pathname === "/api/lab/approvals") {
     json(response, 200, { approvals: await currentApprovals() });
     return true;
@@ -149,8 +175,9 @@ async function handleApi(request, response, url) {
     };
     delete item.screen.cornerRadius;
     manifest.publishedAt = new Date().toISOString();
-    await writeFile(testingManifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
-    json(response, 200, { ok: true, item });
+    await atomicWriteJson(testingManifestPath, manifest);
+    const workflow = await updateWorkflowAfterGeometry(projectRoot, item);
+    json(response, 200, { ok: true, item, workflow });
     return true;
   }
 
@@ -159,18 +186,18 @@ async function handleApi(request, response, url) {
     const manifest = JSON.parse(await readFile(testingManifestPath, "utf8"));
     const item = manifest.items.find((candidate) => candidate.id === body.assetId);
     if (!item) throw new Error("找不到待检样机");
-    await verifyItem(manifest, item);
+    const completeBaseMetrics = await verifyItem(manifest, item);
     if (JSON.stringify(body.quad) !== JSON.stringify(item.screen.quad)) throw new Error("当前坐标尚未保存到测试库");
     if (JSON.stringify(body.apertureQuad) !== JSON.stringify(item.screen.aperture.quad)) throw new Error("当前可见孔径尚未保存到测试库");
     if (!AUTOMATIC_KEYS.every((key) => body.automaticChecks?.[key] === true)) throw new Error("自动检查尚未全部通过");
-    const seamMetrics = body.seamMetrics;
-    if (!seamMetrics || seamMetrics.pass !== true || seamMetrics.mode !== item.screen.compositing.mode || seamMetrics.edgeExtensionLimit !== item.screen.compositing.maxEdgeExtension || seamMetrics.maxEdgeExtension > seamMetrics.edgeExtensionLimit || seamMetrics.interiorSpillRatio < 0.85 || seamMetrics.truncatedSamples !== 0 || seamMetrics.truncatedEdgeRatio !== 0) {
-      throw new Error("接缝像素门禁未通过");
+    const apertureMetrics = body.apertureMetrics;
+    if (!apertureMetrics || apertureMetrics.pass !== true || apertureMetrics.mode !== "aperture-mask" || apertureMetrics.source !== "explicit-geometry" || apertureMetrics.exact !== true) {
+      throw new Error("显式孔径门禁未通过");
     }
     if (!MANUAL_KEYS.every((key) => body.manualChecks?.[key] === true)) throw new Error("人工验收尚未全部确认");
     if (!REQUIRED_PATTERNS.every((id) => body.patternIds?.includes(id))) throw new Error("四种测试图尚未全部查看");
     const report = {
-      schemaVersion: 2,
+      schemaVersion: 3,
       assetId: item.id,
       revision: item.revision,
       status: "approved",
@@ -179,13 +206,17 @@ async function handleApi(request, response, url) {
       approvedAt: new Date().toISOString(),
       patternIds: REQUIRED_PATTERNS,
       automaticChecks: Object.fromEntries(AUTOMATIC_KEYS.map((key) => [key, true])),
-      seamMetrics,
+      apertureMetrics,
+      completeBaseMetrics,
       manualChecks: Object.fromEntries(MANUAL_KEYS.map((key) => [key, true]))
     };
     const approvalPath = resolve(testingRoot, `approvals/${item.id}-r${item.revision}.json`);
     await mkdir(resolve(testingRoot, "approvals"), { recursive: true });
-    await writeFile(approvalPath, `${JSON.stringify(report, null, 2)}\n`);
-    json(response, 200, { ok: true, report });
+    await atomicWriteJson(approvalPath, report);
+    const workflow = item.provenance?.pipelinePolicyId
+      ? await updateWorkflowAfterQa(projectRoot, item, report, approvalPath)
+      : null;
+    json(response, 200, { ok: true, report, workflow });
     return true;
   }
 
@@ -231,6 +262,11 @@ createServer(async (request, response) => {
       return;
     }
     if (url.pathname.startsWith("/catalog/")) {
+      if (!await catalogPathIsActive(url.pathname)) {
+        response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+        response.end("Not Found");
+        return;
+      }
       await serveFile(request, response, safePath(catalogRoot, decodeURIComponent(url.pathname.slice("/catalog/".length))));
       return;
     }

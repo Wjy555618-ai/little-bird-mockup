@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "DEV-HOST-2026-10-31-2D1466A48206",
+  "observedAt": "2026-10-31T10:59:26+08:00",
+  "sourceRevision": "d9e53b462209a828a4d129991f913a307eec9a7d",
+  "worktreeState": "dirty",
+  "buildFingerprint": "DEV-2D1466A48206",
+  "host": {
+    "application": "/Applications/Figma+EX.app",
+    "version": "126.8.16",
+    "platform": "macOS"
+  },
+  "observation": {
+    "method": "macOS accessibility tree",
+    "visibleBuildFingerprint": "DEV-2D1466A48206",
+    "catalogStatus": "素材库已同步",
+    "catalogItemCount": 4,
+    "searchAccessibleName": "搜索样机"
+  },
+  "result": "PASS_WITH_LIMITATIONS",
+  "limitations": [
+    "该证据属于脏工作区中的开发构建，不是REL发布候选。",
+    "只证明新增证据绑定与正式制品摘要门禁后的当前开发制品仍在当前宿主加载。",
+    "没有执行正式候选、Windows、完整任务、最低设备性能、人工无障碍或成功指标测量。"
+  ]
+}

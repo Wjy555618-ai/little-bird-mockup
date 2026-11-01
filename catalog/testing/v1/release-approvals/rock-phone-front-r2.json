@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "approvalType": "release",
+  "decision": "approved",
+  "assetId": "rock-phone-front",
+  "revision": 2,
+  "itemSha256": "648ed4ba2e72b4a4c27dbc064dc3a0849efe65a45fc9558469ecdbf35e551b47",
+  "qaReportSha256": "fd522405d2ad14975cae11c00825f4cc0849adc25f432fcb689459cc90516ecc",
+  "actor": {
+    "type": "human",
+    "identity": "Wang Zhentao",
+    "role": "正式入库决定人"
+  },
+  "decidedAt": "2026-10-31T05:44:39.065Z",
+  "attestation": {
+    "method": "local",
+    "confirmedByHuman": true
+  }
+}

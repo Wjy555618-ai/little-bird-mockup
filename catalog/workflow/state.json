@@ -1,0 +1,586 @@
+{
+  "schemaVersion": 2,
+  "policyId": "MOCKUP-ASSET-PIPELINE-1",
+  "updatedAt": "2026-10-31T10:56:43.246Z",
+  "requests": {
+    "request-studio-display-front-e037f79f8f77": {
+      "requestId": "request-studio-display-front-e037f79f8f77",
+      "status": "CONSUMED",
+      "requestPath": "catalog/workflow/candidate-requests/request-studio-display-front-e037f79f8f77.json",
+      "requestSha256": "a71a01d3682f9048a0bab7f9e77c4ee048252ac91e24d415f89b569979d17930",
+      "referenceSha256": "6e6271a4893a6c5ca54ab27513dcc71198c9b97e0cbb61e81395374ec3523f3b",
+      "assetId": "studio-display-front",
+      "maximumCandidates": 1,
+      "consumedCount": 1,
+      "consumedBy": {
+        "assetId": "studio-display-front",
+        "revision": 3,
+        "candidateSha256": "4ee83fb16051d82bc7eb297b855763389e396d2352e8e56ace904a7c09c78ae4",
+        "consumedAt": "2026-10-31T07:56:48.114Z"
+      }
+    },
+    "request-rock-phone-front-c56f9e6a263d": {
+      "requestId": "request-rock-phone-front-c56f9e6a263d",
+      "status": "CONSUMED",
+      "requestPath": "catalog/workflow/candidate-requests/request-rock-phone-front-c56f9e6a263d.json",
+      "requestSha256": "07ec9100c0b8077db09972b91e41d374d2c5a3a0cbb1a6a3a8883447a4073933",
+      "referenceSha256": "2044a3d5ee3b5e84cd47ba70d1fbe6f2af08b9a1dbc7ff43bc540835b64e7000",
+      "assetId": "rock-phone-front",
+      "maximumCandidates": 1,
+      "consumedCount": 1,
+      "consumedBy": {
+        "assetId": "rock-phone-front",
+        "revision": 3,
+        "candidateSha256": "2313811aa87feb318f14119087c493192049282d693dde1d6dcdda557e4bd377",
+        "consumedAt": "2026-10-31T07:56:48.326Z"
+      }
+    },
+    "request-rail-phone-angle-c7e86b9bb861": {
+      "requestId": "request-rail-phone-angle-c7e86b9bb861",
+      "status": "CONSUMED",
+      "requestPath": "catalog/workflow/candidate-requests/request-rail-phone-angle-c7e86b9bb861.json",
+      "requestSha256": "97508a93427f1b758ae758a8ade28eed868327c245c4675f627e3582a0032fcf",
+      "referenceSha256": "ecbda0cd99076c12005bb7043895a06ce4faca1794c9e9cab9d280a27394f090",
+      "assetId": "rail-phone-angle",
+      "maximumCandidates": 1,
+      "consumedCount": 1,
+      "consumedBy": {
+        "assetId": "rail-phone-angle",
+        "revision": 3,
+        "candidateSha256": "3d757e35224160081c0a7baa4c2899ced21e7fbf417d6dcc5776b77cf00db425",
+        "consumedAt": "2026-10-31T07:56:48.528Z"
+      }
+    },
+    "request-graphite-laptop-angle-d310b561a948": {
+      "requestId": "request-graphite-laptop-angle-d310b561a948",
+      "status": "CONSUMED",
+      "requestPath": "catalog/workflow/candidate-requests/request-graphite-laptop-angle-d310b561a948.json",
+      "requestSha256": "f46b86f9829dfef8d54bc0b830b8d6076a5f4d689c5190ad64180e604d1e5ada",
+      "referenceSha256": "2dac4b02e6751378c71580b4158cf0f8d4edd7d4cb7f5316b05059e8b868af51",
+      "assetId": "graphite-laptop-angle",
+      "maximumCandidates": 1,
+      "consumedCount": 1,
+      "consumedBy": {
+        "assetId": "graphite-laptop-angle",
+        "revision": 3,
+        "candidateSha256": "cd1574100fb6e10f8b29c5c26247ed89adc182f0cd6556a9917438897b68d70d",
+        "consumedAt": "2026-10-31T07:56:48.700Z"
+      }
+    },
+    "request-workstation-display-three-quarter-0ce137349a0d": {
+      "requestId": "request-workstation-display-three-quarter-0ce137349a0d",
+      "status": "CONSUMED",
+      "requestPath": "catalog/workflow/candidate-requests/request-workstation-display-three-quarter-0ce137349a0d.json",
+      "requestSha256": "0eaa118f9d0998323bcff4dbb745563f48213f1147e03510c45064cb2331aaf1",
+      "referenceSha256": "909b5430c7d07f4634d7550222cd10e2a74b8b405a7abfe71e35b1b0ff8a0497",
+      "assetId": "workstation-display-three-quarter",
+      "maximumCandidates": 1,
+      "consumedCount": 1,
+      "consumedBy": {
+        "assetId": "workstation-display-three-quarter",
+        "revision": 3,
+        "candidateSha256": "c2683895cdaebd69618376d73d1c2d27d05afd0391a6948d12310e369cff470f",
+        "consumedAt": "2026-10-31T07:56:48.876Z"
+      }
+    }
+  },
+  "assets": {
+    "studio-display-front": {
+      "assetId": "studio-display-front",
+      "revision": 3,
+      "policyId": "MOCKUP-ASSET-PIPELINE-1",
+      "state": "PROMOTED",
+      "requestAuthorization": {
+        "requestId": "request-studio-display-front-e037f79f8f77",
+        "path": "catalog/workflow/candidate-requests/request-studio-display-front-e037f79f8f77.json",
+        "sha256": "a71a01d3682f9048a0bab7f9e77c4ee048252ac91e24d415f89b569979d17930"
+      },
+      "reference": {
+        "path": "catalog/workflow/references/requests/request-studio-display-front-e037f79f8f77.png",
+        "sha256": "6e6271a4893a6c5ca54ab27513dcc71198c9b97e0cbb61e81395374ec3523f3b",
+        "rightsMode": "owned"
+      },
+      "candidate": {
+        "basePath": "assets/studio-display-front-r3.png",
+        "baseSha256": "4ee83fb16051d82bc7eb297b855763389e396d2352e8e56ace904a7c09c78ae4",
+        "thumbnailPath": "thumbnails/studio-display-front-r3.png",
+        "thumbnailSha256": "7b440cf4f424e9e14db0535a3398b83b72cdea0c1b140113dfe457d48de5ac60"
+      },
+      "itemSha256": "4acc68c2d69b7d631316cf89450d7c6cc43f0da51d8153a9b2c5c57122b167e8",
+      "qa": {
+        "path": "catalog/testing/v1/approvals/studio-display-front-r3.json",
+        "sha256": "f14c8613b3b318aaa1f212a9a68cd697e4da8d06e2d5a0197da4760d8d1f1ff8",
+        "approvedAt": "2026-10-31T09:55:09.424Z"
+      },
+      "releaseApproval": {
+        "path": "catalog/testing/v1/release-approvals/studio-display-front-r3.json",
+        "sha256": "0cb5faa07eaca7af6231f0cf35a6d32fdf180238e6a2b02a55efb3208e3372f9",
+        "itemSha256": "4acc68c2d69b7d631316cf89450d7c6cc43f0da51d8153a9b2c5c57122b167e8",
+        "qaReportSha256": "f14c8613b3b318aaa1f212a9a68cd697e4da8d06e2d5a0197da4760d8d1f1ff8",
+        "batchFingerprint": "sha256:83ed6a2f35380af2da821cf5722aaccc06a9bc2820eb9398d6a7fbc355b1e75f",
+        "reviewPacketPath": "catalog/workflow/final-review-packets/83ed6a2f35380af2da821cf5722aaccc06a9bc2820eb9398d6a7fbc355b1e75f.json",
+        "reviewPacketSha256": "be77b5bcbd306f0c83546a8b4e21384cdf8e571e84d2a530ad3c3df04cd8898f",
+        "buildFingerprint": "DEV-10A37155360B",
+        "hostEvidencePath": "docs/evidence/asset-pipeline/real-host-DEV-10A37155360B.json",
+        "hostEvidenceSha256": "1efe18a62096c368711972f18396c526655172036829340d8c84611796ba2c4c"
+      },
+      "blockedReasons": [],
+      "nextAction": "本地闭环完成；禁止在当前合同下执行外部部署",
+      "history": [
+        {
+          "state": "REQUEST_AUTHORIZED",
+          "reason": "决定人已为该参考图授权一次候选创作委托",
+          "actor": "Wang Zhentao",
+          "at": "2026-10-31T07:56:11.042Z"
+        },
+        {
+          "state": "REFERENCE_RECORDED",
+          "reason": "参考图、权利模式和单次创作委托已绑定",
+          "actor": "Codex 工程执行代理",
+          "at": "2026-10-31T07:56:48.114Z"
+        },
+        {
+          "state": "CANDIDATE_READY",
+          "reason": "候选素材包已原子准备并写入测试清单",
+          "actor": "Codex 工程执行代理",
+          "at": "2026-10-31T07:56:48.181Z"
+        },
+        {
+          "state": "TESTING",
+          "reason": "工作流修订版 4 删除人工前置视觉批准，候选直接进入技术质检",
+          "actor": "system-migration-v4",
+          "at": "2026-10-31T09:50:58.324Z"
+        },
+        {
+          "state": "QA_PASSED",
+          "reason": "十项自动检查、四种测试图和五项人工检查均已通过",
+          "actor": "system",
+          "at": "2026-10-31T09:55:09.439Z"
+        },
+        {
+          "state": "FINAL_APPROVED",
+          "reason": "决定人对完成技术 QA 的准确批次作出一次通过并入库决定",
+          "actor": "Wang Zhentao",
+          "at": "2026-10-31T10:56:36.966Z"
+        },
+        {
+          "state": "PROMOTED",
+          "reason": "已进入本地正式库 2026.10.31.5",
+          "actor": "system",
+          "at": "2026-10-31T10:56:43.245Z"
+        }
+      ],
+      "productionVersion": "2026.10.31.5"
+    },
+    "rock-phone-front": {
+      "assetId": "rock-phone-front",
+      "revision": 3,
+      "policyId": "MOCKUP-ASSET-PIPELINE-1",
+      "state": "PROMOTED",
+      "requestAuthorization": {
+        "requestId": "request-rock-phone-front-c56f9e6a263d",
+        "path": "catalog/workflow/candidate-requests/request-rock-phone-front-c56f9e6a263d.json",
+        "sha256": "07ec9100c0b8077db09972b91e41d374d2c5a3a0cbb1a6a3a8883447a4073933"
+      },
+      "reference": {
+        "path": "catalog/workflow/references/requests/request-rock-phone-front-c56f9e6a263d.png",
+        "sha256": "2044a3d5ee3b5e84cd47ba70d1fbe6f2af08b9a1dbc7ff43bc540835b64e7000",
+        "rightsMode": "owned"
+      },
+      "candidate": {
+        "basePath": "assets/rock-phone-front-r3.png",
+        "baseSha256": "2313811aa87feb318f14119087c493192049282d693dde1d6dcdda557e4bd377",
+        "thumbnailPath": "thumbnails/rock-phone-front-r3.png",
+        "thumbnailSha256": "e16133994d3726f73a539552f0a7734c147618b43af5b69f21f587f0c0205c42"
+      },
+      "itemSha256": "3f26b9b70ddf1f044150ffaefa0dc16164567890eb3e95cef5a6d24a5eaeada1",
+      "qa": {
+        "path": "catalog/testing/v1/approvals/rock-phone-front-r3.json",
+        "sha256": "3429eb7bd87eaa9beba1bc6152768e30dfdeca0c218ad7c500e00784e00521a6",
+        "approvedAt": "2026-10-31T09:55:34.257Z"
+      },
+      "releaseApproval": {
+        "path": "catalog/testing/v1/release-approvals/rock-phone-front-r3.json",
+        "sha256": "953f6a5020ab6d0ccc49b7920fdf18ba50ea8101876aef16ef56183b35a9500a",
+        "itemSha256": "3f26b9b70ddf1f044150ffaefa0dc16164567890eb3e95cef5a6d24a5eaeada1",
+        "qaReportSha256": "3429eb7bd87eaa9beba1bc6152768e30dfdeca0c218ad7c500e00784e00521a6",
+        "batchFingerprint": "sha256:83ed6a2f35380af2da821cf5722aaccc06a9bc2820eb9398d6a7fbc355b1e75f",
+        "reviewPacketPath": "catalog/workflow/final-review-packets/83ed6a2f35380af2da821cf5722aaccc06a9bc2820eb9398d6a7fbc355b1e75f.json",
+        "reviewPacketSha256": "be77b5bcbd306f0c83546a8b4e21384cdf8e571e84d2a530ad3c3df04cd8898f",
+        "buildFingerprint": "DEV-10A37155360B",
+        "hostEvidencePath": "docs/evidence/asset-pipeline/real-host-DEV-10A37155360B.json",
+        "hostEvidenceSha256": "1efe18a62096c368711972f18396c526655172036829340d8c84611796ba2c4c"
+      },
+      "blockedReasons": [],
+      "nextAction": "本地闭环完成；禁止在当前合同下执行外部部署",
+      "history": [
+        {
+          "state": "REQUEST_AUTHORIZED",
+          "reason": "决定人已为该参考图授权一次候选创作委托",
+          "actor": "Wang Zhentao",
+          "at": "2026-10-31T07:56:11.168Z"
+        },
+        {
+          "state": "REFERENCE_RECORDED",
+          "reason": "参考图、权利模式和单次创作委托已绑定",
+          "actor": "Codex 工程执行代理",
+          "at": "2026-10-31T07:56:48.326Z"
+        },
+        {
+          "state": "CANDIDATE_READY",
+          "reason": "候选素材包已原子准备并写入测试清单",
+          "actor": "Codex 工程执行代理",
+          "at": "2026-10-31T07:56:48.371Z"
+        },
+        {
+          "state": "TESTING",
+          "reason": "工作流修订版 4 删除人工前置视觉批准，候选直接进入技术质检",
+          "actor": "system-migration-v4",
+          "at": "2026-10-31T09:50:58.325Z"
+        },
+        {
+          "state": "QA_PASSED",
+          "reason": "十项自动检查、四种测试图和五项人工检查均已通过",
+          "actor": "system",
+          "at": "2026-10-31T09:55:34.259Z"
+        },
+        {
+          "state": "FINAL_APPROVED",
+          "reason": "决定人对完成技术 QA 的准确批次作出一次通过并入库决定",
+          "actor": "Wang Zhentao",
+          "at": "2026-10-31T10:56:36.966Z"
+        },
+        {
+          "state": "PROMOTED",
+          "reason": "已进入本地正式库 2026.10.31.5",
+          "actor": "system",
+          "at": "2026-10-31T10:56:43.245Z"
+        }
+      ],
+      "productionVersion": "2026.10.31.5"
+    },
+    "rail-phone-angle": {
+      "assetId": "rail-phone-angle",
+      "revision": 3,
+      "policyId": "MOCKUP-ASSET-PIPELINE-1",
+      "state": "PROMOTED",
+      "requestAuthorization": {
+        "requestId": "request-rail-phone-angle-c7e86b9bb861",
+        "path": "catalog/workflow/candidate-requests/request-rail-phone-angle-c7e86b9bb861.json",
+        "sha256": "97508a93427f1b758ae758a8ade28eed868327c245c4675f627e3582a0032fcf"
+      },
+      "reference": {
+        "path": "catalog/workflow/references/requests/request-rail-phone-angle-c7e86b9bb861.png",
+        "sha256": "ecbda0cd99076c12005bb7043895a06ce4faca1794c9e9cab9d280a27394f090",
+        "rightsMode": "owned"
+      },
+      "candidate": {
+        "basePath": "assets/rail-phone-angle-r3.png",
+        "baseSha256": "3d757e35224160081c0a7baa4c2899ced21e7fbf417d6dcc5776b77cf00db425",
+        "thumbnailPath": "thumbnails/rail-phone-angle-r3.png",
+        "thumbnailSha256": "af14d395590c457fc06797bc5b803c317bbff8716ed17b4ad1e49518d590638c"
+      },
+      "itemSha256": "c71250be429e8f416a0b89563f8a47c5563bf66c3c3da2a7a9ae11d8bde29bcf",
+      "qa": {
+        "path": "catalog/testing/v1/approvals/rail-phone-angle-r3.json",
+        "sha256": "8982ba07281c73373d052bd1bce509f68f7b7ccb29681fa0b3ae77eb529a2060",
+        "approvedAt": "2026-10-31T09:55:59.578Z"
+      },
+      "releaseApproval": {
+        "path": "catalog/testing/v1/release-approvals/rail-phone-angle-r3.json",
+        "sha256": "747cf5225be2de3f2faf0b8791cd0e9874c1753095ea54e62e1c7e22bdf7b3bf",
+        "itemSha256": "c71250be429e8f416a0b89563f8a47c5563bf66c3c3da2a7a9ae11d8bde29bcf",
+        "qaReportSha256": "8982ba07281c73373d052bd1bce509f68f7b7ccb29681fa0b3ae77eb529a2060",
+        "batchFingerprint": "sha256:83ed6a2f35380af2da821cf5722aaccc06a9bc2820eb9398d6a7fbc355b1e75f",
+        "reviewPacketPath": "catalog/workflow/final-review-packets/83ed6a2f35380af2da821cf5722aaccc06a9bc2820eb9398d6a7fbc355b1e75f.json",
+        "reviewPacketSha256": "be77b5bcbd306f0c83546a8b4e21384cdf8e571e84d2a530ad3c3df04cd8898f",
+        "buildFingerprint": "DEV-10A37155360B",
+        "hostEvidencePath": "docs/evidence/asset-pipeline/real-host-DEV-10A37155360B.json",
+        "hostEvidenceSha256": "1efe18a62096c368711972f18396c526655172036829340d8c84611796ba2c4c"
+      },
+      "blockedReasons": [],
+      "nextAction": "本地闭环完成；禁止在当前合同下执行外部部署",
+      "history": [
+        {
+          "state": "REQUEST_AUTHORIZED",
+          "reason": "决定人已为该参考图授权一次候选创作委托",
+          "actor": "Wang Zhentao",
+          "at": "2026-10-31T07:56:11.282Z"
+        },
+        {
+          "state": "REFERENCE_RECORDED",
+          "reason": "参考图、权利模式和单次创作委托已绑定",
+          "actor": "Codex 工程执行代理",
+          "at": "2026-10-31T07:56:48.528Z"
+        },
+        {
+          "state": "CANDIDATE_READY",
+          "reason": "候选素材包已原子准备并写入测试清单",
+          "actor": "Codex 工程执行代理",
+          "at": "2026-10-31T07:56:48.566Z"
+        },
+        {
+          "state": "TESTING",
+          "reason": "工作流修订版 4 删除人工前置视觉批准，候选直接进入技术质检",
+          "actor": "system-migration-v4",
+          "at": "2026-10-31T09:50:58.325Z"
+        },
+        {
+          "state": "QA_PASSED",
+          "reason": "十项自动检查、四种测试图和五项人工检查均已通过",
+          "actor": "system",
+          "at": "2026-10-31T09:55:59.581Z"
+        },
+        {
+          "state": "FINAL_APPROVED",
+          "reason": "决定人对完成技术 QA 的准确批次作出一次通过并入库决定",
+          "actor": "Wang Zhentao",
+          "at": "2026-10-31T10:56:36.966Z"
+        },
+        {
+          "state": "PROMOTED",
+          "reason": "已进入本地正式库 2026.10.31.5",
+          "actor": "system",
+          "at": "2026-10-31T10:56:43.245Z"
+        }
+      ],
+      "productionVersion": "2026.10.31.5"
+    },
+    "graphite-laptop-angle": {
+      "assetId": "graphite-laptop-angle",
+      "revision": 3,
+      "policyId": "MOCKUP-ASSET-PIPELINE-1",
+      "state": "PROMOTED",
+      "requestAuthorization": {
+        "requestId": "request-graphite-laptop-angle-d310b561a948",
+        "path": "catalog/workflow/candidate-requests/request-graphite-laptop-angle-d310b561a948.json",
+        "sha256": "f46b86f9829dfef8d54bc0b830b8d6076a5f4d689c5190ad64180e604d1e5ada"
+      },
+      "reference": {
+        "path": "catalog/workflow/references/requests/request-graphite-laptop-angle-d310b561a948.png",
+        "sha256": "2dac4b02e6751378c71580b4158cf0f8d4edd7d4cb7f5316b05059e8b868af51",
+        "rightsMode": "owned"
+      },
+      "candidate": {
+        "basePath": "assets/graphite-laptop-angle-r3.png",
+        "baseSha256": "cd1574100fb6e10f8b29c5c26247ed89adc182f0cd6556a9917438897b68d70d",
+        "thumbnailPath": "thumbnails/graphite-laptop-angle-r3.png",
+        "thumbnailSha256": "c5a96a86d83da6e10b363ee35148e14536366a7b8b3be92d73f1fb9eefbfff7e"
+      },
+      "itemSha256": "94642abe7b3500d298f9948520516902f7d56e7fcf70cb5cfd5ad2c2de62dd99",
+      "qa": {
+        "path": "catalog/testing/v1/approvals/graphite-laptop-angle-r3.json",
+        "sha256": "e660b5847d6fce485dc24c51049305fececfcc13ccc5c7ec081fb29fc6adce16",
+        "approvedAt": "2026-10-31T09:56:34.345Z"
+      },
+      "releaseApproval": {
+        "path": "catalog/testing/v1/release-approvals/graphite-laptop-angle-r3.json",
+        "sha256": "8067ad5c8b8c732eb2bf263d2e8fc1ecadb37b140543c03c76a28767a5384e16",
+        "itemSha256": "94642abe7b3500d298f9948520516902f7d56e7fcf70cb5cfd5ad2c2de62dd99",
+        "qaReportSha256": "e660b5847d6fce485dc24c51049305fececfcc13ccc5c7ec081fb29fc6adce16",
+        "batchFingerprint": "sha256:83ed6a2f35380af2da821cf5722aaccc06a9bc2820eb9398d6a7fbc355b1e75f",
+        "reviewPacketPath": "catalog/workflow/final-review-packets/83ed6a2f35380af2da821cf5722aaccc06a9bc2820eb9398d6a7fbc355b1e75f.json",
+        "reviewPacketSha256": "be77b5bcbd306f0c83546a8b4e21384cdf8e571e84d2a530ad3c3df04cd8898f",
+        "buildFingerprint": "DEV-10A37155360B",
+        "hostEvidencePath": "docs/evidence/asset-pipeline/real-host-DEV-10A37155360B.json",
+        "hostEvidenceSha256": "1efe18a62096c368711972f18396c526655172036829340d8c84611796ba2c4c"
+      },
+      "blockedReasons": [],
+      "nextAction": "本地闭环完成；禁止在当前合同下执行外部部署",
+      "history": [
+        {
+          "state": "REQUEST_AUTHORIZED",
+          "reason": "决定人已为该参考图授权一次候选创作委托",
+          "actor": "Wang Zhentao",
+          "at": "2026-10-31T07:56:11.392Z"
+        },
+        {
+          "state": "REFERENCE_RECORDED",
+          "reason": "参考图、权利模式和单次创作委托已绑定",
+          "actor": "Codex 工程执行代理",
+          "at": "2026-10-31T07:56:48.700Z"
+        },
+        {
+          "state": "CANDIDATE_READY",
+          "reason": "候选素材包已原子准备并写入测试清单",
+          "actor": "Codex 工程执行代理",
+          "at": "2026-10-31T07:56:48.737Z"
+        },
+        {
+          "state": "TESTING",
+          "reason": "工作流修订版 4 删除人工前置视觉批准，候选直接进入技术质检",
+          "actor": "system-migration-v4",
+          "at": "2026-10-31T09:50:58.325Z"
+        },
+        {
+          "state": "QA_PASSED",
+          "reason": "十项自动检查、四种测试图和五项人工检查均已通过",
+          "actor": "system",
+          "at": "2026-10-31T09:56:34.346Z"
+        },
+        {
+          "state": "FINAL_APPROVED",
+          "reason": "决定人对完成技术 QA 的准确批次作出一次通过并入库决定",
+          "actor": "Wang Zhentao",
+          "at": "2026-10-31T10:56:36.965Z"
+        },
+        {
+          "state": "PROMOTED",
+          "reason": "已进入本地正式库 2026.10.31.5",
+          "actor": "system",
+          "at": "2026-10-31T10:56:43.245Z"
+        }
+      ],
+      "productionVersion": "2026.10.31.5"
+    },
+    "workstation-display-three-quarter": {
+      "assetId": "workstation-display-three-quarter",
+      "revision": 3,
+      "policyId": "MOCKUP-ASSET-PIPELINE-1",
+      "state": "PROMOTED",
+      "requestAuthorization": {
+        "requestId": "request-workstation-display-three-quarter-0ce137349a0d",
+        "path": "catalog/workflow/candidate-requests/request-workstation-display-three-quarter-0ce137349a0d.json",
+        "sha256": "0eaa118f9d0998323bcff4dbb745563f48213f1147e03510c45064cb2331aaf1"
+      },
+      "reference": {
+        "path": "catalog/workflow/references/requests/request-workstation-display-three-quarter-0ce137349a0d.png",
+        "sha256": "909b5430c7d07f4634d7550222cd10e2a74b8b405a7abfe71e35b1b0ff8a0497",
+        "rightsMode": "owned"
+      },
+      "candidate": {
+        "basePath": "assets/workstation-display-three-quarter-r3.png",
+        "baseSha256": "c2683895cdaebd69618376d73d1c2d27d05afd0391a6948d12310e369cff470f",
+        "thumbnailPath": "thumbnails/workstation-display-three-quarter-r3.png",
+        "thumbnailSha256": "5a4f9d588119e887b5f52121380598538ba74f9570dd3b9d62d752f080b03caf"
+      },
+      "itemSha256": "6ccea38e8b33cc1fc55ab5516aa2c9dd019f2848e1c98321deae513ca814ec4b",
+      "qa": {
+        "path": "catalog/testing/v1/approvals/workstation-display-three-quarter-r3.json",
+        "sha256": "331fb99f1c602bdaa26a138c6f374860519c183eb45e123e1a8c99f259a81b38",
+        "approvedAt": "2026-10-31T09:56:58.514Z"
+      },
+      "releaseApproval": {
+        "path": "catalog/testing/v1/release-approvals/workstation-display-three-quarter-r3.json",
+        "sha256": "01a70943d2f75956e46217886fd9308293b9af931e3f457d378314ae78737ae8",
+        "itemSha256": "6ccea38e8b33cc1fc55ab5516aa2c9dd019f2848e1c98321deae513ca814ec4b",
+        "qaReportSha256": "331fb99f1c602bdaa26a138c6f374860519c183eb45e123e1a8c99f259a81b38",
+        "batchFingerprint": "sha256:83ed6a2f35380af2da821cf5722aaccc06a9bc2820eb9398d6a7fbc355b1e75f",
+        "reviewPacketPath": "catalog/workflow/final-review-packets/83ed6a2f35380af2da821cf5722aaccc06a9bc2820eb9398d6a7fbc355b1e75f.json",
+        "reviewPacketSha256": "be77b5bcbd306f0c83546a8b4e21384cdf8e571e84d2a530ad3c3df04cd8898f",
+        "buildFingerprint": "DEV-10A37155360B",
+        "hostEvidencePath": "docs/evidence/asset-pipeline/real-host-DEV-10A37155360B.json",
+        "hostEvidenceSha256": "1efe18a62096c368711972f18396c526655172036829340d8c84611796ba2c4c"
+      },
+      "blockedReasons": [],
+      "nextAction": "本地闭环完成；禁止在当前合同下执行外部部署",
+      "history": [
+        {
+          "state": "REQUEST_AUTHORIZED",
+          "reason": "决定人已为该参考图授权一次候选创作委托",
+          "actor": "Wang Zhentao",
+          "at": "2026-10-31T07:56:11.511Z"
+        },
+        {
+          "state": "REFERENCE_RECORDED",
+          "reason": "参考图、权利模式和单次创作委托已绑定",
+          "actor": "Codex 工程执行代理",
+          "at": "2026-10-31T07:56:48.876Z"
+        },
+        {
+          "state": "CANDIDATE_READY",
+          "reason": "候选素材包已原子准备并写入测试清单",
+          "actor": "Codex 工程执行代理",
+          "at": "2026-10-31T07:56:48.913Z"
+        },
+        {
+          "state": "TESTING",
+          "reason": "工作流修订版 4 删除人工前置视觉批准，候选直接进入技术质检",
+          "actor": "system-migration-v4",
+          "at": "2026-10-31T09:50:58.325Z"
+        },
+        {
+          "state": "QA_PASSED",
+          "reason": "十项自动检查、四种测试图和五项人工检查均已通过",
+          "actor": "system",
+          "at": "2026-10-31T09:56:58.517Z"
+        },
+        {
+          "state": "FINAL_APPROVED",
+          "reason": "决定人对完成技术 QA 的准确批次作出一次通过并入库决定",
+          "actor": "Wang Zhentao",
+          "at": "2026-10-31T10:56:36.967Z"
+        },
+        {
+          "state": "PROMOTED",
+          "reason": "已进入本地正式库 2026.10.31.5",
+          "actor": "system",
+          "at": "2026-10-31T10:56:43.245Z"
+        }
+      ],
+      "productionVersion": "2026.10.31.5"
+    },
+    "limestone-ultrawide-front": {
+      "assetId": "limestone-ultrawide-front",
+      "revision": 1,
+      "policyId": "MOCKUP-ASSET-PIPELINE-1",
+      "state": "REJECTED",
+      "reference": {
+        "path": "catalog/workflow/references/limestone-ultrawide-front-r1.png",
+        "sha256": "c4fe5874e03c7ea5171f3db51aec6d3e0d4f9de46ded32b036439298a5e75724",
+        "rightsMode": "owned"
+      },
+      "candidate": {
+        "basePath": "assets/limestone-ultrawide-front-r1.png",
+        "baseSha256": "d3c83d5694d356d4891117a373a1358f42684b94479ff6a873040ede5d2422a9",
+        "thumbnailPath": "thumbnails/limestone-ultrawide-front-r1.png",
+        "thumbnailSha256": "d9af1c7fe536b33703d6117c88f35145166f3326549ce008661904e1cad0e5a0"
+      },
+      "itemSha256": "8756fc1ad13a546b1cc1298584467d3217a4c33eb795c5443a286d5765878eaf",
+      "qa": null,
+      "releaseApproval": null,
+      "blockedReasons": [],
+      "nextAction": "保持历史记录；只有新的单次用户创作委托才能继续",
+      "history": [
+        {
+          "state": "REFERENCE_RECORDED",
+          "reason": "参考图与权利模式已记录",
+          "actor": "Codex imagegen production agent",
+          "at": "2026-10-31T05:51:33.003Z"
+        },
+        {
+          "state": "CANDIDATE_READY",
+          "reason": "候选素材包已原子准备并写入测试清单",
+          "actor": "Codex imagegen production agent",
+          "at": "2026-10-31T05:51:33.054Z"
+        },
+        {
+          "state": "REJECTED",
+          "reason": "该候选源于内部测试任务而非决定人对当次参考图的明确单次创作委托；权利声明不等于创作授权。",
+          "actor": "Codex workflow correction",
+          "at": "2026-10-31T06:17:34.619Z"
+        }
+      ],
+      "quarantine": {
+        "reason": "该候选源于内部测试任务而非决定人对当次参考图的明确单次创作委托；权利声明不等于创作授权。",
+        "actor": "Codex workflow correction",
+        "quarantinedAt": "2026-10-31T06:17:34.618Z",
+        "files": [
+          {
+            "path": "catalog/workflow/quarantine/limestone-ultrawide-front-r1/base-limestone-ultrawide-front-r1.png",
+            "sha256": "d3c83d5694d356d4891117a373a1358f42684b94479ff6a873040ede5d2422a9"
+          },
+          {
+            "path": "catalog/workflow/quarantine/limestone-ultrawide-front-r1/thumbnail-limestone-ultrawide-front-r1.png",
+            "sha256": "d9af1c7fe536b33703d6117c88f35145166f3326549ce008661904e1cad0e5a0"
+          },
+          {
+            "path": "catalog/workflow/quarantine/limestone-ultrawide-front-r1/reference-limestone-ultrawide-front-r1.png",
+            "sha256": "c4fe5874e03c7ea5171f3db51aec6d3e0d4f9de46ded32b036439298a5e75724"
+          }
+        ]
+      }
+    }
+  },
+  "workflowRevision": 4
+}

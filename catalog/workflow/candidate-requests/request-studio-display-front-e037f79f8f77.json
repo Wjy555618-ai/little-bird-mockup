@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "requestType": "candidate-creation",
+  "requestId": "request-studio-display-front-e037f79f8f77",
+  "operation": "create-one-candidate",
+  "assetId": "studio-display-front",
+  "name": "工作室显示器 · 正面",
+  "category": "display",
+  "reference": {
+    "path": "catalog/workflow/references/requests/request-studio-display-front-e037f79f8f77.png",
+    "sha256": "6e6271a4893a6c5ca54ab27513dcc71198c9b97e0cbb61e81395374ec3523f3b",
+    "rightsMode": "owned",
+    "reuseAuthorized": false
+  },
+  "constraints": {
+    "maximumCandidates": 1
+  },
+  "requestText": "修复现有已发布样机：移除未经授权的合成界面和紫色圆角泄漏，制作中性关屏 r3 修订候选；不创建新的 assetId。",
+  "actor": {
+    "type": "human",
+    "identity": "Wang Zhentao",
+    "role": "产品决定人、视觉审核人、正式入库决定人"
+  },
+  "authorizedAt": "2026-10-31T07:56:11.042Z",
+  "attestation": {
+    "method": "local",
+    "confirmedByHuman": true
+  },
+  "recordedBy": "Codex 工程执行代理"
+}

@@ -1,0 +1,598 @@
+{
+  "schemaVersion": 5,
+  "catalogVersion": "2026.10.31.3",
+  "publishedAt": "2026-10-31T05:51:33.003Z",
+  "environment": "testing",
+  "rendererVersion": "2.4.0",
+  "minimumPluginVersion": "0.1.0",
+  "categories": [
+    {
+      "id": "display",
+      "label": "显示器"
+    },
+    {
+      "id": "phone",
+      "label": "手机"
+    },
+    {
+      "id": "laptop",
+      "label": "笔记本"
+    }
+  ],
+  "items": [
+    {
+      "id": "studio-display-front",
+      "revision": 2,
+      "status": "testing",
+      "name": "工作室显示器 · 正面",
+      "category": "display",
+      "tags": [
+        "显示器",
+        "桌面",
+        "正面",
+        "金属",
+        "monitor"
+      ],
+      "renderer": "static-screen-v5",
+      "canvas": {
+        "width": 1448,
+        "height": 1086
+      },
+      "screen": {
+        "quad": [
+          [
+            260,
+            185
+          ],
+          [
+            1190,
+            185
+          ],
+          [
+            1190,
+            702
+          ],
+          [
+            260,
+            702
+          ]
+        ],
+        "recommendedSize": {
+          "width": 1920,
+          "height": 1080,
+          "label": "16:9"
+        },
+        "aperture": {
+          "quad": [
+            [
+              260,
+              185
+            ],
+            [
+              1190,
+              185
+            ],
+            [
+              1190,
+              702
+            ],
+            [
+              260,
+              702
+            ]
+          ],
+          "cornerRadii": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "compositing": {
+          "mode": "aperture-mask"
+        },
+        "defaultFit": "cover"
+      },
+      "layers": {
+        "base": "assets/studio-display-front-r2.png"
+      },
+      "thumbnail": "thumbnails/studio-display-front-r2.png",
+      "provenance": {
+        "kind": "generated-in-house",
+        "usage": "candidate",
+        "pipelinePolicyId": "MOCKUP-ASSET-PIPELINE-1",
+        "presentationState": "complete",
+        "migrationFrom": {
+          "revision": 1,
+          "baseSha256": "9af4efe18bbbc3a899d57902e71960a4d9f135389da99833a7b0e922764b0eeb"
+        },
+        "generationNote": "Existing project-made scene neutralized and completed with a baked, non-keyed screen design using explicit aperture geometry."
+      },
+      "integrity": {
+        "baseSha256": "6e6271a4893a6c5ca54ab27513dcc71198c9b97e0cbb61e81395374ec3523f3b",
+        "thumbnailSha256": "2c56ee6eaee9185ede5a89b40c2934d40e706d669d1e7757a4e4188c315a9d00"
+      }
+    },
+    {
+      "id": "rock-phone-front",
+      "revision": 2,
+      "status": "testing",
+      "name": "岩石手机 · 正面",
+      "category": "phone",
+      "tags": [
+        "手机",
+        "岩石",
+        "黑白",
+        "正面",
+        "phone"
+      ],
+      "renderer": "static-screen-v5",
+      "canvas": {
+        "width": 1448,
+        "height": 1086
+      },
+      "screen": {
+        "quad": [
+          [
+            554,
+            154
+          ],
+          [
+            893,
+            154
+          ],
+          [
+            893,
+            886
+          ],
+          [
+            554,
+            886
+          ]
+        ],
+        "recommendedSize": {
+          "width": 1290,
+          "height": 2796,
+          "label": "约 9:19.5"
+        },
+        "aperture": {
+          "quad": [
+            [
+              554,
+              154
+            ],
+            [
+              893,
+              154
+            ],
+            [
+              893,
+              886
+            ],
+            [
+              554,
+              886
+            ]
+          ],
+          "cornerRadii": [
+            0.12,
+            0.12,
+            0.12,
+            0.12
+          ]
+        },
+        "compositing": {
+          "mode": "aperture-mask"
+        },
+        "defaultFit": "cover"
+      },
+      "layers": {
+        "base": "assets/rock-phone-front-r2.png"
+      },
+      "thumbnail": "thumbnails/rock-phone-front-r2.png",
+      "provenance": {
+        "kind": "generated-in-house",
+        "usage": "candidate",
+        "pipelinePolicyId": "MOCKUP-ASSET-PIPELINE-1",
+        "presentationState": "complete",
+        "migrationFrom": {
+          "revision": 1,
+          "baseSha256": "d530217efe71e4169a52e3b2db70237a74b6bcd9ded7d3f730217397177d5993"
+        },
+        "generationNote": "Existing project-made scene neutralized and completed with a baked, non-keyed screen design using explicit aperture geometry."
+      },
+      "integrity": {
+        "baseSha256": "2044a3d5ee3b5e84cd47ba70d1fbe6f2af08b9a1dbc7ff43bc540835b64e7000",
+        "thumbnailSha256": "4a1a8fa4d72f80cfb114cd725f7402ff698eb8c90fe2640acb59104dee5a25df"
+      }
+    },
+    {
+      "id": "rail-phone-angle",
+      "revision": 2,
+      "status": "testing",
+      "name": "支架手机 · 倾斜",
+      "category": "phone",
+      "tags": [
+        "手机",
+        "支架",
+        "倾斜",
+        "透视",
+        "phone"
+      ],
+      "renderer": "static-screen-v5",
+      "canvas": {
+        "width": 1448,
+        "height": 1086
+      },
+      "screen": {
+        "quad": [
+          [
+            644,
+            163
+          ],
+          [
+            862,
+            114
+          ],
+          [
+            862,
+            798
+          ],
+          [
+            644,
+            855
+          ]
+        ],
+        "recommendedSize": {
+          "width": 1290,
+          "height": 2796,
+          "label": "约 9:19.5"
+        },
+        "aperture": {
+          "quad": [
+            [
+              644,
+              163
+            ],
+            [
+              862,
+              114
+            ],
+            [
+              862,
+              798
+            ],
+            [
+              644,
+              855
+            ]
+          ],
+          "cornerRadii": [
+            0.12,
+            0.12,
+            0.12,
+            0.12
+          ]
+        },
+        "compositing": {
+          "mode": "aperture-mask"
+        },
+        "defaultFit": "cover",
+        "occlusions": [
+          {
+            "type": "circle",
+            "cx": 754,
+            "cy": 158,
+            "radius": 10,
+            "fill": "#080808"
+          }
+        ]
+      },
+      "layers": {
+        "base": "assets/rail-phone-angle-r2.png"
+      },
+      "thumbnail": "thumbnails/rail-phone-angle-r2.png",
+      "provenance": {
+        "kind": "generated-in-house",
+        "usage": "candidate",
+        "pipelinePolicyId": "MOCKUP-ASSET-PIPELINE-1",
+        "presentationState": "complete",
+        "migrationFrom": {
+          "revision": 1,
+          "baseSha256": "e09768963cb11b8f7769eae3241deca2add5df0cd23a59ee948aeffda68695c4"
+        },
+        "generationNote": "Existing project-made scene neutralized and completed with a baked, non-keyed screen design using explicit aperture geometry."
+      },
+      "integrity": {
+        "baseSha256": "ecbda0cd99076c12005bb7043895a06ce4faca1794c9e9cab9d280a27394f090",
+        "thumbnailSha256": "c797e339ee8aa13285bcc05af553023ba2e626ecc2fd6551084dc661aaae4ee5"
+      }
+    },
+    {
+      "id": "graphite-laptop-angle",
+      "revision": 2,
+      "status": "testing",
+      "name": "石墨笔记本 · 倾斜",
+      "category": "laptop",
+      "tags": [
+        "笔记本",
+        "金属",
+        "倾斜",
+        "透视",
+        "laptop"
+      ],
+      "renderer": "static-screen-v5",
+      "canvas": {
+        "width": 1536,
+        "height": 1024
+      },
+      "screen": {
+        "quad": [
+          [
+            235,
+            164
+          ],
+          [
+            939,
+            140
+          ],
+          [
+            1004,
+            587
+          ],
+          [
+            297,
+            664
+          ]
+        ],
+        "recommendedSize": {
+          "width": 2560,
+          "height": 1600,
+          "label": "16:10"
+        },
+        "aperture": {
+          "quad": [
+            [
+              235,
+              164
+            ],
+            [
+              939,
+              140
+            ],
+            [
+              1004,
+              587
+            ],
+            [
+              297,
+              664
+            ]
+          ],
+          "cornerRadii": [
+            0.008,
+            0.008,
+            0.008,
+            0.008
+          ]
+        },
+        "compositing": {
+          "mode": "aperture-mask"
+        },
+        "defaultFit": "cover"
+      },
+      "layers": {
+        "base": "assets/graphite-laptop-angle-r2.png"
+      },
+      "thumbnail": "thumbnails/graphite-laptop-angle-r2.png",
+      "provenance": {
+        "kind": "generated-in-house",
+        "usage": "candidate",
+        "pipelinePolicyId": "MOCKUP-ASSET-PIPELINE-1",
+        "presentationState": "complete",
+        "migrationFrom": {
+          "revision": 1,
+          "baseSha256": "893687802f9c1b42522cffeb2e1a361ae6dd4962da31114d2f6221c63220c66c"
+        },
+        "generationNote": "Existing project-made scene neutralized and completed with a baked, non-keyed screen design using explicit aperture geometry."
+      },
+      "integrity": {
+        "baseSha256": "2dac4b02e6751378c71580b4158cf0f8d4edd7d4cb7f5316b05059e8b868af51",
+        "thumbnailSha256": "7ae45fba859085f8417255c8d4d143508f7be9f2cd33aba627822938ba46469c"
+      }
+    },
+    {
+      "id": "workstation-display-three-quarter",
+      "revision": 2,
+      "status": "testing",
+      "name": "极简工作站显示器 · 右后三分之二视角",
+      "category": "display",
+      "tags": [
+        "display",
+        "workstation",
+        "three-quarter",
+        "dark",
+        "metal"
+      ],
+      "renderer": "static-screen-v5",
+      "canvas": {
+        "width": 1448,
+        "height": 1086
+      },
+      "screen": {
+        "quad": [
+          [
+            158,
+            203
+          ],
+          [
+            1053,
+            144
+          ],
+          [
+            1053,
+            708
+          ],
+          [
+            155,
+            715
+          ]
+        ],
+        "recommendedSize": {
+          "width": 2560,
+          "height": 1440,
+          "label": "16:9 显示器"
+        },
+        "aperture": {
+          "quad": [
+            [
+              158,
+              203
+            ],
+            [
+              1053,
+              144
+            ],
+            [
+              1053,
+              708
+            ],
+            [
+              155,
+              715
+            ]
+          ],
+          "cornerRadii": [
+            0.008,
+            0.008,
+            0.008,
+            0.008
+          ]
+        },
+        "compositing": {
+          "mode": "aperture-mask"
+        },
+        "defaultFit": "cover"
+      },
+      "layers": {
+        "base": "assets/workstation-display-three-quarter-r2.png"
+      },
+      "thumbnail": "thumbnails/workstation-display-three-quarter-r2.png",
+      "provenance": {
+        "kind": "generated-in-house",
+        "usage": "candidate",
+        "pipelinePolicyId": "MOCKUP-ASSET-PIPELINE-1",
+        "referenceRightsMode": "owned",
+        "referenceSha256": "c4fe5874e03c7ea5171f3db51aec6d3e0d4f9de46ded32b036439298a5e75724",
+        "generationNote": "Existing project-made scene neutralized and completed with a baked, non-keyed screen design using explicit aperture geometry.",
+        "presentationState": "complete",
+        "migrationFrom": {
+          "revision": 1,
+          "baseSha256": "ac3197135e50c7cf848e5ccc4a93eaff5a0bde0ba9e6b5d6d83b77830db19b14"
+        }
+      },
+      "integrity": {
+        "baseSha256": "909b5430c7d07f4634d7550222cd10e2a74b8b405a7abfe71e35b1b0ff8a0497",
+        "thumbnailSha256": "2c1aca96a02e9a3646f71e5a28a8eea43934be043c54340a5e8b24d622af6017"
+      }
+    },
+    {
+      "id": "limestone-ultrawide-front",
+      "revision": 1,
+      "status": "testing",
+      "name": "石灰岩超宽显示器 · 正面",
+      "category": "display",
+      "tags": [
+        "显示器",
+        "超宽屏",
+        "石灰岩",
+        "正面",
+        "明亮",
+        "display"
+      ],
+      "renderer": "static-screen-v5",
+      "canvas": {
+        "width": 1536,
+        "height": 1024
+      },
+      "screen": {
+        "quad": [
+          [
+            266,
+            192
+          ],
+          [
+            1272,
+            184
+          ],
+          [
+            1274,
+            671
+          ],
+          [
+            265,
+            665
+          ]
+        ],
+        "recommendedSize": {
+          "width": 2560,
+          "height": 1200,
+          "label": "超宽横屏"
+        },
+        "aperture": {
+          "quad": [
+            [
+              266,
+              192
+            ],
+            [
+              1272,
+              184
+            ],
+            [
+              1274,
+              671
+            ],
+            [
+              265,
+              665
+            ]
+          ],
+          "cornerRadii": [
+            0.006,
+            0.006,
+            0.006,
+            0.006
+          ]
+        },
+        "compositing": {
+          "mode": "aperture-mask"
+        },
+        "defaultFit": "cover"
+      },
+      "layers": {
+        "base": "assets/limestone-ultrawide-front-r1.png"
+      },
+      "thumbnail": "thumbnails/limestone-ultrawide-front-r1.png",
+      "provenance": {
+        "kind": "generated-in-house",
+        "usage": "candidate",
+        "pipelinePolicyId": "MOCKUP-ASSET-PIPELINE-1",
+        "referenceRightsMode": "owned",
+        "referenceSha256": "c4fe5874e03c7ea5171f3db51aec6d3e0d4f9de46ded32b036439298a5e75724",
+        "generationNote": "Built-in imagegen created a brand-new complete powered-on monitor mockup from the owned reference for TASK-010; baked navy, blue, indigo, violet and cyan UI; no chroma key, green screen, placeholder panel or runtime color inference.",
+        "presentationState": "complete",
+        "completenessHeuristic": {
+          "result": "passed",
+          "detector": "dominant-green-aperture-v1",
+          "greenDominantRatio": 0,
+          "maximumGreenRatio": 0.85
+        }
+      },
+      "integrity": {
+        "baseSha256": "d3c83d5694d356d4891117a373a1358f42684b94479ff6a873040ede5d2422a9",
+        "thumbnailSha256": "d9af1c7fe536b33703d6117c88f35145166f3326549ce008661904e1cad0e5a0"
+      }
+    }
+  ]
+}

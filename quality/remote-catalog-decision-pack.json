@@ -1,0 +1,827 @@
+{
+  "schema_version": "3.0.0",
+  "meta": {
+    "pack_id": "MOCKUP-REMOTE-CATALOG-ARCHITECTURE-001",
+    "analysis_revision": 4,
+    "title": "样机工作室三天线上闭环与长期远程样机库架构决定",
+    "analysis_mode": "strategize",
+    "target": "Mockup Studio remote production catalog",
+    "source_snapshot_at": "2026-10-31",
+    "created_at": "2026-10-31T19:07:32+08:00",
+    "status": "READY_WITH_RISKS",
+    "research_decision": "TARGETED",
+    "research_rationale": "决定人新增三天内完成免费插件真实线上闭环的最高时限，并明确当前没有企业或个体工商户主体，付费和团队私有后移数月。本修订核验 Netlify 无 Git 手动部署、免费硬额度与 Figma 网络域名/首次审核边界，把 Netlify 阶段零试运行和中国大陆长期生产拆成两个阶段。"
+  },
+  "decision_context": {
+    "decision": "是否先用精确 Netlify HTTPS origin 和严格活动文件白名单，在三天内跑通免费插件线上闭环，同时保留自有域名和中国大陆供应商作为后续长期生产架构。",
+    "decision_stage": "COMMIT",
+    "affected_actors": [
+      "Figma 插件用户",
+      "样机内容审核与发布责任人",
+      "插件工程与运营责任人"
+    ],
+    "contexts": [
+      "插件上线后独立增加、更新和回滚样机",
+      "托管供应商故障或迁移",
+      "网络离线、目录损坏和素材摘要漂移"
+    ],
+    "desired_outcomes": [
+      "兼容素材更新不需要重新发布插件",
+      "三天内完成可验证的远程静态目录和真实 Figma 免费插件闭环",
+      "任何部分部署、损坏目录或错误素材都不能破坏上一已知良好目录",
+      "长期更换托管供应商不改变插件允许访问的自有域名；阶段零从 Netlify 来源迁移时允许一次明确的插件更新",
+      "质检台、用户设计和写凭据永不进入公开数据平面"
+    ],
+    "business_goals": [
+      "建立可持续扩展的样机内容运营能力",
+      "降低目录更新故障和供应商锁定带来的长期维护成本",
+      "为后续上架、运营和商业化保留清晰的兼容边界"
+    ],
+    "success_signals": [
+      "机器合同只允许精确 Netlify 来源的严格静态白名单试运行，并拒绝 GitHub、写方法、远程代码、用户上传、非原子顺序或弱化回滚目标",
+      "供应商评估可以用同一组十项门禁比较候选而不改插件架构",
+      "阶段零能证明精确 Netlify origin 的 manifest 与本地 production 字节一致并完成真实故障恢复",
+      "阶段零不公开旧 revision、批准记录、质检台、源码、参考图或凭据"
+    ],
+    "constraints": [
+      "允许 Netlify Free 手动无 Git 部署严格白名单静态目录；仍不购买域名、不发布 GitHub、不提交 Figma Community",
+      "生产运行时只读取 JSON 与媒体，不发送用户设计内容",
+      "沿用 schema v5、renderer 2.4.0、500 项技术拒绝上限、2 MiB manifest、32 MiB 单素材上限",
+      "人工批准与本地正式库仍是远程发布的唯一上游"
+      ,"主要服务中国大陆，当前无可用域名"
+      ,"首期按 100 个真实样机规划且初始正式库最多 200 个；500 项只作为程序技术安全上限"
+      ,"正常月费用目标不超过 30 元，50 元成本复核，未经新决定的运营上限 80 元；200 元只作为决定人绝对月预算上限"
+      ,"月度 CDN 流量封顶 100 GB，20/50/80 GB 告警；提高流量或内容上限必须由决定人重新批准"
+      ,"阶段零时限为三天，不依赖个人/企业 ICP 备案；Netlify 来源只是试运行且迁移自有域名需要一次插件更新"
+      ,"未来一年内可能引入付费或团队私有样机，但当前阶段不实现身份、支付或权利后端"
+    ],
+    "scope_in": [
+      "远程数据平面与私有控制平面边界",
+      "域名和供应商解耦",
+      "发布顺序、缓存、故障降级、回滚、监控与供应商选择门禁",
+      "免费公开目录的长期兼容规则"
+      ,"两家官方资料候选比较、100–200 个样机的分层预算模型和未来商业化扩展边界"
+      ,"阶段零 Netlify 白名单发布、真实远程验证和免费插件线上闭环"
+    ],
+    "scope_out": [
+      "长期中国大陆生产供应商选择、域名购买或 DNS 修改",
+      "GitHub 连续部署、动态后端、数据库、付费和团队私有功能",
+      "Figma Community 上架",
+      "付费素材、账户、团队私有目录和个性化授权的当前实现"
+    ],
+    "time_window": "从当前架构冻结到首个真实远程目录试点完成",
+    "decision_owner": "Wang Zhentao"
+  },
+  "evidence": [
+    {
+      "id": "E1",
+      "claim": "五个 r3 样机已经通过一次人工批次决定、原子提升和 103/103 综合门禁进入本地正式库 2026.10.31.5。",
+      "kind": "VERIFIED_FACT",
+      "source_ref": "docs/evidence/asset-pipeline/local-promotion-2026.10.31.5.json",
+      "source_locator": "production, decision, gates",
+      "source_date": "2026-10-31",
+      "source_content_sha256": "sha256:9847378332e516f5d6b95b96914b9cbe266643dda1852e3e8e4f12c22fb71639",
+      "supporting_content": "本地正式目录版本、五个 PROMOTED r3、批准摘要、回滚快照和 103/103 门禁均有绑定记录。",
+      "basis_evidence_ids": [],
+      "limitations": [
+        "只证明本地闭环，不证明任何远程供应商、域名或线上可用性"
+      ]
+    },
+    {
+      "id": "E2",
+      "claim": "当前生产目录 URL 仍为保留示例域名，正式 Figma plugin ID 为空，因此没有可用生产远程入口。",
+      "kind": "VERIFIED_FACT",
+      "source_ref": "config/plugin.config.json",
+      "source_locator": "environments.production",
+      "source_date": "2026-10-31",
+      "source_content_sha256": "sha256:9ea0f2c5f23090140dcfcc9852df2d24a667f7e0bc4ccd14af4e27ea858fbaf5",
+      "supporting_content": "catalogUrl 为 assets.mockup-studio.example，pluginId 为空。",
+      "basis_evidence_ids": [],
+      "limitations": [
+        "配置事实不说明应该选择哪一家供应商"
+      ]
+    },
+    {
+      "id": "E3",
+      "claim": "现有插件架构已经固定生产域名、限制 schema/renderer/数量/字节、区分 manifest 与 revision 素材缓存，并要求资源先行、manifest 最后激活。",
+      "kind": "VERIFIED_FACT",
+      "source_ref": "docs/ARCHITECTURE.md",
+      "source_locator": "单一环境配置与生成式制品；插件运行时；缓存、原子更新与回滚",
+      "source_date": "2026-10-31",
+      "source_content_sha256": "sha256:a63e95455aa23255c65ca5d973efdcf21afe76765b03ef51528b32462a8cbc9b",
+      "supporting_content": "开发/生产目录由单一配置生成；正式目录只读 JSON/媒体；manifest no-store、revision 素材 immutable；同 revision 不覆盖。",
+      "basis_evidence_ids": [],
+      "limitations": [
+        "架构说明不是远程故障注入证据"
+      ]
+    },
+    {
+      "id": "E4",
+      "claim": "运行时目录合同会拒绝错误环境、版本、状态、来源、摘要、绝对路径、路径穿越和缺失正式 QA/人工批准的素材。",
+      "kind": "VERIFIED_FACT",
+      "source_ref": "shared/catalog-contract.js",
+      "source_locator": "validateManifest",
+      "source_date": "2026-10-31",
+      "source_content_sha256": "sha256:42cacbf5c734a8fc1a2a15cf7b55a0abb67d0981b8ba0365edfccdff193ed86a",
+      "supporting_content": "生产清单和逐项素材采用默认拒绝式契约校验。",
+      "basis_evidence_ids": [],
+      "limitations": [
+        "源码能力仍需在真实远程来源中验证"
+      ]
+    },
+    {
+      "id": "E5",
+      "claim": "本地目录历史实现支持不可变快照、摘要验证、默认 dry-run 和以新单调版本发布的回滚。",
+      "kind": "VERIFIED_FACT",
+      "source_ref": "scripts/lib/catalog-history.mjs",
+      "source_locator": "snapshotCatalog, snapshotCatalogManifest, rollbackCatalog, verifyCatalogHistory",
+      "source_date": "2026-10-31",
+      "source_content_sha256": "sha256:e1476fd8186bac3ce6cbc67cd7d162b3db016939c410b6d140b0f0e8112a2bf5",
+      "supporting_content": "当前本地回滚库存已通过综合检查，但尚未在远程供应商环境演练。",
+      "basis_evidence_ids": [],
+      "limitations": [
+        "不证明供应商支持原子激活或远程回滚时限"
+      ]
+    },
+    {
+      "id": "E6",
+      "claim": "本地质检服务包含写入几何和 QA 的 POST API，而 Netlify 配置只发布由活动运行时文件白名单生成的 dist/netlify-catalog。",
+      "kind": "VERIFIED_FACT",
+      "source_ref": "scripts/serve-catalog.mjs and netlify.toml",
+      "source_locator": "handleApi POST routes; build.publish",
+      "source_date": "2026-10-31",
+      "source_content_sha256": "",
+      "supporting_content": "质检台属于私有控制平面；原始 catalog/production 还含历史 revision 和批准记录，不能直接公开，必须先生成严格部署候选。",
+      "basis_evidence_ids": [],
+      "limitations": [
+        "当前未执行外部部署，因此没有线上暴露观察"
+      ]
+    },
+    {
+      "id": "E7",
+      "claim": "用项目自有固定域名承载供应商无关静态目录，是当前最符合独立更新、最小攻击面和可迁移目标的架构。",
+      "kind": "RECOMMENDATION",
+      "source_ref": "",
+      "source_locator": "",
+      "source_date": "",
+      "source_content_sha256": "",
+      "supporting_content": "",
+      "basis_evidence_ids": ["E1", "E2", "E3", "E4", "E5", "E6"],
+      "limitations": [
+        "若未来必须支持付费、私有或个性化目录，需要重新评估身份和授权架构"
+      ]
+    },
+    {
+      "id": "E8",
+      "claim": "不使用 Cookie、Authorization 或用户身份的公开静态目录不能执行用户级付费、团队私有或个性化素材授权。",
+      "kind": "INFERENCE",
+      "source_ref": "",
+      "source_locator": "",
+      "source_date": "",
+      "source_content_sha256": "",
+      "supporting_content": "",
+      "basis_evidence_ids": ["E3", "E4", "E6"],
+      "limitations": [
+        "只约束当前公开 v1 数据平面，不排除未来另建身份和授权系统"
+      ]
+    },
+    {
+      "id": "E9",
+      "claim": "决定人明确目标地区为中国大陆，当前无域名，月预算暂不超过 200 元，并计划在未来一年内评估付费或团队私有样机。",
+      "kind": "VERIFIED_FACT",
+      "source_ref": "current task user statement",
+      "source_locator": "2026-10-31 requirements clarification",
+      "source_date": "2026-10-31",
+      "source_content_sha256": "",
+      "supporting_content": "中国大陆；目前还没有域名；每月预算 200 以内暂时；未来一年有计划付费或团队私有样机。",
+      "basis_evidence_ids": [],
+      "limitations": [
+        "尚未明确个人/企业备案主体、域名名称和云账号现状"
+      ]
+    },
+    {
+      "id": "E10",
+      "claim": "阿里云 OSS/CDN 支持自定义域名；内地 OSS Bucket 域名和中国内地/全球 CDN 加速域名需要 ICP 备案。",
+      "kind": "VERIFIED_FACT",
+      "source_ref": "https://help.aliyun.com/zh/oss/user-guide/access-buckets-via-custom-domain-names",
+      "source_locator": "开启自定义域名访问；中国内地 Bucket 备案要求",
+      "source_date": "2026-09-16",
+      "source_content_sha256": "",
+      "supporting_content": "阿里云官方资料说明可通过 CNAME 绑定自定义域名，中国内地 Bucket 需备案；CDN 官方资料对内地/全球加速作同样要求。",
+      "basis_evidence_ids": [],
+      "limitations": [
+        "只是官方产品资料，未在本项目域名和账号实测"
+      ]
+    },
+    {
+      "id": "E11",
+      "claim": "阿里云 OSS 官方示例标准本地冗余存储为 0.12 元/GB/月；CDN 支持按流量计费、静态 HTTPS 每月前 500 万次免费和用量封顶。",
+      "kind": "VERIFIED_FACT",
+      "source_ref": "https://help.aliyun.com/zh/oss/storage-fees",
+      "source_locator": "计费单价示例；其他官方资料见供应商比较文档",
+      "source_date": "2026-10-31",
+      "source_content_sha256": "",
+      "supporting_content": "存储单价、CDN 计费结构、HTTPS 免费额度和用量封顶均来自阿里云官方文档。",
+      "basis_evidence_ids": [],
+      "limitations": [
+        "官方示例不是真实账号报价；资源包、地域、回源和促销会改变最终账单"
+      ]
+    },
+    {
+      "id": "E12",
+      "claim": "腾讯云 COS/CDN 支持自定义域名；中国境内 CDN 域名需 ICP 备案。",
+      "kind": "VERIFIED_FACT",
+      "source_ref": "https://intl.cloud.tencent.com/document/product/436/18670?lang=zh",
+      "source_locator": "开启自定义 CDN 加速域名；备案要求",
+      "source_date": "2026-10-31",
+      "source_content_sha256": "",
+      "supporting_content": "腾讯云官方资料说明可为 COS 绑定自定义 CDN 加速域名，中国大陆分发需 ICP 备案。",
+      "basis_evidence_ids": [],
+      "limitations": [
+        "只是官方产品资料，未在本项目域名和账号实测"
+      ]
+    },
+    {
+      "id": "E13",
+      "claim": "腾讯云 COS 支持限时预签名 URL，私有 COS 可通过 CDN 回源鉴权和 CDN URL 鉴权分发；CDN 支持用量封顶。",
+      "kind": "VERIFIED_FACT",
+      "source_ref": "https://cloud.tencent.com/document/product/436/68284",
+      "source_locator": "预签名 URL；其他官方资料见供应商比较文档",
+      "source_date": "2026-10-31",
+      "source_content_sha256": "",
+      "supporting_content": "COS 预签名 URL、CDN 回源鉴权、CDN URL 鉴权和用量封顶均有腾讯云官方资料。",
+      "basis_evidence_ids": [],
+      "limitations": [
+        "平台鉴权只是底层能力，不会自动建立本项目的用户、订阅或团队权利模型"
+      ]
+    },
+    {
+      "id": "E14",
+      "claim": "决定人明确首批真实样机最多 200 个，100 个也可能是实际首期规模，并要求重新压缩预算。",
+      "kind": "VERIFIED_FACT",
+      "source_ref": "current task user statement",
+      "source_locator": "2026-10-31 catalog scale and budget clarification",
+      "source_date": "2026-10-31",
+      "source_content_sha256": "",
+      "supporting_content": "第一次真实样机最多可能 200 个；100 个样机也有可能；希望重新计划并进一步控制预算。",
+      "basis_evidence_ids": [],
+      "limitations": [
+        "这是内容规模和预算边界，不等于供应商选择、购买、部署或生产绑定授权"
+      ]
+    },
+    {
+      "id": "E15",
+      "claim": "按当前 5 个活动样机的真实文件体积、manifest 元数据和插件只预取相邻 3 项的加载机制估算，100 个样机的一次首次冷会话约 3.08 MiB、10,000 次约 30.0 GiB；200 个样机约 3.47 MiB、10,000 次约 33.9 GiB。",
+      "kind": "ESTIMATE",
+      "source_ref": "catalog/production/v1/manifest.json; plugin/ui.js; tests/scale.test.mjs",
+      "source_locator": "5 active r3 item byte sizes; lazy thumbnails; scheduleCatalogPreload; three-neighbor prefetch",
+      "source_date": "2026-10-31",
+      "source_content_sha256": "",
+      "supporting_content": "活动主图平均约 0.573 MiB、缩略图平均约 85.5 KiB；manifest 元数据按当前每项约 4,134 字节线性外推。100/200 个样机的活动目录估算约 66.1/132.1 MiB，但首次会话不会下载全部主图。",
+      "basis_evidence_ids": ["E3", "E14"],
+      "limitations": [
+        "线性估算假设未来样机体积和元数据接近当前 5 项",
+        "用户继续打开更多样机、回源、请求、攻击和价格变化都会提高真实账单",
+        "正式成本必须由真实账号价格计算器和 7 天隔离试点复核"
+      ]
+    },
+    {
+      "id": "E16",
+      "claim": "决定人当前没有公司或个体工商户主体，并把目标改为三天内先跑通免费插件完整线上闭环，付费与团队私有后移数月。",
+      "kind": "VERIFIED_FACT",
+      "source_ref": "current task user statement",
+      "source_locator": "2026-10-31 phase-zero deadline and scope change",
+      "source_date": "2026-10-31",
+      "source_content_sha256": "",
+      "supporting_content": "没有企业或个体工商户；三天内必须完成线上闭环；当前是免费插件；付费收费内容后移数月。",
+      "basis_evidence_ids": [],
+      "limitations": [
+        "不代表 Figma 的外部审核能够在三天内完成"
+      ]
+    },
+    {
+      "id": "E17",
+      "claim": "Netlify 官方支持不连接 Git 仓库的本地手动部署并提供 netlify.app URL；Free 计划为零月费、300 credits 和硬额度，不会自动产生超额费用。",
+      "kind": "VERIFIED_FACT",
+      "source_ref": "https://docs.netlify.com/manage/projects/add-new-project/",
+      "source_locator": "Deploy local files; Credit-based pricing plans / Free plan",
+      "source_date": "2026-10-31",
+      "source_content_sha256": "",
+      "supporting_content": "官方说明可用 deploy dropzone 或 netlify deploy 手动部署本地项目而不连接 Git；Free 计划为 300 credits/month with credit hard limit。",
+      "basis_evidence_ids": [],
+      "limitations": [
+        "免费额度耗尽会暂停站点；不提供中国大陆长期生产 SLA"
+      ]
+    },
+    {
+      "id": "E18",
+      "claim": "Figma 插件必须在 manifest 中声明允许访问的网络域名；首次 Community 发布需要审核，官方提示审批可能最长两周。",
+      "kind": "VERIFIED_FACT",
+      "source_ref": "https://developers.figma.com/docs/plugins/manifest/",
+      "source_locator": "networkAccess.allowedDomains; Figma Help plugin review process",
+      "source_date": "2026-10-31",
+      "source_content_sha256": "",
+      "supporting_content": "未声明的网络域名会被阻止；Community 首次发布需审核，官方帮助中心说明审核和批准可能需要最长两周。",
+      "basis_evidence_ids": [],
+      "limitations": [
+        "因此只能承诺三天内完成闭环和提交，不能承诺三天内获批上架"
+      ]
+    },
+    {
+      "id": "E19",
+      "claim": "当前两个已连接的 Netlify 账号都返回 UNAUTHORIZED 并要求重新认证。",
+      "kind": "OBSERVATION",
+      "source_ref": "Netlify connector get_user and coding-context calls",
+      "source_locator": "two configured link IDs, 2026-10-31 current task",
+      "source_date": "2026-10-31",
+      "source_content_sha256": "",
+      "supporting_content": "两条连接都返回 This app connection requires reauthentication，error_code UNAUTHORIZED。",
+      "basis_evidence_ids": [],
+      "limitations": [
+        "只说明当前连接认证失效，不说明 Netlify 服务不可用"
+      ]
+    },
+    {
+      "id": "E20",
+      "claim": "本地 Netlify 部署候选已由当前正式库生成并通过复核，只有 12 个允许文件，候选摘要为 sha256:4313d710fef431d7b4ff1dfee4a18306eddf69de2cc14687a1da14d26140c608。",
+      "kind": "VERIFIED_FACT",
+      "source_ref": "dist/netlify-catalog.json",
+      "source_locator": "catalogVersion, itemCount, fileCount, files, candidateSha256",
+      "source_date": "2026-10-31",
+      "source_content_sha256": "",
+      "supporting_content": "版本 2026.10.31.5、5 个活动 r3 样机；公开文件仅为 1 个 manifest、5 个活动底图、5 个活动缩略图和 1 个 _headers。",
+      "basis_evidence_ids": ["E1", "E6"],
+      "limitations": [
+        "只证明本地候选完整性和公开面隔离，尚未证明 Netlify 远程字节、响应头或真实 Figma 网络闭环"
+      ]
+    }
+  ],
+  "problems": [
+    {
+      "id": "P1",
+      "statement": "插件上线后若没有真实且稳定的远程正式目录，用户无法获得独立于插件版本的样机更新，网络失败也没有可运营的恢复责任链。",
+      "level": "PRIMARY",
+      "affected_actors": ["Figma 插件用户", "内容与运营责任人"],
+      "contexts": ["插件从本地开发转向真实长期使用"],
+      "evidence_links": [
+        { "evidence_id": "E1", "relationship": "CONTEXT", "reason": "本地正式目录已经具备可发布的数据基础。" },
+        { "evidence_id": "E2", "relationship": "SUPPORTS", "reason": "当前生产入口仍是占位值，真实远程链路不存在。" }
+      ],
+      "symptoms": ["生产构建被占位域名和空 plugin ID 阻断", "素材更新目前只能停留在本地正式库"],
+      "cause_hypotheses": [
+        {
+          "id": "C1",
+          "statement": "阶段零 Netlify 路径已经选择，但账号认证、精确站点 origin 和真实远程门禁尚未完成；长期供应商与自有域名继续后置。",
+          "status": "OBSERVED",
+          "evidence_links": [
+            { "evidence_id": "E2", "relationship": "SUPPORTS", "reason": "配置明确保留占位生产入口。" }
+          ],
+          "validation": "恢复一个 Netlify 连接，只部署严格白名单候选并完成 P0-G01 至 P0-G08；长期阶段再执行中国大陆供应商比较。"
+        }
+      ],
+      "impacts": {
+        "severity": { "value": "S4", "basis_evidence_ids": ["E2"] },
+        "reach": { "value": "未来正式插件的全部在线目录会话", "basis_evidence_ids": ["E2"] },
+        "frequency": { "value": "UNKNOWN", "basis_evidence_ids": [] },
+        "persistence": { "value": "在真实远程入口建立前持续存在", "basis_evidence_ids": ["E2"] },
+        "risk_flags": ["DATA_INTEGRITY", "REVERSIBILITY"],
+        "scope_surfaces": ["生产构建", "远程目录读取", "离线缓存", "内容更新和事故恢复"]
+      },
+      "priority": {
+        "problem_priority": "CRITICAL",
+        "confidence": "HIGH",
+        "rationale": "没有真实生产入口会直接阻断上架和独立内容更新；这里不推断真实故障频率。",
+        "basis_evidence_ids": ["E2"],
+        "sequence_dependencies": ["先冻结架构和门禁，再选择供应商与域名"]
+      }
+    },
+    {
+      "id": "P2",
+      "statement": "如果远程更新没有不可变资源、manifest 最后原子激活和可验证回滚，部分部署或错误字节可能使插件看到一套自相矛盾的正式目录。",
+      "level": "CONTRIBUTING",
+      "affected_actors": ["Figma 插件用户", "发布与运营责任人"],
+      "contexts": ["增加样机、撤回样机、供应商故障和回滚"],
+      "evidence_links": [
+        { "evidence_id": "E3", "relationship": "SUPPORTS", "reason": "现有架构已把资源先行、manifest 最后和不可变 revision 作为必要机制。" },
+        { "evidence_id": "E5", "relationship": "CONTEXT", "reason": "本地回滚证明恢复模型存在，但远程尚未验证。" }
+      ],
+      "symptoms": ["manifest 引用尚未可用的文件", "错误发布覆盖同 revision", "故障后无法证明恢复到哪一版"],
+      "cause_hypotheses": [
+        {
+          "id": "C2",
+          "statement": "本地原子提升和回滚能力尚未转化为供应商无关的远程发布合同与真实故障证据。",
+          "status": "SUPPORTED",
+          "evidence_links": [
+            { "evidence_id": "E3", "relationship": "SUPPORTS", "reason": "架构说明已定义远程顺序，但没有供应商证据。" },
+            { "evidence_id": "E5", "relationship": "SUPPORTS", "reason": "直接证据只覆盖本地快照与回滚实现。" }
+          ],
+          "validation": "对候选供应商执行部分上传、错误 manifest、超时和真实回滚故障注入。"
+        }
+      ],
+      "impacts": {
+        "severity": { "value": "S4", "basis_evidence_ids": ["E3", "E5"] },
+        "reach": { "value": "发生错误目录激活时影响读取该版本的会话", "basis_evidence_ids": ["E3"] },
+        "frequency": { "value": "UNKNOWN", "basis_evidence_ids": [] },
+        "persistence": { "value": "持续到新 manifest 或回滚版本被激活", "basis_evidence_ids": ["E5"] },
+        "risk_flags": ["DATA_INTEGRITY", "REVERSIBILITY"],
+        "scope_surfaces": ["部署快照", "CDN 缓存", "manifest 激活", "插件缓存", "事故恢复"]
+      },
+      "priority": {
+        "problem_priority": "CRITICAL",
+        "confidence": "HIGH",
+        "rationale": "错误目录会破坏核心任务，且恢复机制必须在上线前被真实证明。",
+        "basis_evidence_ids": ["E3", "E5"],
+        "sequence_dependencies": ["供应商必须先证明原子部署和可回滚，再允许生产绑定"]
+      }
+    },
+    {
+      "id": "P3",
+      "statement": "若公开部署边界配置错误，私有质检写接口、测试素材、参考权利记录或部署凭据可能与运行时静态目录一起暴露。",
+      "level": "CONTRIBUTING",
+      "affected_actors": ["素材权利相关方", "项目维护者", "插件用户"],
+      "contexts": ["配置托管发布目录和凭据"],
+      "evidence_links": [
+        { "evidence_id": "E6", "relationship": "SUPPORTS", "reason": "仓库同时存在私有写 API 和只发布 production 目录的候选配置。" }
+      ],
+      "symptoms": ["公开路径包含内部页面或 API", "写凭据进入插件或静态包", "日志或目录包含用户设计内容"],
+      "cause_hypotheses": [
+        {
+          "id": "C3",
+          "statement": "控制平面和数据平面的隔离目前依赖发布根目录配置，尚未有统一机器合同阻止范围扩大。",
+          "status": "OBSERVED",
+          "evidence_links": [
+            { "evidence_id": "E6", "relationship": "SUPPORTS", "reason": "serve-catalog 含写 API，而 netlify.toml 仅靠 publish 路径限制公开面。" }
+          ],
+          "validation": "对每个部署候选生成公开文件清单并证明禁止面不存在。"
+        }
+      ],
+      "impacts": {
+        "severity": { "value": "S4", "basis_evidence_ids": ["E6"] },
+        "reach": { "value": "错误公开配置下可被互联网访问的全部内部材料", "basis_evidence_ids": ["E6"] },
+        "frequency": { "value": "UNKNOWN", "basis_evidence_ids": [] },
+        "persistence": { "value": "从错误部署生效到撤回或修正", "basis_evidence_ids": ["E6"] },
+        "risk_flags": ["SECURITY", "PRIVACY", "INTELLECTUAL_PROPERTY"],
+        "scope_surfaces": ["公开文件清单", "质检 API", "参考图和权利记录", "部署凭据与日志"]
+      },
+      "priority": {
+        "problem_priority": "CRITICAL",
+        "confidence": "HIGH",
+        "rationale": "控制平面暴露属于上线前必须关闭的安全、隐私和知识产权风险。",
+        "basis_evidence_ids": ["E6"],
+        "sequence_dependencies": ["先固定公开目录白名单，再进行任何供应商试点"]
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "id": "X1",
+      "target": "阿里云 OSS + CDN",
+      "target_type": "TOOL_OR_WORKFLOW",
+      "capture_context": {
+        "date": "2026-10-31",
+        "platform": "Alibaba Cloud official documentation",
+        "version": "official pages current on capture date",
+        "region": "Chinese mainland",
+        "access_state": "public documentation; no project account deployment"
+      },
+      "evidence_ids": ["E10", "E11"],
+      "patterns": [
+        {
+          "id": "X1-PATTERN-1",
+          "observation": "OSS 与 CDN 可以通过自定义域名分发中国内地静态资源，内地域名需 ICP 备案。",
+          "mechanism": "项目域名 CNAME 到 CDN，CDN 回源 OSS；公开 v1 只读分发。",
+          "quality_against_criteria": "符合固定自定义域名、静态对象存储和中国内地 CDN 的纸面要求；原子激活与回滚未实测。",
+          "rationale_status": "STATED",
+          "why": "官方文档直接描述自定义域名、CDN、ICP 备案和私有回源机制。",
+          "transferability": "ADAPT",
+          "fit_conditions": [
+            "项目获得可实名与备案的自有域名",
+            "隔离试点通过 RC-G02 至 RC-G10"
+          ],
+          "risks": [
+            "计费按多个项目叠加，价格示例不是账单保证",
+            "用量封顶有监控延迟，不能保证零超支"
+          ],
+          "evidence_ids": ["E10", "E11"]
+        }
+      ]
+    },
+    {
+      "id": "X2",
+      "target": "腾讯云 COS + CDN",
+      "target_type": "TOOL_OR_WORKFLOW",
+      "capture_context": {
+        "date": "2026-10-31",
+        "platform": "Tencent Cloud official documentation",
+        "version": "official pages current on capture date",
+        "region": "Chinese mainland",
+        "access_state": "public documentation; no project account deployment"
+      },
+      "evidence_ids": ["E12", "E13"],
+      "patterns": [
+        {
+          "id": "X2-PATTERN-1",
+          "observation": "COS 与 CDN 可以通过自定义域名分发中国境内静态资源，中国境内 CDN 域名需 ICP 备案。",
+          "mechanism": "项目域名 CNAME 到 CDN，CDN 通过服务授权回源 COS；可叠加 URL 时间戳鉴权。",
+          "quality_against_criteria": "符合固定自定义域名、静态对象存储、中国境内 CDN 和未来私有素材的纸面要求；原子激活与回滚未实测。",
+          "rationale_status": "STATED",
+          "why": "官方文档直接描述自定义 CDN 域名、ICP 备案、私有 COS 回源、URL 鉴权和用量封顶。",
+          "transferability": "ADAPT",
+          "fit_conditions": [
+            "项目获得可实名与备案的自有域名",
+            "隔离试点通过 RC-G02 至 RC-G10"
+          ],
+          "risks": [
+            "真实帐户的地区、流量、HTTPS 和回源价格需在价格计算器内再核定",
+            "用量封顶有监控与全网下发延迟，不能保证零超支"
+          ],
+          "evidence_ids": ["E12", "E13"]
+        }
+      ]
+    }
+  ],
+  "strategies": [
+    {
+      "id": "S1",
+      "name": "两阶段静态只读目录：Netlify 阶段零 + 自有域名长期生产",
+      "problem_ids": ["P1", "P2", "P3"],
+      "cause_ids": ["C1", "C2", "C3"],
+      "mechanism": "阶段零只把本地正式库中当前活动 revision 的 manifest、底图、缩略图和安全响应头打成严格白名单快照，通过一个精确 Netlify HTTPS origin 手动无 Git 部署；长期再迁移到项目自有固定域名和中国大陆对象存储/CDN。两个阶段都由私有控制平面完成校验、资源先行、manifest 最后激活、监控与单调版本回滚。",
+      "user_path": "插件打开 → 从当前唯一允许的精确 HTTPS origin 读取并校验 manifest → 按需读取摘要绑定素材 → 网络失败时使用同源有效缓存 → 无有效缓存时保留用户设计并显示可行动错误。",
+      "key_states": [
+        "本地 production 已批准",
+        "远程候选验证中",
+        "资源已上传但 manifest 未激活",
+        "新 manifest 已激活并观察",
+        "离线有效缓存",
+        "目录或素材被拒绝",
+        "回滚演练与回滚完成"
+      ],
+      "scope_in": [
+        "公开免费静态样机目录",
+        "三天内完成的 Netlify Free 严格白名单试运行、真实远程校验和免费插件闭环",
+        "自定义域名、不可变资源、原子 manifest、缓存、监控和回滚",
+        "供应商选择的十项阻断门禁",
+        "中国大陆、100–200 个首期样机、分层成本/流量门禁和未来付费/团队私有扩展边界"
+      ],
+      "scope_out": [
+        "账户、付费权限、团队私有目录、个性化目录",
+        "GitHub 连续部署、长期生产域名绑定和 Figma Community 上架"
+      ],
+      "dependencies": [
+        "恢复一个 Netlify 账号连接并取得唯一站点 origin",
+        "阶段零远程目录通过 P0-G01 至 P0-G08",
+        "真实 Figma production plugin ID",
+        "长期生产阶段再取得可控制的自定义域名、备案主体和满足门禁的对象存储/CDN",
+        "长期生产前确定运营、日志保留、成本和撤回窗口"
+      ],
+      "potential_harms": [
+        "Netlify Free 达到硬额度后站点会暂停，不能当作中国大陆长期生产可用性保证",
+        "阶段零使用 Netlify 来源，因此迁移到自有域名时需要一次明确的插件更新",
+        "Figma 首次审核由外部平台控制，三天目标不能承诺审核完成",
+        "168 小时有效离线缓存可能延迟权利或安全撤回",
+        "供应商缓存语义不符会造成 manifest 或素材传播不一致",
+        "若未来出现付费素材，公开静态目录不能提供授权隔离",
+        "用量封顶存在监控和下发延迟，不能保证账单绝对不越过 30/50/80/200 元中的任何阈值"
+      ],
+      "assumptions": [
+        {
+          "statement": "Netlify 阶段零能够以精确 HTTPS origin、无 Git 手动部署和严格静态白名单完成真实线上目录验证。",
+          "test": "恢复账号连接后创建或选择无 Git 站点，只部署 dist/netlify-catalog，并逐项执行 P0-G01 至 P0-G08。"
+        },
+        {
+          "statement": "候选供应商能够在自定义域名下提供准确缓存头、不可变资源和原子部署或等价机制。",
+          "test": "查阅当前官方资料后，在隔离域名执行字节一致性、部分上传、并发读取和回滚故障注入。"
+        },
+        {
+          "statement": "首个远程上线阶段保持公开免费，付费/团队私有能力作为一年内的独立后续阶段。",
+          "test": "在商业化开始前重新冻结身份、支付/订阅、团队、授权、撤权、离线许可和隐私合同，不在公开 v1 上追加权限补丁。"
+        },
+        {
+          "statement": "在首期 100 个、最多 200 个样机和低流量启动期，对象存储 + CDN 可以把正常月费用控制在 30 元目标内，并以 80 元作为未经新决定的运营上限。",
+          "test": "使用真实账号价格计算器生成成本快照，在 7 天隔离试点后用实际存储、回源、下行、请求和 HTTPS 用量复核 30/50/80 元费用门槛及 20/50/80/100 GB 流量门槛。"
+        }
+      ],
+      "validation": {
+        "fastest_test": "恢复一个 Netlify 连接，在无 Git 站点部署 dist/netlify-catalog，先验证 P0-G01 至 P0-G08，再把唯一精确 origin 写入生产配置并构建真实 Figma 免费插件。长期生产供应商比较不阻塞该阶段。",
+        "success_signals": [
+          "精确 Netlify origin 读取的 manifest 与本地活动 production 字节完全一致",
+          "部分上传时旧 manifest 始终可用",
+          "损坏目录和素材被拒绝且插件用户状态保留",
+          "真实回滚在 5 分钟发现、15 分钟恢复目标内完成"
+        ],
+        "guardrail_signals": [
+          "公开文件清单只有 manifest、五个活动底图、五个活动缩略图和安全响应头，不含旧 revision、批准记录、控制平面、参考图或凭据",
+          "网络日志没有用户设计上传、未声明域名或远程代码",
+          "未取得精确 Netlify origin 前生产配置保持占位并拒绝构建；不使用通配 netlify.app"
+        ],
+        "change_conditions": [
+          "需要付费、团队私有或个性化目录",
+          "没有供应商能满足原子部署、导出和回滚门禁",
+          "首期目录计划突破 200 个，或技术目录超过现有数量/字节上限",
+          "业务要求即时撤回且不能接受任何离线缓存窗口"
+        ]
+      },
+      "hard_gates": [
+        {
+          "id": "S1-G1",
+          "type": "FEASIBILITY",
+          "result": "PASS",
+          "rationale": "现有本地 production 已是静态 JSON、媒体与摘要绑定记录，能够形成供应商无关部署快照。",
+          "evidence_ids": ["E1", "E3"],
+          "owner_role": "release engineering owner",
+          "unblock_condition": ""
+        },
+        {
+          "id": "S1-G2",
+          "type": "DATA_INTEGRITY",
+          "result": "PASS",
+          "rationale": "现有运行时合同默认拒绝错误目录和素材，本地生产清单已绑定不可变 SHA-256。",
+          "evidence_ids": ["E1", "E4"],
+          "owner_role": "data integrity owner",
+          "unblock_condition": ""
+        },
+        {
+          "id": "S1-G3",
+          "type": "REVERSIBILITY",
+          "result": "PASS",
+          "rationale": "本地目录已经具备不可变历史、dry-run 和单调新版本回滚，足以进入远程机制试点；不代表远程演练已通过。",
+          "evidence_ids": ["E1", "E5"],
+          "owner_role": "operations owner",
+          "unblock_condition": ""
+        },
+        {
+          "id": "S1-G4",
+          "type": "SECURITY",
+          "result": "PASS",
+          "rationale": "推荐架构明确只发布静态 production 白名单，并把现有写 API、测试库和凭据留在私有控制平面。",
+          "evidence_ids": ["E4", "E6"],
+          "owner_role": "security owner",
+          "unblock_condition": ""
+        },
+        {
+          "id": "S1-G5",
+          "type": "PRIVACY",
+          "result": "PASS",
+          "rationale": "目录数据平面只提供样机 JSON 与媒体，控制平面和用户设计处理保持本地；真实网络日志仍是上线门禁。",
+          "evidence_ids": ["E3", "E6"],
+          "owner_role": "privacy and product owner",
+          "unblock_condition": ""
+        },
+        {
+          "id": "S1-G6",
+          "type": "INTELLECTUAL_PROPERTY",
+          "result": "PASS",
+          "rationale": "只有已经通过本地正式入库并绑定权利、QA 和人工决定的 production 内容可进入候选部署。",
+          "evidence_ids": ["E1"],
+          "owner_role": "asset rights owner",
+          "unblock_condition": ""
+        }
+      ],
+      "tradeoffs": [
+        "用 Netlify 阶段零换取三天内无域名、无备案、无 Git 的真实线上闭环；接受迁移自有域名时一次插件更新",
+        "用公开只读和供应商可迁移性换取更简单、更可靠的免费目录；暂不支持用户级权限",
+        "用最多 168 小时的离线可用性换取故障韧性，但必须在上线前决定紧急撤回窗口",
+        "增加发布前远程字节校验和故障注入成本，换取不会半发布和可证明回滚"
+      ]
+    }
+  ],
+  "risks": [
+    {
+      "id": "R1",
+      "statement": "具体供应商可能无法满足无重定向 manifest、精确缓存头或原子激活。",
+      "severity": "HIGH",
+      "basis_evidence_ids": ["E2", "E3"],
+      "mitigation": "供应商选择前查阅当前官方资料，并在隔离域名完成 RC-G02 至 RC-G07；任一失败即淘汰。",
+      "owner_role": "release and operations owner",
+      "trigger": "候选供应商进入试点评审",
+      "blocking": false
+    },
+    {
+      "id": "R2",
+      "statement": "168 小时离线窗口可能与未来权利撤回或安全撤回要求冲突。",
+      "severity": "HIGH",
+      "basis_evidence_ids": ["E3"],
+      "mitigation": "正式部署前由产品与权利责任人选择可接受窗口；若要求即时撤回，修改缓存合同并使旧证据失效。",
+      "owner_role": "product and asset rights owner",
+      "trigger": "供应商决定或出现任何撤回时限要求",
+      "blocking": false
+    },
+    {
+      "id": "R3",
+      "statement": "公开静态目录不适合未来付费、团队私有或个性化授权素材。",
+      "severity": "HIGH",
+      "basis_evidence_ids": ["E8", "E9", "E13"],
+      "mitigation": "把 v1 明确限定为公开免费目录；商业化前先建立独立身份、支付/订阅、团队、授权、撤权、离线许可和隐私合同，使用私有 Bucket 与短时效签名 URL/CDN 鉴权。",
+      "owner_role": "product and business owner",
+      "trigger": "决定引入任何用户级素材权限",
+      "blocking": false
+    },
+    {
+      "id": "R4",
+      "statement": "恶意盗刷、攻击或短时流量突增可能越过 30 元正常目标、80 元运营上限甚至 200 元绝对预算；用量封顶并非实时零延迟。",
+      "severity": "HIGH",
+      "basis_evidence_ids": ["E9", "E11", "E13", "E14", "E15"],
+      "mitigation": "把月度 CDN 流量封顶设为 100 GB，在 20/50/80 GB 告警，达到 80 GB 停止非紧急素材发布；配置账单告警和防盗刷，并以真实 7 天用量复核阈值。任何提高流量封顶或突破 200 个样机的行为必须获得决定人新决定。",
+      "owner_role": "operations and finance owner",
+      "trigger": "供应商试点开通或流量异常",
+      "blocking": false
+    },
+    {
+      "id": "R5",
+      "statement": "Netlify Free 达到硬额度后会暂停站点，且中国大陆实际访问质量尚未用真实网络验证。",
+      "severity": "HIGH",
+      "basis_evidence_ids": ["E16", "E17"],
+      "mitigation": "把 Netlify 限定为阶段零免费试运行；部署后记录真实请求、流量与中国大陆访问结果，出现额度或可用性问题时停止扩量并进入自有域名长期迁移。",
+      "owner_role": "release and operations owner",
+      "trigger": "阶段零站点部署成功或出现首次真实用户流量",
+      "blocking": false
+    },
+    {
+      "id": "R6",
+      "statement": "Figma Community 首次审核可能超过三天，因此三天目标不能被表述为已在社区审核上线。",
+      "severity": "MEDIUM",
+      "basis_evidence_ids": ["E18"],
+      "mitigation": "三天验收只承诺远程目录、生产构建和本地真实 Figma 使用闭环；提交与审核状态单独记录，绝不伪装为已审核发布。",
+      "owner_role": "product and release owner",
+      "trigger": "准备提交 Figma Community",
+      "blocking": false
+    },
+    {
+      "id": "R7",
+      "statement": "当前两个 Netlify 连接都要求重新认证，外部部署在恢复一个连接前不能执行。",
+      "severity": "HIGH",
+      "basis_evidence_ids": ["E19"],
+      "mitigation": "本地先完成严格部署候选和全部门禁；决定人只需重新登录一个 Netlify 连接，随后继续创建站点和真实远程验证。",
+      "owner_role": "account owner",
+      "trigger": "执行首次 Netlify 写入",
+      "blocking": false
+    }
+  ],
+  "unknowns": [
+    {
+      "id": "U1",
+      "question": "长期阶段采用阿里云 OSS+CDN 还是腾讯云 COS+CDN？",
+      "decision_impact": "只影响阶段零之后的中国大陆长期生产，不阻塞 Netlify 免费试运行。",
+      "next_action": "完成阶段零并获得真实流量后再比较真实账号成本和性能，不在三天闭环中要求决定人选择。",
+      "blocking": false
+    },
+    {
+      "id": "U2",
+      "question": "项目将使用哪个自定义域名和个人/企业备案主体，以及谁控制 DNS、证书和续费？",
+      "decision_impact": "没有答案不能完成长期中国大陆生产绑定，但不阻塞阶段零生产构建。",
+      "next_action": "阶段零完成后、长期迁移前再决定域名、备案与责任人。",
+      "blocking": false
+    },
+    {
+      "id": "U3",
+      "question": "可接受的紧急素材撤回窗口是多少？",
+      "decision_impact": "可能把当前 168 小时离线上限改为更短值，并使缓存证据失效。",
+      "next_action": "在真实发布前由产品与权利责任人明确离线可用性和撤回时限取舍。",
+      "blocking": false
+    },
+    {
+      "id": "U4",
+      "question": "正式 Figma plugin ID、监控责任人、支持入口和日志保留是什么？",
+      "decision_impact": "正式 Figma plugin ID 阻止最终生产构建；监控、支持和日志保留可以在阶段零部署后、提交社区前补齐。",
+      "next_action": "Netlify origin 通过远程门禁后取得真实 plugin ID，并在一次生产构建中绑定；运营信息在提交社区前形成记录。",
+      "blocking": false
+    },
+    {
+      "id": "U5",
+      "question": "哪一个 Netlify 连接恢复认证，以及创建后的唯一站点 origin 是什么？",
+      "decision_impact": "这是当前唯一阻止首次外部部署和生产网络配置的操作性未知，不改变已经批准的两阶段策略。",
+      "next_action": "决定人重新登录任意一个 Netlify 连接；系统读取账号后创建或选择无 Git 站点并记录唯一 origin。",
+      "blocking": false
+    }
+  ],
+  "recommendation": {
+    "strategy_id": "S1",
+    "reason": "当前正确方案是两阶段而不是强迫三天目标等待域名和备案：阶段零使用 Netlify Free、无 Git 手动部署和严格活动文件白名单，先完成真实线上目录与免费插件闭环；长期再用自有域名迁移到中国大陆对象存储/CDN。该策略直接利用已验证的静态正式目录、摘要校验和本地回滚能力，不提前实现付费、账号或团队私有系统。首期仍按 100 个、最多 200 个样机运营；500 项只保留为技术拒绝上限。",
+    "confidence": "HIGH",
+    "change_conditions": [
+      "需要付费、团队私有或个性化目录",
+      "候选供应商均不能满足原子部署、导出和回滚门禁",
+      "业务要求即时撤回且不能接受离线缓存",
+      "首期目录计划突破 200 个，或目录规模超过当前插件技术合同上限"
+    ]
+  },
+  "decision_record": {
+    "status": "NOT_LINKED",
+    "outcome": "",
+    "record_ref": "",
+    "actor_ref": "",
+    "actor_role": "",
+    "recorded_at": "",
+    "bound_analysis_sha256": "",
+    "notes": [
+      "用户已授权开展本阶段工作，但尚未在外部决定系统中建立可绑定的架构批准记录。",
+      "用户已授权 Netlify 阶段零目录试运行；该授权不包含 GitHub、Figma Community 提交、长期供应商绑定、域名购买或商业化系统。"
+    ]
+  },
+  "extensions": {
+    "operative_contract": "quality/remote-catalog-contract.json",
+    "authority_document": "docs/REMOTE_CATALOG_ARCHITECTURE_CONTRACT_2026-10-31.md",
+    "provider_comparison": "docs/REMOTE_CATALOG_PROVIDER_COMPARISON_2026-10-31.md"
+  }
+}
