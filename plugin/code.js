@@ -74,7 +74,7 @@
   return Object.freeze({ CODES, MESSAGES, create, message, payload, messageFromPayload, report });
 });
 
-const PLUGIN_VERSION = "0.1.0";
+const PLUGIN_VERSION = "0.1.2";
 const CATALOG_CACHE_KEY = "mockup-studio-catalog-v6";
 const MAX_SELECTION_LAYERS = 50;
 const MAX_SELECTION_EXPORT_BYTES = 83886080;

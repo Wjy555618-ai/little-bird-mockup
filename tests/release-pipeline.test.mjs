@@ -34,6 +34,8 @@ test("release pipeline requires a published tag, packages one provenance-bound R
 
     const configPath = resolve(root, "config/plugin.config.json");
     const config = JSON.parse(await readFile(configPath, "utf8"));
+    const releaseVersion = config.pluginVersion;
+    const releaseTag = `v${releaseVersion}`;
     config.environments.production = {
       pluginId: "1234567890123456789",
       catalogUrl: "https://assets.mockup-studio-cdn.com/v1/manifest.json",
@@ -53,7 +55,7 @@ test("release pipeline requires a published tag, packages one provenance-bound R
     mustRun(root, "git", ["config", "user.email", "release-test@example.invalid"]);
     mustRun(root, "git", ["add", "-A"]);
     mustRun(root, "git", ["commit", "-qm", "test release"]);
-    mustRun(root, "git", ["tag", "v0.1.0"]);
+    mustRun(root, "git", ["tag", releaseTag]);
     mustRun(root, "git", ["remote", "add", "origin", "https://git.mockup-studio-cdn.com/mockup-studio.git"]);
     mustRun(remoteRoot, "git", ["init", "--bare", "-q"]);
     mustRun(root, "git", ["config", `url.${pathToFileURL(remoteRoot).href}.insteadOf`, "https://git.mockup-studio-cdn.com/mockup-studio.git"]);
@@ -68,23 +70,23 @@ test("release pipeline requires a published tag, packages one provenance-bound R
     assert.equal(unpublished.status, 1);
     assert.match(unpublished.stderr, /必须已发布到 origin/);
 
-    mustRun(root, "git", ["push", "-q", "origin", "HEAD:refs/heads/main", "refs/tags/v0.1.0"]);
+    mustRun(root, "git", ["push", "-q", "origin", "HEAD:refs/heads/main", `refs/tags/${releaseTag}`]);
 
     const first = run(root, process.execPath, ["scripts/verify-release.mjs", "--out-dir", "dist/plugin"], { env: releaseEnvironment });
     assert.equal(first.status, 0, first.stderr || first.stdout);
-    assert.match(first.stdout, /Release engineering gate PASS: v0\.1\.0, REL-[A-F0-9]{12}/);
+    assert.match(first.stdout, new RegExp(`Release engineering gate PASS: ${releaseTag.replaceAll(".", "\\.")}, REL-[A-F0-9]{12}`));
     assert.match(first.stdout, /Immutable release bundle written/);
 
     const policySource = await readFile(resolve(root, "quality/measurement-policy.json"));
     const contractSource = await readFile(resolve(root, "quality/acceptance-gates.json"));
     const bundle = await inspectReleaseBundle(resolve(root, "dist/plugin"), {
-      version: "0.1.0",
+      version: releaseVersion,
       sourceRevision,
       measurementPolicySha256: createHash("sha256").update(policySource).digest("hex"),
       contractId: "MOCKUP-STUDIO-PRODUCTION-CONTRACT-1",
       contractSha256: createHash("sha256").update(contractSource).digest("hex")
     });
-    assert.equal(bundle.provenance.sourceTag, "v0.1.0");
+    assert.equal(bundle.provenance.sourceTag, releaseTag);
     assert.equal(bundle.provenance.sourceRevision, sourceRevision);
 
     const second = run(root, process.execPath, ["scripts/verify-release.mjs", "--out-dir", "dist/plugin"], { env: releaseEnvironment });

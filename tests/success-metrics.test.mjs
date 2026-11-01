@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import { contractSha256, measurementPolicySha256, validateEvidenceDocument } from "../scripts/verify-evidence.mjs";
 
+const currentVersion = JSON.parse(readFileSync(new URL("../config/plugin.config.json", import.meta.url), "utf8")).pluginVersion;
 const release = {
-  version: "0.1.0",
+  version: currentVersion,
   fingerprint: "REL-123456789ABC",
   sourceRevision: "a".repeat(40),
   artifactSha256: "b".repeat(64),

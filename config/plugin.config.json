@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pluginVersion": "0.1.0",
+  "pluginVersion": "0.1.2",
   "catalogContract": {
     "schemaVersion": 5,
     "rendererVersion": "2.4.0",

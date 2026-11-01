@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import test from "node:test";
 import { contractSha256, measurementPolicySha256, validateEvidenceDocument } from "../scripts/verify-evidence.mjs";
 
+const currentVersion = JSON.parse(readFileSync(new URL("../config/plugin.config.json", import.meta.url), "utf8")).pluginVersion;
 const fingerprint = "REL-123456789ABC";
 const sourceRevision = "a".repeat(40);
 const artifactSha256 = "b".repeat(64);
@@ -41,7 +43,7 @@ function validPerformanceEvidence() {
     createdAt: "2026-11-01T01:00:00.000Z",
     ownerRole: "performance owner",
     release: {
-      version: "0.1.0",
+      version: currentVersion,
       fingerprint,
       sourceRevision,
       artifactSha256,
@@ -70,7 +72,7 @@ async function fixture() {
 async function validate(document, filePath) {
   return validateEvidenceDocument(document, {
     gateId: "G-120",
-    version: "0.1.0",
+    version: currentVersion,
     fingerprint,
     sourceRevision,
     artifactSha256,
@@ -248,7 +250,7 @@ test("manual evidence rejects empty evidence objects, unknown scenarios and a no
     const wrongPath = validPerformanceEvidence();
     await assert.rejects(validateEvidenceDocument(wrongPath, {
       gateId: "G-120",
-      version: "0.1.0",
+      version: currentVersion,
       fingerprint,
       sourceRevision,
       artifactSha256,

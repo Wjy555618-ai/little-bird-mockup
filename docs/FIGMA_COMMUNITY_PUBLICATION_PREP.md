@@ -96,7 +96,7 @@
 - 公开 GitHub 仓库、Issues 与 Private Vulnerability Reporting 已建立并验证；代码推送、线上 CI 与默认分支内容仍需单独验证。
 - 在 Figma 账号启用双重验证，确认发布者身份与 Community 发布资格。
 - 正式 Figma plugin ID `1698731404284779274` 已生成，并写入 `config/plugin.config.json` 与 `config/figma-community.json`。
-- 形成干净提交，推送 `origin`，创建并推送与同一提交绑定的 `v0.1.0` 标签。
+- 发布前运行 `pnpm release:version <major.minor.patch>`，形成干净提交并推送 `origin`；只创建与该提交、`package.json` 和 `config/plugin.config.json` 完全一致的 `v<version>` 标签。
 - 生成唯一 REL 制品并在 macOS、Windows、人工无障碍和真实 Figma 关键任务中完成发布级证据。
 - 发布门禁全部通过后，产品层发布授权无需重做；实际平台提交仍遵守 Figma 与执行环境要求的临提交确认。遇到登录、验证码或双重验证时暂停，并用最短步骤引导决定人本人完成。
 
