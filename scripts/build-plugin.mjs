@@ -101,7 +101,7 @@ const [
   readFile(resolve(pluginRoot, "ui.js"), "utf8"),
   readFile(resolve(pluginRoot, "code.template.js"), "utf8"),
   readFile(resolve(pluginRoot, "manifest.template.json"), "utf8"),
-  readFile(resolve(pluginRoot, "assets/little-bird-mockup-logo.png")),
+  readFile(resolve(pluginRoot, "assets/little-bird-mockup-logo-dark-ui.png")),
   readFile(configPath, "utf8"),
   readFile(resolve(projectRoot, "package.json"), "utf8"),
   readFile(resolve(projectRoot, "pnpm-lock.yaml"), "utf8"),

@@ -17,7 +17,8 @@ const RED = '#F04B43';
 const FONT = "'PingFang SC','SF Pro Display','Helvetica Neue',Arial,sans-serif";
 
 const assets = {
-  bird: path.join(ROOT, 'plugin/assets/little-bird-mockup-logo-source.png'),
+  bird: path.join(ROOT, 'plugin/assets/little-bird-mockup-logo-light-surface.png'),
+  birdDark: path.join(ROOT, 'plugin/assets/little-bird-mockup-logo-dark-ui.png'),
   plugin: path.join(ROOT, 'docs/evidence/little-bird-mockup-brand-expanded.png'),
   edit: path.join(ROOT, 'docs/evidence/2026-10-29-final-c-edit.png'),
   perspective: path.join(ROOT, 'docs/evidence/2026-10-29-final-e-perspective.png'),
@@ -57,9 +58,9 @@ function label(x, y, text, width) {
 }
 
 async function createIcon() {
-  const bird = await sharp(assets.bird).trim({ background: { r: 0, g: 0, b: 0, alpha: 0 } }).resize(116, 116, { fit: 'contain' }).png().toBuffer();
-  const base = sharp({ create: { width: 128, height: 128, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } });
-  await base.composite([{ input: bird, left: 6, top: 6 }]).png().toFile(path.join(OUT, 'plugin-icon-128.png'));
+  const bird = await sharp(assets.bird).trim({ background: { r: 0, g: 0, b: 0, alpha: 0 } }).resize(104, 104, { fit: 'contain' }).png().toBuffer();
+  const plate = svg(128, 128, '<rect x="2" y="2" width="124" height="124" rx="32" fill="#F4F3EF" stroke="#DDDCD7" stroke-width="2"/>');
+  await sharp(plate).composite([{ input: bird, left: 12, top: 12 }]).png().toFile(path.join(OUT, 'plugin-icon-128.png'));
 }
 
 async function cover(icon) {
@@ -166,7 +167,7 @@ async function contactSheet() {
     <text x="1346" y="166" font-size="24" font-weight="650">统一原则</text>
     <text x="1346" y="202" font-size="20" class="muted">真实界面 · 真实样机 · 真实功能</text>
     <rect x="1310" y="258" width="548" height="558" rx="28" fill="#FFFFFF" stroke="#DDDAD4" stroke-width="2"/>
-    <text x="1350" y="342" font-size="28" font-weight="700">透明背景图标</text>
+    <text x="1350" y="342" font-size="28" font-weight="700">跨主题插件图标</text>
     <text x="1350" y="740" font-size="22" class="muted">128 × 128 px</text>
     <text x="64" y="884" font-size="28" font-weight="700">轮播图</text>
     ${[0,1,2,3].map((i) => `<rect x="${64 + i*462}" y="920" width="446" height="258" rx="22" fill="#fff" stroke="${LINE}"/>`).join('')}
@@ -179,15 +180,39 @@ async function contactSheet() {
   ]).png().toFile(path.join(OUT, '00-review-contact-sheet.png'));
 }
 
+async function brandContextMatrix() {
+  const dark38 = await sharp(assets.birdDark).resize(38, 38, { fit: 'contain' }).png().toBuffer();
+  const dark44 = await sharp(assets.birdDark).resize(44, 44, { fit: 'contain' }).png().toBuffer();
+  const light44 = await sharp(assets.bird).resize(44, 44, { fit: 'contain' }).png().toBuffer();
+  const light72 = await sharp(assets.bird).resize(72, 72, { fit: 'contain' }).png().toBuffer();
+  const listing = await sharp(path.join(OUT, 'plugin-icon-128.png')).resize(128, 128).png().toBuffer();
+  const surface = svg(1280, 520, `
+    <rect x="40" y="40" width="580" height="440" rx="28" fill="#171717"/>
+    <rect x="660" y="40" width="580" height="440" rx="28" fill="#F4F3EF" stroke="#DDDCD7"/>
+    <text x="80" y="104" font-size="26" font-weight="700" class="white">插件深色界面</text>
+    <text x="700" y="104" font-size="26" font-weight="700">Figma 广场浅色界面</text>
+    <text x="80" y="430" font-size="20" class="white">38px / 44px：眼睛、嘴、腿保持可见</text>
+    <text x="700" y="430" font-size="20">44px / 72px / 128px：深色细节保持可见</text>
+  `, '#E9E8E3');
+  await sharp(surface).composite([
+    { input: dark38, left: 100, top: 206 },
+    { input: dark44, left: 238, top: 203 },
+    { input: light44, left: 720, top: 203 },
+    { input: light72, left: 860, top: 189 },
+    { input: listing, left: 1020, top: 161 },
+  ]).png().toFile(path.join(OUT, '00-brand-context-matrix.png'));
+}
+
 async function main() {
   await fs.mkdir(OUT, { recursive: true });
   await createIcon();
-  const icon = await sharp(path.join(OUT, 'plugin-icon-128.png')).resize(72, 72).png().toBuffer();
-  await cover(icon);
-  await threeSteps(icon);
-  await adjust(icon);
-  await perspective(icon);
-  await finish(icon);
+  await brandContextMatrix();
+  const promotionMark = await sharp(assets.bird).resize(72, 72, { fit: 'contain' }).png().toBuffer();
+  await cover(promotionMark);
+  await threeSteps(promotionMark);
+  await adjust(promotionMark);
+  await perspective(promotionMark);
+  await finish(promotionMark);
   await contactSheet();
 }
 

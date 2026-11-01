@@ -66,7 +66,7 @@ test("active publication surfaces use only the selected right-facing bird brand 
     assert.doesNotMatch(source, /monster-mockup-logo|panda-mockup-logo|little-bird-wallpaper-logo|怪兽样机|熊猫样机|小鸟壁纸|Angry Birds|愤怒的小鸟/i);
   }
   assert.match(manifest, /"name": "小鸟样机"/);
-  assert.match(build, /little-bird-mockup-logo\.png/);
+  assert.match(build, /little-bird-mockup-logo-dark-ui\.png/);
   assert.match(provenance, /CONFIRMED_BY_OWNER/);
   assert.match(provenance, /决定人 Wang Zhentao 明确确认/);
 });

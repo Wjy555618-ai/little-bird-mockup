@@ -11,8 +11,10 @@ import sharp from "sharp";
 
 const projectRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const pluginRoot = resolve(projectRoot, "plugin");
-const brandLogoBytes = await readFile(resolve(pluginRoot, "assets/little-bird-mockup-logo.png"));
+const brandLogoBytes = await readFile(resolve(pluginRoot, "assets/little-bird-mockup-logo-dark-ui.png"));
+const lightBrandLogoBytes = await readFile(resolve(pluginRoot, "assets/little-bird-mockup-logo-light-surface.png"));
 const brandLogoSource = await readFile(resolve(pluginRoot, "assets/little-bird-mockup-logo-source.png"));
+const brandContract = await readFile(resolve(pluginRoot, "assets/little-bird-mockup-brand-contract.json"), "utf8").then(JSON.parse);
 const [pluginManifest, pluginConfig, buildScript, code, codeTemplate, uiScript, uiHtml, uiStyles, assetCardHoverScript, rendererScript, catalogContractScript, resourceLimitsScript, boundedResponseScript, labHtml, labScript, serverScript, netlifyConfig, gitignore] = await Promise.all([
   readFile(resolve(pluginRoot, "manifest.json"), "utf8").then(JSON.parse),
   readFile(resolve(projectRoot, "config/plugin.config.json"), "utf8").then(JSON.parse),
@@ -547,25 +549,46 @@ test("built UI contains the intended product modes without external scripts", ()
 
 test("小鸟样机 brand identity is source-bound and embedded without external runtime assets", async () => {
   assert.equal(pluginManifest.name, "小鸟样机");
-  const regeneratedLogo = await sharp(brandLogoSource).resize(512, 512, { fit: "contain" }).png().toBuffer();
-  assert.deepEqual(brandLogoBytes, regeneratedLogo);
+  const brandCheck = spawnSync(process.execPath, ["scripts/generate-brand-assets.mjs", "--check"], { cwd: projectRoot, encoding: "utf8" });
+  assert.equal(brandCheck.status, 0, brandCheck.stderr || brandCheck.stdout);
   const sourceMetadata = await sharp(brandLogoSource).metadata();
   const runtimeMetadata = await sharp(brandLogoBytes).metadata();
+  const lightMetadata = await sharp(lightBrandLogoBytes).metadata();
   assert.equal(sourceMetadata.hasAlpha, true);
   assert.deepEqual([runtimeMetadata.width, runtimeMetadata.height, runtimeMetadata.hasAlpha], [512, 512, true]);
-  const { data: logoPixels } = await sharp(brandLogoBytes).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  assert.deepEqual([lightMetadata.width, lightMetadata.height, lightMetadata.hasAlpha], [512, 512, true]);
+  const { data: logoPixels, info: logoInfo } = await sharp(brandLogoBytes).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const { data: lightPixels } = await sharp(lightBrandLogoBytes).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   let transparentPixels = 0;
   let redPixels = 0;
-  let whitePixels = 0;
   for (let index = 0; index < logoPixels.length; index += 4) {
     const [red, green, blue, alpha] = logoPixels.subarray(index, index + 4);
     if (alpha <= 8) transparentPixels += 1;
     if (alpha >= 240 && red >= 190 && green <= 110 && blue <= 110) redPixels += 1;
-    if (alpha >= 240 && red >= 235 && green >= 235 && blue >= 235) whitePixels += 1;
   }
   assert.ok(transparentPixels > 10_000, "brand logo must keep a genuine transparent background");
   assert.ok(redPixels > 80_000, "brand logo must preserve the red bird body");
-  assert.ok(whitePixels > 1_000, "eye, beak and legs must remain visible white details on the dark plugin surface");
+  const scale = logoInfo.width / brandContract.sourceSize.width;
+  for (const [featureName, feature] of Object.entries(brandContract.features)) {
+    const [sourceX, sourceY, sourceWidth, sourceHeight] = feature.region;
+    const left = Math.floor(sourceX * scale);
+    const top = Math.floor(sourceY * scale);
+    const right = Math.ceil((sourceX + sourceWidth) * scale);
+    const bottom = Math.ceil((sourceY + sourceHeight) * scale);
+    let darkUiWhite = 0;
+    let lightSurfaceDark = 0;
+    for (let y = top; y < bottom; y += 1) {
+      for (let x = left; x < right; x += 1) {
+        const index = (y * logoInfo.width + x) * 4;
+        const [darkRed, darkGreen, darkBlue, darkAlpha] = logoPixels.subarray(index, index + 4);
+        const [lightRed, lightGreen, lightBlue, lightAlpha] = lightPixels.subarray(index, index + 4);
+        if (darkAlpha >= 180 && darkRed >= 225 && darkGreen >= 225 && darkBlue >= 225) darkUiWhite += 1;
+        if (lightAlpha >= 180 && lightRed <= 55 && lightGreen <= 55 && lightBlue <= 55) lightSurfaceDark += 1;
+      }
+    }
+    assert.ok(darkUiWhite > 500, `${featureName} must stay visibly white on the dark plugin surface`);
+    assert.ok(lightSurfaceDark > 500, `${featureName} must stay visibly dark on light Community surfaces`);
+  }
   assert.match(uiHtml, /<title>小鸟样机<\/title>/);
   assert.match(uiHtml, /class="window-brand"[^>]*aria-label="小鸟样机"/);
   assert.match(uiHtml, /class="brand-logo brand-logo-window"/);
@@ -585,6 +608,7 @@ test("小鸟样机 brand identity is source-bound and embedded without external 
   assert.match(code, /小鸟样机导出/);
   assert.match(uiScript, /· 小鸟样机/);
   assert.match(buildScript, /brandLogoSha256/);
+  assert.match(buildScript, /little-bird-mockup-logo-dark-ui\.png/);
   assert.match(buildScript, /replaceAll\("__BRAND_LOGO_DATA_URI__", brandLogoDataUri\)/);
 });
 

@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "source": "little-bird-mockup-logo-source.png",
+  "sourceSize": {
+    "width": 1254,
+    "height": 1254
+  },
+  "outputSize": {
+    "width": 512,
+    "height": 512
+  },
+  "contexts": {
+    "darkUi": {
+      "path": "little-bird-mockup-logo-dark-ui.png",
+      "detailColor": "#FFFFFF"
+    },
+    "lightSurface": {
+      "path": "little-bird-mockup-logo-light-surface.png",
+      "detailColor": "#171717"
+    }
+  },
+  "features": {
+    "eye": {
+      "region": [760, 165, 180, 180],
+      "selector": "light",
+      "minimumPixels": 8000
+    },
+    "beak": {
+      "region": [1010, 250, 200, 115],
+      "selector": "dark",
+      "minimumPixels": 5000
+    },
+    "legs": {
+      "region": [530, 1080, 210, 140],
+      "selector": "dark",
+      "minimumPixels": 6500
+    }
+  }
+}
