@@ -1,9 +1,9 @@
 # 远程样机库两阶段架构与上线合同
 
-合同 ID：`MOCKUP-REMOTE-CATALOG-CONTRACT-1`
-决定人：Wang Zhentao
-状态：阶段零 Netlify 免费静态目录试运行已授权；GitHub、Figma Community 提交和长期中国大陆生产绑定仍未授权
-适用范围：正式样机目录的托管、更新、故障降级、回滚、监控与供应商迁移。
+合同 ID：`MOCKUP-REMOTE-CATALOG-CONTRACT-1`  
+决定人：Wang Zhentao  
+状态：阶段零 Netlify 免费静态目录试运行已授权；GitHub、Figma Community 提交和长期中国大陆生产绑定仍未授权  
+适用范围：正式样机目录的托管、更新、故障降级、回滚、监控与供应商迁移。  
 机器合同：`quality/remote-catalog-contract.json`
 
 ## 1. 当前决定
