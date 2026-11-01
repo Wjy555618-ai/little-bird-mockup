@@ -549,6 +549,14 @@ test("built UI contains the intended product modes without external scripts", ()
 
 test("小鸟样机 brand identity is source-bound and embedded without external runtime assets", async () => {
   assert.equal(pluginManifest.name, "小鸟样机");
+  assert.equal(brandContract.schemaVersion, 2);
+  assert.deepEqual(brandContract.contexts.darkUi.usageSizes, [38, 44]);
+  assert.deepEqual(brandContract.contexts.lightSurface.usageSizes, [44, 72, 128]);
+  assert.notDeepEqual(brandContract.contexts.darkUi.featureColors, brandContract.contexts.lightSurface.featureColors);
+  for (const featureName of Object.keys(brandContract.features)) {
+    assert.equal(brandContract.contexts.darkUi.featureColors[featureName], "#FFFFFF");
+    assert.equal(brandContract.contexts.lightSurface.featureColors[featureName], "#171717");
+  }
   const brandCheck = spawnSync(process.execPath, ["scripts/generate-brand-assets.mjs", "--check"], { cwd: projectRoot, encoding: "utf8" });
   assert.equal(brandCheck.status, 0, brandCheck.stderr || brandCheck.stdout);
   const sourceMetadata = await sharp(brandLogoSource).metadata();

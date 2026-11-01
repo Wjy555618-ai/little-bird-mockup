@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "source": "little-bird-mockup-logo-source.png",
   "sourceSize": {
     "width": 1254,
@@ -12,11 +12,27 @@
   "contexts": {
     "darkUi": {
       "path": "little-bird-mockup-logo-dark-ui.png",
-      "detailColor": "#FFFFFF"
+      "surfaceColor": "#171717",
+      "featureColors": {
+        "eye": "#FFFFFF",
+        "beak": "#FFFFFF",
+        "legs": "#FFFFFF"
+      },
+      "usageSizes": [38, 44],
+      "minimumVisiblePixels": 5,
+      "minimumContrastRatio": 4.5
     },
     "lightSurface": {
       "path": "little-bird-mockup-logo-light-surface.png",
-      "detailColor": "#171717"
+      "surfaceColor": "#F4F3EF",
+      "featureColors": {
+        "eye": "#171717",
+        "beak": "#171717",
+        "legs": "#171717"
+      },
+      "usageSizes": [44, 72, 128],
+      "minimumVisiblePixels": 5,
+      "minimumContrastRatio": 4.5
     }
   },
   "features": {

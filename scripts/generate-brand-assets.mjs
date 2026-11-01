@@ -17,6 +17,28 @@ function parseHexColor(value, label) {
   return [1, 3, 5].map((offset) => Number.parseInt(value.slice(offset, offset + 2), 16));
 }
 
+function relativeLuminance([red, green, blue]) {
+  const channels = [red, green, blue].map((value) => {
+    const normalized = value / 255;
+    return normalized <= 0.04045 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4;
+  });
+  return (0.2126 * channels[0]) + (0.7152 * channels[1]) + (0.0722 * channels[2]);
+}
+
+function contrastRatio(first, second) {
+  const light = Math.max(relativeLuminance(first), relativeLuminance(second));
+  const dark = Math.min(relativeLuminance(first), relativeLuminance(second));
+  return (light + 0.05) / (dark + 0.05);
+}
+
+function matchesTargetColor(red, green, blue, target, tolerance = 96) {
+  return Math.max(
+    Math.abs(red - target[0]),
+    Math.abs(green - target[1]),
+    Math.abs(blue - target[2])
+  ) <= tolerance;
+}
+
 function insideRegion(x, y, region) {
   const [left, top, width, height] = region;
   return x >= left && x < left + width && y >= top && y < top + height;
@@ -31,6 +53,7 @@ function matchesSelector(red, green, blue, alpha, selector) {
 
 async function renderVariants() {
   const contract = JSON.parse(await readFile(contractPath, "utf8"));
+  if (contract.schemaVersion !== 2) fail(`不支持的品牌合同版本：${contract.schemaVersion}`);
   const sourcePath = resolve(assetRoot, contract.source);
   const { data, info } = await sharp(sourcePath).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
 
@@ -56,14 +79,22 @@ async function renderVariants() {
   }
 
   const detailIndexes = new Set([...masks.values()].flat());
+  if (detailIndexes.size === 0) fail("品牌合同没有可着色的语义细节");
   const outputs = new Map();
   for (const [contextName, context] of Object.entries(contract.contexts)) {
     const pixels = Buffer.from(data);
-    const [red, green, blue] = parseHexColor(context.detailColor, `${contextName}.detailColor`);
-    for (const index of detailIndexes) {
-      pixels[index] = red;
-      pixels[index + 1] = green;
-      pixels[index + 2] = blue;
+    const surfaceColor = parseHexColor(context.surfaceColor, `${contextName}.surfaceColor`);
+    for (const [featureName, indexes] of masks) {
+      const featureColor = parseHexColor(context.featureColors?.[featureName], `${contextName}.featureColors.${featureName}`);
+      const ratio = contrastRatio(featureColor, surfaceColor);
+      if (ratio < context.minimumContrastRatio) {
+        fail(`${contextName}.${featureName} 与使用背景的对比度不足：${ratio.toFixed(2)} < ${context.minimumContrastRatio}`);
+      }
+      for (const index of indexes) {
+        pixels[index] = featureColor[0];
+        pixels[index + 1] = featureColor[1];
+        pixels[index + 2] = featureColor[2];
+      }
     }
     const output = await sharp(pixels, {
       raw: { width: info.width, height: info.height, channels: 4 }
@@ -71,6 +102,34 @@ async function renderVariants() {
       .resize(contract.outputSize.width, contract.outputSize.height, { fit: "contain", kernel: sharp.kernel.lanczos3 })
       .png({ compressionLevel: 9 })
       .toBuffer();
+
+    for (const usageSize of context.usageSizes) {
+      const { data: usagePixels, info: usageInfo } = await sharp(output)
+        .resize(usageSize, usageSize, { fit: "contain", kernel: sharp.kernel.lanczos3 })
+        .ensureAlpha()
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+      const scale = usageSize / contract.sourceSize.width;
+      for (const [featureName, feature] of Object.entries(contract.features)) {
+        const target = parseHexColor(context.featureColors[featureName], `${contextName}.featureColors.${featureName}`);
+        const [sourceX, sourceY, sourceWidth, sourceHeight] = feature.region;
+        const left = Math.max(0, Math.floor(sourceX * scale));
+        const top = Math.max(0, Math.floor(sourceY * scale));
+        const right = Math.min(usageInfo.width, Math.ceil((sourceX + sourceWidth) * scale));
+        const bottom = Math.min(usageInfo.height, Math.ceil((sourceY + sourceHeight) * scale));
+        let visiblePixels = 0;
+        for (let y = top; y < bottom; y += 1) {
+          for (let x = left; x < right; x += 1) {
+            const index = (y * usageInfo.width + x) * 4;
+            const [red, green, blue, alpha] = usagePixels.subarray(index, index + 4);
+            if (alpha >= 96 && matchesTargetColor(red, green, blue, target)) visiblePixels += 1;
+          }
+        }
+        if (visiblePixels < context.minimumVisiblePixels) {
+          fail(`${contextName}.${featureName} 在 ${usageSize}px 下不可辨识：${visiblePixels} < ${context.minimumVisiblePixels}`);
+        }
+      }
+    }
     outputs.set(resolve(assetRoot, context.path), output);
   }
   return outputs;
