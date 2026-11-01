@@ -16,6 +16,17 @@ const LINE = '#DDDCD7';
 const RED = '#F04B43';
 const FONT = "'PingFang SC','SF Pro Display','Helvetica Neue',Arial,sans-serif";
 
+const BRAND = Object.freeze({
+  x: 92,
+  y: 66,
+  iconSize: 60,
+  gap: 20,
+  labelX: 172,
+  labelBaseline: 108,
+  width: 500,
+  height: 60,
+});
+
 const assets = {
   bird: path.join(ROOT, 'plugin/assets/little-bird-mockup-logo-light-surface.png'),
   birdDark: path.join(ROOT, 'plugin/assets/little-bird-mockup-logo-dark-ui.png'),
@@ -57,6 +68,31 @@ function label(x, y, text, width) {
   return `<rect x="${x}" y="${y}" width="${width}" height="60" rx="30" fill="#fff" stroke="${LINE}"/><circle cx="${x + 30}" cy="${y + 30}" r="8" fill="${RED}"/><text x="${x + 52}" y="${y + 40}" font-size="26" font-weight="650">${text}</text>`;
 }
 
+function brandLockup(text = '小鸟样机 · Figma 插件') {
+  return `<text x="${BRAND.labelX}" y="${BRAND.labelBaseline}" font-size="30" font-weight="650" class="muted">${text}</text>`;
+}
+
+function brandComposite(icon) {
+  return { input: icon, left: BRAND.x, top: BRAND.y };
+}
+
+function assertZones(name, zones) {
+  for (const zone of zones) {
+    if (zone.x < 0 || zone.y < 0 || zone.x + zone.width > W || zone.y + zone.height > H) {
+      throw new Error(`${name}: ${zone.name} is outside the 1920×1080 canvas`);
+    }
+  }
+
+  for (let i = 0; i < zones.length; i += 1) {
+    for (let j = i + 1; j < zones.length; j += 1) {
+      const a = zones[i];
+      const b = zones[j];
+      const overlaps = a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
+      if (overlaps) throw new Error(`${name}: ${a.name} overlaps ${b.name}`);
+    }
+  }
+}
+
 async function createIcon() {
   const bird = await sharp(assets.bird).trim({ background: { r: 0, g: 0, b: 0, alpha: 0 } }).resize(104, 104, { fit: 'contain' }).png().toBuffer();
   const plate = svg(128, 128, '<rect x="2" y="2" width="124" height="124" rx="32" fill="#F4F3EF" stroke="#DDDCD7" stroke-width="2"/>');
@@ -64,12 +100,19 @@ async function createIcon() {
 }
 
 async function cover(icon) {
+  assertZones('01-cover', [
+    { name: 'brand', x: BRAND.x, y: BRAND.y, width: BRAND.width, height: BRAND.height },
+    { name: 'headline', x: 92, y: 246, width: 590, height: 210 },
+    { name: 'support', x: 92, y: 540, width: 600, height: 52 },
+    { name: 'cta', x: 92, y: 682, width: 365, height: 60 },
+    { name: 'product-visual', x: 760, y: 76, width: 1090, height: 928 },
+  ]);
   const plugin = await image(assets.plugin, 900, 675, 'cover', 'centre', 24);
   const laptop = await image(assets.laptop, 430, 287, 'cover', 'centre', 22);
   const phone = await image(assets.phone, 330, 248, 'cover', 'centre', 22);
   const overlay = svg(W, H, `
     ${cardShadow(760, 76, 1090, 928, 36)}
-    <text x="92" y="176" font-size="30" font-weight="650" class="muted">小鸟样机 · Figma 插件</text>
+    ${brandLockup()}
     <text x="92" y="318" font-size="84" font-weight="760"><tspan x="92" dy="0">把设计放进去，</tspan><tspan x="92" dy="104">一眼就像成品</tspan></text>
     <text x="92" y="584" font-size="34" font-weight="520" class="muted">精选设备样机 · 直接粘贴回 Figma</text>
     ${label(92, 682, '打开 Figma，马上试试', 365)}
@@ -78,7 +121,7 @@ async function cover(icon) {
     <rect x="1296" y="826" width="512" height="164" rx="26" fill="#fff" stroke="${LINE}"/>
   `, BG);
   await sharp(overlay).composite([
-    { input: icon, left: 92, top: 88 },
+    brandComposite(icon),
     { input: plugin, left: 802, top: 116 },
     { input: laptop, left: 820, top: 688 },
     { input: phone, left: 1450, top: 710 },
@@ -86,11 +129,16 @@ async function cover(icon) {
 }
 
 async function threeSteps(icon) {
+  assertZones('02-three-steps', [
+    { name: 'brand', x: BRAND.x, y: BRAND.y, width: BRAND.width, height: BRAND.height },
+    { name: 'headline', x: 92, y: 190, width: 1040, height: 90 },
+    { name: 'steps', x: 86, y: 318, width: 1720, height: 644 },
+  ]);
   const choose = await image(assets.plugin, 500, 530, 'cover', 'west', 26);
   const edit = await image(assets.edit, 500, 530, 'cover', 'centre', 26);
   const done = await image(assets.laptop, 500, 530, 'cover', 'centre', 26);
   const overlay = svg(W, H, `
-    <text x="180" y="102" font-size="30" font-weight="650" class="muted">小鸟样机</text>
+    ${brandLockup()}
     <text x="92" y="246" font-size="76" font-weight="760">三步，设计就能上样机</text>
     <text x="110" y="962" font-size="38" font-weight="700">01  选一个样机</text>
     <text x="710" y="962" font-size="38" font-weight="700">02  放入你的设计</text>
@@ -100,7 +148,7 @@ async function threeSteps(icon) {
     <rect x="1286" y="318" width="520" height="550" rx="32" fill="#fff" stroke="${LINE}"/>
   `, BG);
   await sharp(overlay).composite([
-    { input: icon, left: 92, top: 52 },
+    brandComposite(icon),
     { input: choose, left: 96, top: 328 },
     { input: edit, left: 696, top: 328 },
     { input: done, left: 1296, top: 328 },
@@ -108,38 +156,58 @@ async function threeSteps(icon) {
 }
 
 async function adjust(icon) {
+  assertZones('03-adjust', [
+    { name: 'brand', x: BRAND.x, y: BRAND.y, width: BRAND.width, height: BRAND.height },
+    { name: 'product-visual', x: 88, y: 166, width: 1120, height: 806 },
+    { name: 'headline', x: 1320, y: 188, width: 510, height: 184 },
+    { name: 'feature-list', x: 1320, y: 482, width: 460, height: 110 },
+    { name: 'cta', x: 1320, y: 704, width: 500, height: 60 },
+  ]);
   const edit = await image(assets.edit, 1080, 750, 'cover', 'centre', 30);
   const overlay = svg(W, H, `
+    ${brandLockup()}
     ${cardShadow(88, 166, 1120, 806, 36)}
     <text x="1320" y="246" font-size="72" font-weight="760"><tspan x="1320" dy="0">画面怎么放，</tspan><tspan x="1320" dy="92">你说了算</tspan></text>
     <text x="1320" y="526" font-size="34" font-weight="540" class="muted"><tspan x="1320" dy="0">缩放 · 移动</tspan><tspan x="1320" dy="58">旋转 · 色彩</tspan></text>
     ${label(1320, 704, '不用切软件，直接在 Figma 里调', 500)}
   `, BG);
   await sharp(overlay).composite([
+    brandComposite(icon),
     { input: edit, left: 108, top: 186 },
-    { input: icon, left: 1320, top: 94 },
   ]).png().toFile(path.join(OUT, '03-adjust.png'));
 }
 
 async function perspective(icon) {
+  assertZones('04-perspective', [
+    { name: 'brand', x: BRAND.x, y: BRAND.y, width: BRAND.width, height: BRAND.height },
+    { name: 'headline', x: 92, y: 238, width: 530, height: 196 },
+    { name: 'support', x: 92, y: 532, width: 500, height: 118 },
+    { name: 'product-visual', x: 708, y: 90, width: 1150, height: 900 },
+  ]);
   const shot = await image(assets.perspective, 1120, 780, 'cover', 'centre', 30);
   const overlay = svg(W, H, `
-    <text x="180" y="112" font-size="30" font-weight="650" class="muted">自由透视</text>
+    ${brandLockup()}
     <text x="92" y="300" font-size="76" font-weight="760"><tspan x="92" dy="0">角度不对？</tspan><tspan x="92" dy="98">拖一拖就好</tspan></text>
     <text x="92" y="566" font-size="34" font-weight="540" class="muted"><tspan x="92" dy="0">四个角点自由调整</tspan><tspan x="92" dy="58">斜着放，也能贴得自然</tspan></text>
     ${cardShadow(708, 90, 1150, 900, 36)}
   `, BG);
   await sharp(overlay).composite([
-    { input: icon, left: 92, top: 66 },
+    brandComposite(icon),
     { input: shot, left: 723, top: 105 },
   ]).png().toFile(path.join(OUT, '04-perspective.png'));
 }
 
 async function finish(icon) {
+  assertZones('05-finish', [
+    { name: 'brand', x: BRAND.x, y: BRAND.y, width: BRAND.width, height: BRAND.height },
+    { name: 'headline', x: 92, y: 208, width: 800, height: 90 },
+    { name: 'support', x: 92, y: 316, width: 830, height: 48 },
+    { name: 'results', x: 88, y: 420, width: 1744, height: 520 },
+  ]);
   const laptop = await image(assets.laptop, 720, 480, 'cover', 'centre', 28);
   const phone = await image(assets.phone, 620, 465, 'cover', 'centre', 28);
   const overlay = svg(W, H, `
-    <text x="180" y="106" font-size="30" font-weight="650" class="muted">完成以后</text>
+    ${brandLockup()}
     <text x="92" y="268" font-size="76" font-weight="760">直接回到 Figma</text>
     <text x="92" y="344" font-size="34" font-weight="540" class="muted">粘贴回画布，或导出原始尺寸 PNG</text>
     <rect x="88" y="420" width="756" height="520" rx="34" fill="#fff" stroke="${LINE}"/>
@@ -150,7 +218,7 @@ async function finish(icon) {
     <text x="1620" y="818" font-size="38" font-weight="700" class="white"><tspan x="1620" dy="0">画面</tspan><tspan x="1620" dy="58">本地处理</tspan></text>
   `, BG);
   await sharp(overlay).composite([
-    { input: icon, left: 92, top: 58 },
+    brandComposite(icon),
     { input: laptop, left: 106, top: 440 },
     { input: phone, left: 894, top: 440 },
   ]).png().toFile(path.join(OUT, '05-finish.png'));
@@ -207,7 +275,7 @@ async function main() {
   await fs.mkdir(OUT, { recursive: true });
   await createIcon();
   await brandContextMatrix();
-  const promotionMark = await sharp(assets.bird).resize(72, 72, { fit: 'contain' }).png().toBuffer();
+  const promotionMark = await sharp(assets.bird).resize(BRAND.iconSize, BRAND.iconSize, { fit: 'contain' }).png().toBuffer();
   await cover(promotionMark);
   await threeSteps(promotionMark);
   await adjust(promotionMark);
