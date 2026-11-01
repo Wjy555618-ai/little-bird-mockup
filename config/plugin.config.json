@@ -25,7 +25,7 @@
       "catalogEnvironment": "production"
     },
     "production": {
-      "pluginId": "",
+      "pluginId": "1698731404284779274",
       "catalogUrl": "https://unrivaled-cat-56bfe7.netlify.app/v1/manifest.json",
       "catalogEnvironment": "production"
     }

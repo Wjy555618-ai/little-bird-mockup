@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "lifecycle": "UNPUBLISHED",
+  "pluginId": "1698731404284779274",
+  "name": "小鸟样机",
+  "tagline": "精选设备样机，设计放进去就好",
+  "description": "小鸟样机是一款简单好用的 Figma 设备样机插件。\n\n选择一个喜欢的手机、电脑或显示器样机，读取当前 Figma 画面，设计就会自动适配到设备屏幕。调整满意后，可以直接粘贴回 Figma 画布，也可以导出原始尺寸 PNG。\n\n不需要打开 Photoshop，不需要寻找 PSD，也不用手动制作蒙版和透视。\n\n三步完成\n\n1. 选择样机\n从样机库中选择喜欢的设备和场景。\n\n2. 放入设计\n读取 Figma 选区，或者导入自己的本地文件。\n\n3. 直接使用\n实时预览效果，然后粘贴回画布或导出 PNG。\n\n为什么好用\n\n- 打开就会用：整个流程都在 Figma 里完成，没有复杂设置。\n- 画面自动适配：自动保持原始比例并填满设备屏幕，不会把设计拉伸变形。\n- 调整直观：直接拖动、缩放和旋转画面，所见就是最终效果。\n- 支持自由透视：拖动画面角点，就能调整屏幕透视。\n- 随时微调效果：支持亮度、对比度和饱和度调整。\n- 找样机更方便：支持搜索、分类、相似样机和最近使用。\n- 结果直接可用：一键粘贴回 Figma 画布，或导出原始尺寸 PNG。\n\n支持的画面来源\n\n- Figma 图层、画板、组合和容器\n- 本地图片和 SVG\n- 视频和 PDF 静态画面\n\n当前样机库\n\n首发版本提供 5 个经过检查的完整场景样机，覆盖手机、笔记本和显示器。\n\n样机素材可以通过在线目录持续更新，不需要每次增加素材都重新安装插件。成功同步后，网络暂时不可用时也可以继续使用最近保存的离线目录。\n\n免费与隐私\n\n首发版本免费使用，不需要注册或登录。\n\n你的 Figma 画面、导入文件和生成结果都在插件本地处理，不会上传到素材服务器。网络仅用于读取公开的样机目录和素材文件。\n\n现在就试试\n\n打开小鸟样机，选择一个喜欢的场景，把你的设计放进去。\n\n不用学习复杂操作，几步就能得到一张可以直接用于作品集、产品汇报和方案展示的完整样机图。",
+  "category": "Design tools",
+  "subcategory": "Product and brand",
+  "tags": [
+    "Product mockups",
+    "Product images"
+  ],
+  "publisher": "王贞涛-UED",
+  "additionalContributors": [],
+  "pricing": "free",
+  "allowComments": true,
+  "playground": null,
+  "supportContact": "https://github.com/Wjy555618-ai/little-bird-mockup/issues",
+  "network": {
+    "label": "Restricted network access",
+    "allowedOrigins": [
+      "https://unrivaled-cat-56bfe7.netlify.app"
+    ],
+    "purpose": "Read the public, read-only mockup catalog and static asset files. No Figma-derived data is transmitted."
+  },
+  "dataSecurity": {
+    "backendService": "hosted-static-catalog-no-figma-derived-data",
+    "thirdPartyNetworkRequests": [
+      "static-assets-no-figma-derived-data"
+    ],
+    "userAuthentication": "none",
+    "storesFigmaDerivedData": false,
+    "updateManagement": "solo-developer"
+  },
+  "media": {
+    "icon": "docs/community-assets/review/plugin-icon-128.png",
+    "thumbnail": "docs/community-assets/review/01-cover.png",
+    "carousel": [
+      "docs/community-assets/review/02-three-steps.png",
+      "docs/community-assets/review/03-adjust.png",
+      "docs/community-assets/review/04-perspective.png",
+      "docs/community-assets/review/05-finish.png"
+    ]
+  }
+}

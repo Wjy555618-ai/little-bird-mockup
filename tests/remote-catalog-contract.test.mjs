@@ -8,14 +8,20 @@ import { validateRemoteCatalogContract, verifyRemoteCatalogContract } from "../s
 const projectRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const contract = JSON.parse(await readFile(resolve(projectRoot, "quality/remote-catalog-contract.json"), "utf8"));
 const config = JSON.parse(await readFile(resolve(projectRoot, "config/plugin.config.json"), "utf8"));
+const community = JSON.parse(await readFile(resolve(projectRoot, "config/figma-community.json"), "utf8"));
 
-test("remote catalog contract authorizes only the three-day Netlify catalog pilot while preserving the long-term architecture", async () => {
+test("remote catalog contract preserves the historical Netlify pilot while authorizing the current public repository and Community submission", async () => {
   const verified = await verifyRemoteCatalogContract(projectRoot);
   assert.equal(verified.contractId, "MOCKUP-REMOTE-CATALOG-CONTRACT-1");
   assert.equal(verified.scope.externalDeploymentAllowed, true);
   assert.equal(verified.scope.netlifyDeploymentAllowed, true);
-  assert.equal(verified.scope.githubPublicationAllowed, false);
-  assert.equal(verified.scope.figmaCommunityPublicationAllowed, false);
+  assert.equal(verified.scope.netlifyRedeployAllowed, false);
+  assert.equal(verified.scope.githubPublicationAllowed, true);
+  assert.equal(verified.scope.figmaCommunityPublicationAllowed, true);
+  assert.equal(verified.phaseZeroPilot.communitySubmissionAuthorized, false);
+  assert.equal(verified.publication.pluginId, "1698731404284779274");
+  assert.equal(verified.publication.repository, "Wjy555618-ai/little-bird-mockup");
+  assert.equal(verified.publication.netlifyRedeployAuthorized, false);
   assert.equal(verified.phaseZeroPilot.publishDirectory, "dist/netlify-catalog");
   assert.equal(verified.phaseZeroDeployment.origin, "https://unrivaled-cat-56bfe7.netlify.app");
   assert.equal(verified.phaseZeroDeployment.deployId, "6ae5de9c8a03867857235639");
@@ -37,8 +43,11 @@ test("remote catalog contract authorizes only the three-day Netlify catalog pilo
 test("remote catalog contract rejects permission, trust, atomicity, recovery and limit drift", () => {
   const cases = [
     ["remove pilot deployment authorization", (value) => { value.scope.externalDeploymentAllowed = false; }, /授权缺失/],
-    ["expand to GitHub", (value) => { value.scope.githubPublicationAllowed = true; }, /禁止授权/],
-    ["expand to Community", (value) => { value.scope.figmaCommunityPublicationAllowed = true; }, /禁止授权/],
+    ["revoke authorized GitHub publication", (value) => { value.scope.githubPublicationAllowed = false; }, /公开发布授权缺失/],
+    ["revoke authorized Community submission", (value) => { value.scope.figmaCommunityPublicationAllowed = false; }, /公开发布授权缺失/],
+    ["silently authorize Netlify redeploy", (value) => { value.scope.netlifyRedeployAllowed = true; }, /第二次 Netlify/],
+    ["rewrite the historical pilot decision", (value) => { value.phaseZeroPilot.communitySubmissionAuthorized = true; }, /阶段零部署/],
+    ["change the formal plugin ID", (value) => { value.publication.pluginId = "1698731404284779275"; }, /生产配置未绑定正式 Figma plugin ID/],
     ["publish raw production tree", (value) => { value.phaseZeroPilot.publishDirectory = "catalog/production"; }, /公开目录/],
     ["allow inactive revisions", (value) => { value.phaseZeroPilot.forbiddenPublishedContent.shift(); }, /禁止公开内容/],
     ["allow wildcard Netlify", (value) => { value.phaseZeroPilot.wildcardNetlifyDomainAllowed = true; }, /域名/],
@@ -63,6 +72,6 @@ test("remote catalog contract rejects permission, trust, atomicity, recovery and
   for (const [label, mutate, pattern] of cases) {
     const value = structuredClone(contract);
     mutate(value);
-    assert.throws(() => validateRemoteCatalogContract(value, config), pattern, label);
+    assert.throws(() => validateRemoteCatalogContract(value, config, community), pattern, label);
   }
 });

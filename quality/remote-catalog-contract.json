@@ -1,14 +1,16 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "contractId": "MOCKUP-REMOTE-CATALOG-CONTRACT-1",
-  "status": "phase-zero-netlify-static-catalog-pilot-authorized",
+  "contractRevision": 2,
+  "status": "community-publication-authorized-on-phase-zero-static-catalog",
   "decisionOwner": "Wang Zhentao",
   "authorityDocument": "docs/REMOTE_CATALOG_ARCHITECTURE_CONTRACT_2026-10-31.md",
-  "decisionPack": "quality/remote-catalog-decision-pack.json",
+  "historicalDecisionPack": "quality/remote-catalog-decision-pack.json",
+  "publicationAuthority": "docs/PUBLICATION_AUTHORIZATION_2026-11-01.md",
   "contractSources": [
     {
       "path": "docs/REMOTE_CATALOG_ARCHITECTURE_CONTRACT_2026-10-31.md",
-      "sha256": "11fccdf49858ce48aac412535392efdba620aa8d8a9690d006493d44109322bb"
+      "sha256": "2c4d7f911814777224763bd241c09a4d824d0b34313cb7da3288b0b6b315d5c3"
     },
     {
       "path": "docs/REMOTE_CATALOG_PROVIDER_COMPARISON_2026-10-31.md",
@@ -20,7 +22,11 @@
     },
     {
       "path": "config/plugin.config.json",
-      "sha256": "cf9994100162e67d3cf7e759f09f9046834773441e5dd9d6c099e344f59f29a5"
+      "sha256": "52b2d0a9eb45057404846ae862fb4a10ffe2eaa3ab2b49a5a1f74b0ceb57f9ba"
+    },
+    {
+      "path": "docs/PUBLICATION_AUTHORIZATION_2026-11-01.md",
+      "sha256": "ed24a0e167674a7ccb772451eea9ab6c09bd4cb739d16029869fc1f4a100f8d4"
     }
   ],
   "scope": {
@@ -29,9 +35,23 @@
     "providerSelectionAuthorized": false,
     "domainBindingAuthorized": false,
     "externalDeploymentAllowed": true,
-    "githubPublicationAllowed": false,
+    "githubPublicationAllowed": true,
     "netlifyDeploymentAllowed": true,
-    "figmaCommunityPublicationAllowed": false
+    "netlifyRedeployAllowed": false,
+    "figmaCommunityPublicationAllowed": true
+  },
+  "publication": {
+    "authorizedAt": "2026-11-01",
+    "pluginId": "1698731404284779274",
+    "repository": "Wjy555618-ai/little-bird-mockup",
+    "defaultBranch": "main",
+    "listingContract": "config/figma-community.json",
+    "supportContact": "https://github.com/Wjy555618-ai/little-bird-mockup/issues",
+    "securityContact": "https://github.com/Wjy555618-ai/little-bird-mockup/security/advisories/new",
+    "assetRightsConfirmed": true,
+    "githubPublicationAuthorized": true,
+    "figmaCommunitySubmissionAuthorized": true,
+    "netlifyRedeployAuthorized": false
   },
   "architecture": {
     "model": "vendor-neutral-static-read-only-data-plane-with-private-control-plane",
@@ -226,9 +246,8 @@
     "project-owned-production-domain",
     "icp-filing-subject",
     "provider-isolated-pilot-approval",
-    "figma-production-plugin-id",
     "log-retention-and-access-roles",
     "acceptable-emergency-revocation-window",
-    "monitoring-and-support-owners"
+    "monitoring-and-incident-owner"
   ]
 }

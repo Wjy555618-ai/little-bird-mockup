@@ -2,7 +2,7 @@
 
 合同 ID：`MOCKUP-REMOTE-CATALOG-CONTRACT-1`  
 决定人：Wang Zhentao  
-状态：阶段零 Netlify 免费静态目录试运行已授权；GitHub、Figma Community 提交和长期中国大陆生产绑定仍未授权  
+状态：阶段零 Netlify 免费静态目录已上线；2026-11-01 已追加授权公开 GitHub 与 Figma Community 提交；长期中国大陆生产绑定仍未授权
 适用范围：正式样机目录的托管、更新、故障降级、回滚、监控与供应商迁移。  
 机器合同：`quality/remote-catalog-contract.json`
 
@@ -13,7 +13,7 @@
 - **阶段零：三天线上闭环。** 允许使用一个精确的 `*.netlify.app` HTTPS 来源，手动、无 Git 地部署只读正式样机运行时目录；只用于免费插件试运行，不宣称中国大陆长期生产质量。
 - **阶段一：长期生产。** 继续采用供应商无关的静态只读数据平面、项目自有固定 HTTPS 域名和私有控制平面；备案、付费和团队私有在独立合同中完成。
 
-阶段零授权不包含 GitHub 连接、任意 Netlify 通配域、质检台/源码公开、Figma Community 提交、收费、账号或团队私有能力。质检台、创作委托、批准接口、原始参考图、权利材料、构建源码和部署凭据始终不得进入公开目录。
+2026-10-31 的阶段零部署授权当时不包含 GitHub 连接、Figma Community 提交、任意 Netlify 通配域、收费、账号或团队私有能力。2026-11-01，决定人通过 `docs/PUBLICATION_AUTHORIZATION_2026-11-01.md` 追加授权公开完整工程仓库和 Figma Community 提交；这项新授权不允许连接 GitHub 自动部署 Netlify，也不允许第二次 Netlify 部署。质检台、源码和不含秘密的交接流程可以进入公开 GitHub，但质检台、创作委托、批准接口、原始参考图、权利材料、构建源码和部署凭据始终不得进入 Netlify 公开运行目录。
 
 ## 2. 为什么采用这一模型
 
@@ -102,7 +102,7 @@
 
 阶段零选择 Netlify 不是长期供应商结论，而是为了满足三天时限的可逆试运行决定。只允许：Free 计划硬额度、手动无 Git 部署、精确站点 origin、静态白名单目录和真实 Figma 验证。Netlify 账号、站点、部署 ID、固定 URL、候选摘要和时间必须形成证据；免费额度耗尽导致暂停属于已知风险，不能宣称长期 SLA 或中国大陆稳定性。
 
-阶段零的唯一公开候选由 `pnpm netlify:catalog:prepare` 生成到 `dist/netlify-catalog`。直接把 `catalog/production` 整目录拖到 Netlify 属于合同失败，因为该目录包含不活动历史 revision 和控制平面批准记录。
+阶段零的唯一公开候选由 `pnpm netlify:catalog:prepare` 生成到 `dist/netlify-catalog`。直接把 `catalog/production` 整目录拖到 Netlify 属于合同失败，因为该目录包含不活动历史 revision 和控制平面批准记录。公开 GitHub 仓库与 Netlify 运行目录是不同发布面：仓库承担可审计、可接管的工程交付，Netlify 仍只承载白名单静态运行文件。
 
 长期生产供应商名称不是架构。只有同时满足以下条件的托管方案才能进入阶段一：
 
@@ -174,4 +174,4 @@
 
 目前不能把阶段零称为完整通过：全部远程媒体的完整 GET SHA-256 仍需由真实插件下载校验补齐，`P0-G06` 的在线加载、换画面、编辑、导出、粘贴、断网缓存和错误保留尚需在真实 Figma 中执行，`P0-G08` 还需保存最终额度保护证据。任何第二次上传或重新部署都会消耗新的部署额度，必须先告知 Wang Zhentao 并获得新的明确同意；当前阶段不得为了补证据重复部署。
 
-GitHub 连接和 Figma Community 提交仍保持关闭。个人/企业备案、域名购买、阿里云/腾讯云阶段一选择、付费和团队私有全部后移，不阻塞当前真实 Figma 阶段零验证。
+2026-11-01，公开 GitHub 与 Figma Community 提交已经由决定人追加授权，正式 plugin ID 为 `1698731404284779274`；公开仓库、上架字段与支持入口由 `docs/PUBLICATION_AUTHORIZATION_2026-11-01.md` 和 `config/figma-community.json` 约束。任何第二次 Netlify 上传仍保持关闭。个人/企业备案、域名购买、阿里云/腾讯云阶段一选择、付费和团队私有全部后移，不阻塞当前首发插件验证。

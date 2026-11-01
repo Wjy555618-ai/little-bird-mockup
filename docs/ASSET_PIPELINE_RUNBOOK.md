@@ -1,6 +1,6 @@
 # 样机生产流水线运行手册
 
-本手册服务本地资产流水线，不自行授权外部发布。当前精确 Netlify 阶段零试运行的授权、站点、证据和剩余门禁只以 `docs/REMOTE_CATALOG_ARCHITECTURE_CONTRACT_2026-10-31.md` 与 `quality/remote-catalog-contract.json` 为准；GitHub 和 Figma 社区仍未授权。
+本手册服务本地资产流水线，不自行授权外部发布。外部发布权限只以 `quality/remote-catalog-contract.json` 与其来源文件为准：当前公开 GitHub 与 Figma Community 提交已授权；精确 Netlify 站点继续可用，但任何第二次 Netlify 部署仍未授权。
 
 ## 新对话恢复
 

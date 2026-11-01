@@ -2,7 +2,7 @@
 
 核对日期：2026-11-01
 生命周期：`UNPUBLISHED`
-当前状态：`PUBLICATION_AUTHORIZED`——工程开发门禁、品牌权利确认、用户冻结的上架材料和公开支持/安全入口已完成；决定人已授权公开 GitHub 与最终 Figma Publish。正式 Figma 身份、正式 REL 制品与发布级验证仍待完成。
+当前状态：`PUBLICATION_AUTHORIZED`——工程开发门禁、品牌权利确认、用户冻结的上架材料、公开支持/安全入口和正式 Figma plugin ID 已完成；决定人已授权公开 GitHub 与最终 Figma Publish。正式 REL 制品与发布级验证仍待完成。
 
 本文件只记录已经由代码、现有合同或决定人明确决定的发布事实。2026-11-01，决定人 Wang Zhentao 已明确授权创建公开 GitHub 仓库、配置 Issues 与私密漏洞报告、提交 Figma 审核，并在发布门禁通过后执行最终 Publish；账号登录、验证码和双重验证仍由决定人本人完成。
 
@@ -14,7 +14,7 @@
 - `1920 × 1080` 主缩略图及四张轮播图。
 - 已确认的 Tagline、详细说明、标签及其他推广文案。
 
-轮播图和视频不是首次提交的必需项。首发默认不添加，除非决定人在材料阶段明确要求。
+首发已明确使用四张轮播图，不添加视频。所有发布字段的机器可读单一事实源为 [`config/figma-community.json`](../config/figma-community.json)；本文件只解释决定、依据与边界。
 
 ## 2. 已确定的发布字段
 
@@ -24,7 +24,8 @@
 | 产品形式 | Classic plugin | 当前 Figma 插件结构 |
 | 编辑器 | Figma Design | `editorType: ["figma"]`；不宣称支持 FigJam、Slides、Buzz 或 Dev Mode |
 | 首发价格 | 免费 | 决定人已明确先跑通免费插件；付费与团队私有样机后移 |
-| 分类 | `Design tools` | 核心任务是将设计画面应用到样机场景；不是软件开发工具 |
+| 分类 | `Design tools` → `Product and brand` | 核心任务是将设计画面应用到产品样机场景；不是软件开发工具 |
+| 发现标签 | `Product mockups`、`Product images` | 与当前设备样机和产出类型直接一致，不使用未经支持的标签 |
 | 发布目标 | Figma Community | 不发布为组织内部资源 |
 | 发布者 | Wang Zhentao | 当前产品决定人；最终在 Figma 发布界面确认账号身份 |
 | 额外贡献者 | 首发不添加 | 当前没有已确认需要展示的额外贡献者 |
@@ -94,10 +95,10 @@
 - 图标、主缩略图、四张轮播图和推广文案已由决定人确认并冻结。
 - 公开 GitHub 仓库、Issues 与 Private Vulnerability Reporting 已建立并验证；代码推送、线上 CI 与默认分支内容仍需单独验证。
 - 在 Figma 账号启用双重验证，确认发布者身份与 Community 发布资格。
-- 获取正式 Figma plugin ID，写入单一生产配置。
+- 正式 Figma plugin ID `1698731404284779274` 已生成，并写入 `config/plugin.config.json` 与 `config/figma-community.json`。
 - 形成干净提交，推送 `origin`，创建并推送与同一提交绑定的 `v0.1.0` 标签。
 - 生成唯一 REL 制品并在 macOS、Windows、人工无障碍和真实 Figma 关键任务中完成发布级证据。
-- 发布门禁全部通过后，执行代理可直接在 Figma Desktop 中上传、提交并点击 Publish；无需再次请求发布授权。遇到登录、验证码或双重验证时暂停，并用最短步骤引导决定人本人完成。
+- 发布门禁全部通过后，产品层发布授权无需重做；实际平台提交仍遵守 Figma 与执行环境要求的临提交确认。遇到登录、验证码或双重验证时暂停，并用最短步骤引导决定人本人完成。
 
 ## 7. 官方来源
 

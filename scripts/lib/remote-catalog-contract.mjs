@@ -19,15 +19,25 @@ function safePath(root, relativePath, label) {
   return path;
 }
 
-export function validateRemoteCatalogContract(contract, pluginConfig) {
-  if (contract?.schemaVersion !== 1 || contract.contractId !== "MOCKUP-REMOTE-CATALOG-CONTRACT-1") fail("远程目录合同身份无效");
-  if (contract.status !== "phase-zero-netlify-static-catalog-pilot-authorized" || contract.decisionOwner !== "Wang Zhentao") fail("远程目录合同状态或决定人无效");
-  if (!Array.isArray(contract.contractSources) || contract.contractSources.length !== 4) fail("远程目录合同来源不完整");
+export function validateRemoteCatalogContract(contract, pluginConfig, communityConfig) {
+  if (contract?.schemaVersion !== 2 || contract.contractId !== "MOCKUP-REMOTE-CATALOG-CONTRACT-1" || contract.contractRevision !== 2) fail("远程目录合同身份无效");
+  if (contract.status !== "community-publication-authorized-on-phase-zero-static-catalog" || contract.decisionOwner !== "Wang Zhentao") fail("远程目录合同状态或决定人无效");
+  if (contract.historicalDecisionPack !== "quality/remote-catalog-decision-pack.json" || contract.publicationAuthority !== "docs/PUBLICATION_AUTHORIZATION_2026-11-01.md") fail("远程目录合同来源关系无效");
+  if (!Array.isArray(contract.contractSources) || contract.contractSources.length !== 5) fail("远程目录合同来源不完整");
   if (contract.scope?.architectureAndGatesAuthorized !== true || contract.scope?.providerResearchAuthorized !== true) fail("当前授权范围不完整");
-  for (const key of ["providerSelectionAuthorized", "domainBindingAuthorized", "githubPublicationAllowed", "figmaCommunityPublicationAllowed"]) {
-    if (contract.scope?.[key] !== false) fail(`当前阶段禁止授权：${key}`);
-  }
+  for (const key of ["providerSelectionAuthorized", "domainBindingAuthorized"]) if (contract.scope?.[key] !== false) fail(`当前阶段禁止授权：${key}`);
   if (contract.scope.externalDeploymentAllowed !== true || contract.scope.netlifyDeploymentAllowed !== true) fail("阶段零 Netlify 静态目录部署授权缺失");
+  if (contract.scope.githubPublicationAllowed !== true || contract.scope.figmaCommunityPublicationAllowed !== true) fail("当前公开发布授权缺失");
+  if (contract.scope.netlifyRedeployAllowed !== false) fail("第二次 Netlify 部署不得被静默授权");
+
+  const publication = contract.publication;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(publication?.authorizedAt || "") || !/^(?!0+$)\d{10,25}$/.test(publication.pluginId || "") || !/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(publication.repository || "") || publication.defaultBranch !== "main") fail("公开发布身份无效");
+  const repositoryUrl = `https://github.com/${publication.repository}`;
+  if (publication.listingContract !== "config/figma-community.json" || publication.supportContact !== `${repositoryUrl}/issues` || publication.securityContact !== `${repositoryUrl}/security/advisories/new`) fail("公开发布支持或清单入口无效");
+  if (publication.assetRightsConfirmed !== true || publication.githubPublicationAuthorized !== true || publication.figmaCommunitySubmissionAuthorized !== true || publication.netlifyRedeployAuthorized !== false) fail("公开发布授权边界无效");
+  if (pluginConfig?.environments?.production?.pluginId !== publication.pluginId) fail("生产配置未绑定正式 Figma plugin ID");
+  if (communityConfig?.lifecycle !== "UNPUBLISHED" || communityConfig.pluginId !== publication.pluginId || typeof communityConfig.name !== "string" || !communityConfig.name || communityConfig.supportContact !== publication.supportContact) fail("Figma Community 清单未绑定当前发布授权");
+  if (communityConfig.network?.allowedOrigins?.length !== 1 || communityConfig.network.allowedOrigins[0] !== contract.phaseZeroDeployment?.origin) fail("Figma Community 网络披露与精确目录来源不一致");
 
   const architecture = contract.architecture;
   if (architecture?.model !== "vendor-neutral-static-read-only-data-plane-with-private-control-plane") fail("远程目录架构模型漂移");
@@ -100,7 +110,15 @@ export function validateRemoteCatalogContract(contract, pluginConfig) {
   exactArray(pilotGates?.map((gate) => gate.id), Array.from({ length: 8 }, (_, index) => `P0-G${String(index + 1).padStart(2, "0")}`), "阶段零部署门禁");
   for (const gate of pilotGates) if (gate.blocking !== true || typeof gate.evidenceRequired !== "string" || !gate.evidenceRequired) fail(`${gate.id} 必须默认关闭并要求证据`);
   exactArray(contract.unresolvedBeforePilotDeployment, [], "阶段零部署前未知项");
-  if (!Array.isArray(contract.unresolvedBeforeLongTermProduction) || contract.unresolvedBeforeLongTermProduction.length !== 8) fail("长期生产部署前未知项不完整");
+  exactArray(contract.unresolvedBeforeLongTermProduction, [
+    "hosting-provider",
+    "project-owned-production-domain",
+    "icp-filing-subject",
+    "provider-isolated-pilot-approval",
+    "log-retention-and-access-roles",
+    "acceptable-emergency-revocation-window",
+    "monitoring-and-incident-owner"
+  ], "长期生产部署前未知项");
   return contract;
 }
 
@@ -111,7 +129,8 @@ export async function verifyRemoteCatalogContract(projectRoot) {
     readFile(contractPath, "utf8").then(JSON.parse),
     readFile(configPath, "utf8").then(JSON.parse)
   ]);
-  validateRemoteCatalogContract(contract, pluginConfig);
+  const communityConfig = await readFile(safePath(projectRoot, contract.publication?.listingContract, "Figma Community 清单"), "utf8").then(JSON.parse);
+  validateRemoteCatalogContract(contract, pluginConfig, communityConfig);
   for (const source of contract.contractSources) {
     if (!/^[a-f0-9]{64}$/.test(source.sha256 || "")) fail(`合同来源摘要无效：${source.path}`);
     const bytes = await readFile(safePath(projectRoot, source.path, "合同来源"));
