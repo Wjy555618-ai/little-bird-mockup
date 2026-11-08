@@ -63,7 +63,7 @@
     "node": ">=20"
   },
   "dependencies": {
-    "pdfjs-dist": "^6.4.299",
+    "pdfjs-dist": "^6.5.438",
     "sharp": "^0.35.5"
   },
   "devDependencies": {
